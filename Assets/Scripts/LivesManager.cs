@@ -1,0 +1,93 @@
+using UnityEngine;
+using UnityEngine.Events;
+
+// Gère le nombre de vies restantes du joueur.
+public class LivesManager : MonoBehaviour
+{
+    // -------------------------------------------------------------------------
+    // Paramètres configurables
+    // -------------------------------------------------------------------------
+
+    // Nombre maximum de vies au démarrage de la partie.
+    [SerializeField] private int _maxLives = 3;
+
+    // -------------------------------------------------------------------------
+    // Événements publics
+    // -------------------------------------------------------------------------
+
+    // Déclenché à chaque changement avec la nouvelle valeur.
+    public UnityEvent<int> OnLivesChanged = new UnityEvent<int>();
+
+    // Déclenché quand toutes les vies atteignent zéro.
+    public UnityEvent OnDeath = new UnityEvent();
+
+    // -------------------------------------------------------------------------
+    // État interne
+    // -------------------------------------------------------------------------
+
+    // Nombre de vies restantes au moment courant.
+    private int _currentLives;
+
+    // -------------------------------------------------------------------------
+    // Cycle de vie Unity
+    // -------------------------------------------------------------------------
+
+    // Initialise les vies et notifie les abonnés au démarrage.
+    private void Awake()
+    {
+        // Copie la valeur maximale dans le compteur courant.
+        _currentLives = _maxLives;
+
+        // Notifie immédiatement les abonnés avec la valeur initiale.
+        OnLivesChanged.Invoke(_currentLives);
+    }
+
+    // -------------------------------------------------------------------------
+    // API publique
+    // -------------------------------------------------------------------------
+
+    /// <summary>Retourne le nombre de vies restantes actuellement.</summary>
+    public int GetCurrentLives()
+    {
+        // Retourne directement la valeur de l'état interne.
+        return _currentLives;
+    }
+
+    /// <summary>Décrémente les vies et notifie les abonnés.</summary>
+    public void LoseLife()
+    {
+        // Empêche de descendre en dessous de zéro vie.
+        if (_currentLives <= 0)
+            return;
+
+        // Décrémente les vies et notifie tous les abonnés.
+        _currentLives--;
+        OnLivesChanged.Invoke(_currentLives);
+    }
+
+    /// <summary>Réinitialise les vies à la valeur maximale.</summary>
+    public void ResetLives()
+    {
+        // Restaure les vies au maximum et notifie les abonnés.
+        _currentLives = _maxLives;
+        OnLivesChanged.Invoke(_currentLives);
+    }
+
+    /// <summary>Réduit les vies d'un point et notifie les abonnés.</summary>
+    public void TakeDamage()
+    {
+        // Ignore si les vies sont déjà à zéro.
+        if (_currentLives <= 0)
+            return;
+
+        // Décrémente le compteur de vies actuel.
+        _currentLives--;
+
+        // Notifie les abonnés du nouveau total de vies.
+        OnLivesChanged.Invoke(_currentLives);
+
+        // Déclenche la mort si toutes les vies sont perdues.
+        if (_currentLives <= 0)
+            OnDeath.Invoke();
+    }
+}

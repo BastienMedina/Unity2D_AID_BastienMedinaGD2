@@ -37,6 +37,9 @@ public class LaserSystem : MonoBehaviour
     // Index du pattern laser actuellement actif.
     private int _currentPatternIndex;
 
+    // Liste mutable des cellules laser actives ce tour.
+    private List<Vector2Int> _activeLaserCells = new List<Vector2Int>();
+
     // Indique si la séquence de patterns est utilisable.
     private bool HasValidPatterns => _patterns != null && _patterns.Count > 0;
 
@@ -71,6 +74,9 @@ public class LaserSystem : MonoBehaviour
 
         // Initialise l'index au premier pattern de la séquence.
         _currentPatternIndex = 0;
+
+        // Charge les cellules actives du pattern initial en mémoire.
+        RebuildActiveCells();
     }
 
     // Désabonne proprement pour éviter des fuites mémoire.
@@ -126,19 +132,32 @@ public class LaserSystem : MonoBehaviour
     /// </summary>
     public List<Vector2Int> GetCurrentLaserCells()
     {
+        // Retourne une copie de la liste mutable pour protéger l'état interne.
+        return new List<Vector2Int>(_activeLaserCells);
+    }
+
+    /// <summary>
+    /// Retourne une copie des cellules du pattern suivant dans la séquence.
+    /// Destiné exclusivement aux systèmes de rendu d'indicateur laser.
+    /// </summary>
+    public List<Vector2Int> GetNextLaserCells()
+    {
         // Retourne une liste vide si aucun pattern n'est disponible.
         if (!HasValidPatterns)
             return new List<Vector2Int>();
 
-        // Récupère le pattern laser actuellement actif dans la séquence.
-        LaserPattern current = GetCurrentPattern();
+        // Calcule l'index du prochain pattern en bouclant sur la séquence.
+        int nextIndex = (_currentPatternIndex + 1) % _patterns.Count;
 
-        // Retourne une liste vide si le pattern courant est nul.
-        if (current == null || current.ActiveCells == null)
+        // Récupère le pattern correspondant à l'index suivant calculé.
+        LaserPattern next = _patterns[nextIndex];
+
+        // Retourne une liste vide si le pattern suivant est invalide.
+        if (next == null || next.ActiveCells == null)
             return new List<Vector2Int>();
 
         // Retourne une copie pour protéger les données source ScriptableObject.
-        return new List<Vector2Int>(current.ActiveCells);
+        return new List<Vector2Int>(next.ActiveCells);
     }
 
     // -------------------------------------------------------------------------
@@ -171,11 +190,17 @@ public class LaserSystem : MonoBehaviour
         {
             // Bloque l'index à zéro pour éviter toute dérive.
             _currentPatternIndex = 0;
+
+            // Recharge les cellules actives même avec un seul pattern.
+            RebuildActiveCells();
             return;
         }
 
         // Passe au pattern suivant et reboucle en fin de séquence.
         _currentPatternIndex = (_currentPatternIndex + 1) % _patterns.Count;
+
+        // Charge les cellules du nouveau pattern dans la liste mutable.
+        RebuildActiveCells();
     }
 
     // -------------------------------------------------------------------------
@@ -190,5 +215,41 @@ public class LaserSystem : MonoBehaviour
             return null;
 
         return _patterns[_currentPatternIndex];
+    }
+
+    // Remplace la liste mutable par les cellules du pattern courant.
+    private void RebuildActiveCells()
+    {
+        // Vide la liste avant de la repeupler depuis le ScriptableObject.
+        _activeLaserCells.Clear();
+
+        // Récupère le pattern correspondant à l'index courant.
+        LaserPattern current = GetCurrentPattern();
+
+        // Ignore le rechargement si le pattern ou ses cellules sont nuls.
+        if (current == null || current.ActiveCells == null)
+            return;
+
+        // Copie chaque cellule du ScriptableObject dans la liste mutable.
+        foreach (Vector2Int cell in current.ActiveCells)
+        {
+            // Ajoute la cellule à la liste active du tour courant.
+            _activeLaserCells.Add(cell);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // API publique — synchronisation avec la grille
+    // -------------------------------------------------------------------------
+
+    /// <summary>Retire de la liste active la cellule occupée par le joueur.</summary>
+    public void SyncWithGrid(GridManager gridManager)
+    {
+        // Récupère la position actuelle du joueur depuis la grille.
+        Vector2Int playerPos = gridManager.GetPlayerPosition();
+
+        // Retire les cellules laser qui coïncident avec la position joueur.
+        _activeLaserCells.RemoveAll(cell =>
+            cell.x == playerPos.x && cell.y == playerPos.y);
     }
 }

@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+// Initialise la grille avant le renderer et le turn manager.
+[DefaultExecutionOrder(-20)]
 // Gère uniquement l'état de la grille et la position du joueur.
 public class GridManager : MonoBehaviour
 {
@@ -86,27 +88,27 @@ public class GridManager : MonoBehaviour
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
-    // Initialise la grille au démarrage du composant.
+    // Initialise uniquement la grille au démarrage du composant.
     private void Awake()
     {
+        // Construit la grille et place le joueur en position initiale.
         InitializeGrid();
-
-        // Abonne la vidange de file à la fin de chaque tour.
-        if (_turnManager != null)
-        {
-            _turnManager.OnTurnProcessed.AddListener(HandleTurnProcessed);
-        }
     }
 
-    // Désabonne proprement la file à la destruction du composant.
-    private void OnDestroy()
+    // Abonne la file d'entrée quand le composant s'active.
+    private void OnEnable()
     {
-        // Vérifie que la référence TurnManager est encore valide.
+        // Vérifie la référence avant d'abonner la vidange de file.
         if (_turnManager != null)
-        {
-            // Supprime l'abonnement à l'événement de fin de tour.
+            _turnManager.OnTurnProcessed.AddListener(HandleTurnProcessed);
+    }
+
+    // Désabonne proprement la file quand le composant se désactive.
+    private void OnDisable()
+    {
+        // Vérifie la référence avant de retirer l'abonnement.
+        if (_turnManager != null)
             _turnManager.OnTurnProcessed.RemoveListener(HandleTurnProcessed);
-        }
     }
 
     // -------------------------------------------------------------------------
@@ -116,6 +118,8 @@ public class GridManager : MonoBehaviour
     /// <summary>Déplace le joueur d'une cellule vers le haut.</summary>
     public void MoveUp()
     {
+        // Confirme que MoveUp est bien appelé par le bouton
+        Debug.Log("[DIAG] GridManager.MoveUp() appelé");
         // Déplacement vers la ligne supérieure de la grille.
         TryMove(Vector2Int.up);
     }
@@ -123,6 +127,8 @@ public class GridManager : MonoBehaviour
     /// <summary>Déplace le joueur d'une cellule vers le bas.</summary>
     public void MoveDown()
     {
+        // Confirme que MoveDown est bien appelé par le bouton
+        Debug.Log("[DIAG] GridManager.MoveDown() appelé");
         // Déplacement vers la ligne inférieure de la grille.
         TryMove(Vector2Int.down);
     }
@@ -130,6 +136,8 @@ public class GridManager : MonoBehaviour
     /// <summary>Déplace le joueur d'une cellule vers la gauche.</summary>
     public void MoveLeft()
     {
+        // Confirme que MoveLeft est bien appelé par le bouton
+        Debug.Log("[DIAG] GridManager.MoveLeft() appelé");
         // Déplacement vers la colonne précédente de la grille.
         TryMove(Vector2Int.left);
     }
@@ -137,6 +145,8 @@ public class GridManager : MonoBehaviour
     /// <summary>Déplace le joueur d'une cellule vers la droite.</summary>
     public void MoveRight()
     {
+        // Confirme que MoveRight est bien appelé par le bouton
+        Debug.Log("[DIAG] GridManager.MoveRight() appelé");
         // Déplacement vers la colonne suivante de la grille.
         TryMove(Vector2Int.right);
     }
@@ -201,9 +211,13 @@ public class GridManager : MonoBehaviour
     // Valide le déplacement et met à jour l'état de la grille.
     private void TryMove(Vector2Int direction)
     {
+        // Affiche la direction reçue et l'état du verrou de tour
+        Debug.Log($"[DIAG] TryMove() — direction={direction} isTurnProcessing={_isTurnProcessing}");
         // Met en file si un tour est en cours de traitement.
         if (_isTurnProcessing)
         {
+            // Signale que l'entrée est mise en file d'attente
+            Debug.Log($"[DIAG] TryMove() — MIS EN FILE direction={direction}");
             // Écrase l'entrée précédente par la dernière reçue.
             _pendingDirection = direction;
             return;
@@ -215,6 +229,8 @@ public class GridManager : MonoBehaviour
         // Bloque le mouvement si la cible est hors grille.
         if (!IsInsideGrid(target.x, target.y))
         {
+            // Signale que le déplacement est bloqué par le bord de grille
+            Debug.Log($"[DIAG] TryMove() — BLOQUÉ bord grille target={target}");
             // Notifie les abonnés de l'échec du déplacement.
             OnMoveFailed.Invoke();
             return;
@@ -229,6 +245,8 @@ public class GridManager : MonoBehaviour
         // Marque la nouvelle cellule comme occupée par le joueur.
         _grid[_playerPosition.x, _playerPosition.y].State = CellState.Player;
 
+        // Confirme que l'événement OnPlayerMoved va être déclenché
+        Debug.Log($"[DIAG] TryMove() — OnPlayerMoved.Invoke() → newPos={_playerPosition} listeners={OnPlayerMoved.GetPersistentEventCount()}");
         // Notifie les abonnés avec la nouvelle position du joueur.
         OnPlayerMoved.Invoke(_playerPosition);
     }

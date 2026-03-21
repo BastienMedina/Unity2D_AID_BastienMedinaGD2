@@ -21,6 +21,9 @@ public class GridCollisionResolver : MonoBehaviour
     // Référence au système de pièces pour la collecte.
     [SerializeField] private CoinSystem _coinSystem;
 
+    // Référence au gestionnaire de vies pour déclencher les dégâts.
+    [SerializeField] private LivesManager _livesManager;
+
     // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
@@ -67,8 +70,16 @@ public class GridCollisionResolver : MonoBehaviour
             );
         }
 
-        // Abonne la résolution à l'événement de fin de tour.
-        _turnManager.OnTurnProcessed.AddListener(HandleTurnProcessed);
+        // Lève une exception si LivesManager n'est pas assigné.
+        if (_livesManager == null)
+        {
+            throw new MissingReferenceException(
+                $"[GridCollisionResolver] La référence {nameof(_livesManager)} n'est pas assignée."
+            );
+        }
+
+        // Abonne la résolution au signal d'évaluation laser du tour.
+        _turnManager.OnEvaluateLaser.AddListener(ResolveCollisions);
     }
 
     // Désabonne proprement pour éviter des fuites mémoire.
@@ -77,61 +88,58 @@ public class GridCollisionResolver : MonoBehaviour
         // Vérifie que la référence TurnManager est encore valide.
         if (_turnManager != null)
         {
-            // Supprime l'abonnement à l'événement de fin de tour.
-            _turnManager.OnTurnProcessed.RemoveListener(HandleTurnProcessed);
+            // Supprime l'abonnement à l'événement d'évaluation laser.
+            _turnManager.OnEvaluateLaser.RemoveListener(ResolveCollisions);
         }
-    }
-
-    // -------------------------------------------------------------------------
-    // Gestionnaire d'événement privé
-    // -------------------------------------------------------------------------
-
-    // Reçoit le signal de fin de tour et résout les collisions.
-    private void HandleTurnProcessed()
-    {
-        // Lance la résolution ordonnée de toutes les collisions.
-        ResolveCollisions();
     }
 
     // -------------------------------------------------------------------------
     // Résolution des collisions
     // -------------------------------------------------------------------------
 
-    // Résout laser puis pièce dans l'ordre strict défini.
+    // Résout laser en priorité, pièce seulement si pas de laser.
     private void ResolveCollisions()
     {
         // Récupère la position actuelle du joueur depuis la grille.
         Vector2Int playerPos = _gridManager.GetPlayerPosition();
 
-        // Résout la collision laser en priorité absolue sur la pièce.
-        bool laserHit = CheckLaserCollision(playerPos);
+        // Récupère les cellules du pattern laser actuel.
+        List<Vector2Int> laserCells = _laserSystem.GetCurrentLaserCells();
 
-        // Ignore la pièce si le joueur est touché par le laser.
-        if (!laserHit)
+        // Vérifie chaque cellule laser contre la position joueur.
+        foreach (Vector2Int laserCell in laserCells)
         {
-            // Résout la collision de pièce seulement sans laser actif.
-            CheckCoinCollision(playerPos);
+            // Compare les coordonnées explicitement sans Equals.
+            if (laserCell.x == playerPos.x && laserCell.y == playerPos.y)
+            {
+                // Inflige des dégâts et stoppe la vérification laser.
+                TriggerLaserHit();
+
+                // Notifie les abonnés que la résolution est terminée.
+                OnCollisionsResolved.Invoke();
+                return;
+            }
         }
+
+        // Résout la collision de pièce seulement si pas de laser actif.
+        CheckCoinCollision(playerPos);
 
         // Notifie les abonnés que toutes les collisions sont résolues.
         OnCollisionsResolved.Invoke();
     }
 
-    // Détecte le chevauchement joueur-laser et déclenche l'événement.
-    private bool CheckLaserCollision(Vector2Int playerPos)
+    // Applique les dégâts laser et notifie les systèmes abonnés.
+    private void TriggerLaserHit()
     {
-        // Récupère les cellules actives du pattern laser courant.
-        List<Vector2Int> laserCells = _laserSystem.GetCurrentLaserCells();
+        // Vérifie que la référence LivesManager est assignée.
+        if (_livesManager == null)
+            return;
 
-        // Vérifie si la position joueur chevauche une cellule laser.
-        if (!laserCells.Contains(playerPos))
-            return false;
+        // Applique les dégâts au gestionnaire de vies.
+        _livesManager.TakeDamage();
 
-        // Déclenche l'événement de collision laser du système.
+        // Notifie les abonnés du hit laser confirmé.
         _laserSystem.OnPlayerHitByLaser.Invoke();
-
-        // Signale au code appelant qu'un hit laser s'est produit.
-        return true;
     }
 
     // Détecte le chevauchement joueur-pièce et déclenche la collecte.
