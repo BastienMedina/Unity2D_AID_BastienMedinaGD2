@@ -73,6 +73,20 @@ public class LivesManager : MonoBehaviour
         OnLivesChanged.Invoke(_currentLives);
     }
 
+    /// <summary>Restaure un nombre de vies et notifie les abonnés.</summary>
+    public void Heal(int amount)
+    {
+        // Ignore le soin si les vies sont déjà au maximum configuré.
+        if (_currentLives >= _maxLives)
+            return;
+
+        // Ajoute le montant de soin sans dépasser le maximum de vies.
+        _currentLives = Mathf.Min(_currentLives + amount, _maxLives);
+
+        // Notifie les abonnés du nouveau total de vies après soin.
+        OnLivesChanged.Invoke(_currentLives);
+    }
+
     /// <summary>Réduit les vies d'un point et notifie les abonnés.</summary>
     public void TakeDamage()
     {
