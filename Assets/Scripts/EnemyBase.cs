@@ -21,6 +21,14 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
     {
         // Copie la valeur maximale comme santé de départ
         _currentHealth = _maxHealth;
+
+        // Vérifie la présence du collider sur l'ennemi
+        Collider2D col = GetComponent<Collider2D>();
+        Debug.Log($"[COL] EnemyBase Awake — {gameObject.name} | Collider2D={col != null} | isTrigger={col?.isTrigger} | enabled={col?.enabled}");
+
+        // Vérifie que IEnemyDamageable est bien implémenté
+        IEnemyDamageable dmg = GetComponent<IEnemyDamageable>();
+        Debug.Log($"[COL] EnemyBase Awake — IEnemyDamageable={dmg != null}");
     }
 
     // Retourne la santé actuelle de l'ennemi
@@ -40,6 +48,9 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
     // Décrémente la santé et déclenche les événements appropriés
     public void TakeDamage(int amount)
     {
+        // Confirme que TakeDamage est bien appelé
+        Debug.Log($"[COL] TakeDamage CALLED — {gameObject.name} | amount={amount} | currentHP={_currentHealth}");
+
         // Ignore les dégâts si l'ennemi est déjà mort
         if (IsDead())
         {

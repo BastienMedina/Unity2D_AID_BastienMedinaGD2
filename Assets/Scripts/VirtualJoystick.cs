@@ -1,71 +1,55 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-// Détecte le glissement tactile et expose la direction normalisée
-public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+// Gère l'entrée joystick tactile et souris via PointerEventData
+public class VirtualJoystick : MonoBehaviour,
+    IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    // Cercle extérieur de fond du joystick virtuel
+    // Fond circulaire extérieur du joystick virtuel
     [SerializeField] private RectTransform _background;
 
-    // Point intérieur mobile représentant la position du doigt
+    // Poignée mobile intérieure représentant la position du doigt
     [SerializeField] private RectTransform _handle;
 
-    // Rayon maximal de déplacement du handle en pixels
-    [SerializeField] private float _maxRadius = 50f;
+    // Rayon maximum de déplacement du handle en pixels UI
+    [SerializeField] private float _maxRadius = 60f;
 
-    // Direction normalisée calculée depuis l'ancre vers le handle
-    private Vector2 _direction = Vector2.zero;
+    // Seuil minimal pour ignorer les micro-déplacements du handle
+    [SerializeField] private float _deadZone = 0.1f;
 
-    // Indique si un toucher est actuellement actif
-    private bool _isTouching = false;
+    // Direction normalisée actuelle calculée depuis le handle
+    private Vector2 _currentDirection = Vector2.zero;
 
-    // Retourne la direction normalisée ou zéro si inactif
-    public Vector2 GetDirection()
-    {
-        // Renvoie zéro si aucun toucher n'est en cours
-        if (!_isTouching)
-        {
-            return Vector2.zero;
-        }
+    // Indique si un contact ou clic est actuellement actif
+    private bool _isActive = false;
 
-        // Renvoie la direction calculée lors du dernier glissement
-        return _direction;
-    }
-
-    // Enregistre le contact initial et active le suivi du doigt
+    // Enregistre le début du contact et active le suivi
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Marque le joystick comme actif au premier contact
-        _isTouching = true;
+        // Confirme que OnPointerDown est bien déclenché
+        Debug.Log($"[JOY] OnPointerDown() — position={eventData.position} camera={eventData.pressEventCamera}");
 
-        // Calcule la direction dès le toucher initial
-        UpdateHandlePosition(eventData);
+        // Active le suivi dès le premier contact ou clic
+        _isActive = true;
+
+        // Calcule la position du handle immédiatement au contact
+        OnDrag(eventData);
     }
 
-    // Recalcule la direction et déplace le handle lors du glissement
+    // Met à jour la position du handle pendant le glissement
     public void OnDrag(PointerEventData eventData)
     {
-        // Met à jour la position du handle selon le doigt glissé
-        UpdateHandlePosition(eventData);
-    }
+        // Ignore si aucun contact actif n'est en cours
+        if (!_isActive)
+        {
+            return;
+        }
 
-    // Réinitialise le handle et la direction au relâchement du doigt
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        // Désactive le suivi du toucher
-        _isTouching = false;
+        // Confirme que OnDrag reçoit les événements souris
+        Debug.Log($"[JOY] OnDrag() — rawPosition={eventData.position}");
 
-        // Remet la direction calculée à zéro
-        _direction = Vector2.zero;
-
-        // Replace le handle au centre du fond du joystick
-        _handle.anchoredPosition = Vector2.zero;
-    }
-
-    // Calcule la position clampée du handle et la direction normalisée
-    private void UpdateHandlePosition(PointerEventData eventData)
-    {
-        // Convertit la position écran du doigt en position locale du fond
+        // Convertit la position écran en coordonnées locales du fond
+        // pressEventCamera est null pour ScreenSpaceOverlay — correct
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             _background,
             eventData.position,
@@ -73,13 +57,54 @@ public class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler,
             out Vector2 localPoint
         );
 
-        // Clamp le point local dans le rayon maximal autorisé
-        Vector2 clampedPoint = Vector2.ClampMagnitude(localPoint, _maxRadius);
+        // Affiche la position locale calculée dans le fond
+        Debug.Log($"[JOY] localPoint={localPoint} | background null={_background == null}");
 
-        // Applique la position clampée au handle dans l'espace local
-        _handle.anchoredPosition = clampedPoint;
+        // Limite le déplacement au rayon maximal autorisé
+        Vector2 clamped = Vector2.ClampMagnitude(localPoint, _maxRadius);
 
-        // Calcule la direction normalisée entre -1 et 1
-        _direction = clampedPoint / _maxRadius;
+        // Déplace le handle vers la position locale calculée
+        _handle.anchoredPosition = clamped;
+
+        // Calcule la direction normalisée uniquement si hors de la zone morte
+        if (clamped.magnitude > _deadZone)
+        {
+            _currentDirection = clamped / _maxRadius;
+        }
+        // Remet la direction à zéro si dans la zone morte
+        else
+        {
+            _currentDirection = Vector2.zero;
+        }
+
+        // Affiche la direction normalisée finale du joystick
+        Debug.Log($"[JOY] clamped={clamped} | currentDirection={_currentDirection}");
+    }
+
+    // Réinitialise le joystick au relâchement du contact
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        // Confirme le relâchement du joystick
+        Debug.Log("[JOY] OnPointerUp() — joystick released, direction reset to zero");
+
+        // Désactive le suivi du contact ou du clic
+        _isActive = false;
+
+        // Replace le handle au centre du fond du joystick
+        _handle.anchoredPosition = Vector2.zero;
+
+        // Remet la direction normalisée à zéro
+        _currentDirection = Vector2.zero;
+    }
+
+    /// <summary>Retourne la direction normalisée actuelle du joystick, Vector2.zero si inactif.</summary>
+    // Expose la direction sans permettre de la modifier
+    public Vector2 GetDirection()
+    {
+        // Affiche la valeur retournée par GetDirection
+        Debug.Log($"[JOY] GetDirection() called — returning {_currentDirection}");
+
+        // Renvoie la direction courante calculée lors du dernier glissement
+        return _currentDirection;
     }
 }
