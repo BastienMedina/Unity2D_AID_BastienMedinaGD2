@@ -18,7 +18,7 @@ MonoBehaviour:
   Rarity: 1
   EffectType: 5
   EffectValue: 1
-  HasDuration: 0
-  EffectDuration: 5
+  HasDuration: 1
+  EffectDuration: 30
   HasConsumptionTime: 0
   ConsumptionTime: 1.5

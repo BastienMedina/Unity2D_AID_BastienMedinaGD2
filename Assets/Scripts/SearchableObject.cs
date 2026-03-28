@@ -31,6 +31,9 @@ public class SearchableObject : MonoBehaviour
     // Référence au composant qui génère le butin à la fouille.
     [SerializeField] private LootDropper _lootDropper;
 
+    // Ennemi réseau lié à ce bureau fouillable
+    [SerializeField] private DeskNetworkEnemy _networkEnemy;
+
     // Étiquette textuelle identifiant cet objet dans l'interface.
     [SerializeField] private string _objectLabel = "Bureau";
 
@@ -283,6 +286,10 @@ public class SearchableObject : MonoBehaviour
 
         // Notifie les abonnés de la complétion de la fouille.
         OnSearchComplete.Invoke();
+
+        // Déclenche l'ennemi réseau si assigné à ce bureau
+        if (_networkEnemy != null && !_networkEnemy.gameObject.activeSelf)
+            _networkEnemy.TriggerFromDesk(this);
 
         // Masque le bouton en notifiant la sortie de proximité.
         OnPlayerExitRange.Invoke(this);

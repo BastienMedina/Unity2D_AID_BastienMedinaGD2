@@ -174,4 +174,11 @@ public class PlayerMovement : MonoBehaviour
 
     // Retourne la dernière direction de déplacement valide
     public Vector2 GetFacingDirection() => _lastFacingDirection;
+
+    // Modifie la vitesse de déplacement depuis l'extérieur
+    public void SetSpeed(float newSpeed)
+    {
+        // Met à jour la vitesse avec la nouvelle valeur
+        _moveSpeed = newSpeed;
+    }
 }

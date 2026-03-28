@@ -170,7 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d109ed8c8c32fa747b129647aa45406c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BarrelProjectile
-  _speed: 5
+  _speed: 15
   _damage: 1
   _maxRange: 10
 --- !u!114 &7043688648634118481

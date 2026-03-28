@@ -52,6 +52,12 @@ public class EnemyCharger : EnemyBase
     // Exécute la logique d'état à chaque frame
     private void Update()
     {
+        // Ignore si la référence joueur est absente
+        if (_playerTransform == null)
+        {
+            return;
+        }
+
         // Stoppe toute logique si l'ennemi est mort
         if (IsDead())
         {

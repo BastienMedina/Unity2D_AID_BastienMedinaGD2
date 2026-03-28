@@ -11,7 +11,7 @@ public class HeroDonkeyKong : MonoBehaviour
     [SerializeField] private float _attackCooldown = 0.8f;
 
     // Vitesse de déplacement du baril après l'instanciation
-    [SerializeField] private float _barrelSpeed = 5f;
+    [SerializeField] private float _barrelSpeed = 15f;
 
     // Dégâts infligés par chaque baril lancé
     [SerializeField] private int _damage = 1;
@@ -71,5 +71,19 @@ public class HeroDonkeyKong : MonoBehaviour
 
         // Notifie les abonnés qu'une attaque vient d'être lancée
         _onAttackFired?.Invoke();
+    }
+
+    // Modifie les dégâts des projectiles depuis l'extérieur
+    public void SetDamage(int newDamage)
+    {
+        // Met à jour les dégâts configurés
+        _damage = newDamage;
+    }
+
+    // Modifie le cooldown d'attaque depuis l'extérieur
+    public void SetAttackCooldown(float newCooldown)
+    {
+        // Met à jour le cooldown avec la nouvelle valeur
+        _attackCooldown = newCooldown;
     }
 }

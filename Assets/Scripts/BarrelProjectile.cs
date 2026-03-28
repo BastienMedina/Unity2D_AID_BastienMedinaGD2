@@ -4,7 +4,7 @@ using UnityEngine;
 public class BarrelProjectile : MonoBehaviour
 {
     // Vitesse de déplacement configurable depuis l'inspecteur
-    [SerializeField] private float _speed = 5f;
+    [SerializeField] private float _speed = 15f;
 
     // Dégâts infligés à l'ennemi touché par le baril
     [SerializeField] private int _damage = 1;

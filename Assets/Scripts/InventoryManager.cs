@@ -49,6 +49,9 @@ public class InventoryManager : MonoBehaviour
     // Référence au gestionnaire de vies pour les soins.
     [SerializeField] private LivesManager _livesManager;
 
+    // Référence au gestionnaire de stats pour les effets d'items.
+    [SerializeField] private PlayerStatsManager _playerStats;
+
     // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
@@ -144,8 +147,11 @@ public class InventoryManager : MonoBehaviour
         // Récupère l'item du slot avant de le supprimer.
         InventoryItem item = _slots[slotIndex];
 
-        // Applique l'effet de l'item selon son type configuré.
-        ApplyEffect(item);
+        // Délègue l'effet à PlayerStatsManager si disponible.
+        if (_playerStats != null)
+            _playerStats.ApplyItemEffect(item);
+        else
+            Debug.LogWarning("[INV] _playerStats non assigné");
 
         // Supprime l'item du slot en le remplaçant par null.
         _slots[slotIndex] = null;

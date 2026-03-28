@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: NewItem
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   ItemName: Potion de soint
-  Description: Restaure votre vie
+  Description: Restaure votre vie de 1
   Icon: {fileID: -1111481587, guid: dd7117edbb861b7418116a33ab8e2638, type: 3}
   Rarity: 0
   EffectType: 0

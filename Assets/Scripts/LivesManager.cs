@@ -104,4 +104,14 @@ public class LivesManager : MonoBehaviour
         if (_currentLives <= 0)
             OnDeath.Invoke();
     }
+
+    // Met à jour le maximum de vies du joueur
+    public void SetMaxHealth(int newMax)
+    {
+        // Met à jour le maximum configurable
+        _maxLives = newMax;
+
+        // Notifie les abonnés du changement
+        OnLivesChanged.Invoke(_currentLives);
+    }
 }
