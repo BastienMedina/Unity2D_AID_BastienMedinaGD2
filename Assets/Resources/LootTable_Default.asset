@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92e3c91c75163db47aae648a5c160fcd, type: 3}
+  m_Name: LootTable_Default
+  m_EditorClassIdentifier: Assembly-CSharp::LootTable
+  _entries:
+  - Item: {fileID: 11400000, guid: dcdafa72e6790ab4ea9742114cc63844, type: 2}
+    Weight: 60
+  - Item: {fileID: 11400000, guid: d77049d705de5d24ab855d5906748df1, type: 2}
+    Weight: 8
+  - Item: {fileID: 11400000, guid: 50b8fa1658c62cb4f90fef4b7e12e467, type: 2}
+    Weight: 30
+  - Item: {fileID: 11400000, guid: f08f681284af60d44947dfbedcf6e266, type: 2}
+    Weight: 30
+  - Item: {fileID: 11400000, guid: e88915820bdf6b0468ed4dd4e4156391, type: 2}
+    Weight: 30
+  _commonWeight: 60
+  _uncommonWeight: 30
+  _rareWeight: 8
+  _legendaryWeight: 2

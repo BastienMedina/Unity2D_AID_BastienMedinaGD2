@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aae161da11c4c5849abe6e137f03ffb2, type: 3}
+  m_Name: NewItem 2
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  ItemName: "Potion de f\xE9rocit\xE9"
+  Description: "Augmente de 1 vos d\xE9gats"
+  Icon: {fileID: 308765525, guid: dd7117edbb861b7418116a33ab8e2638, type: 3}
+  Rarity: 1
+  EffectType: 2
+  EffectValue: 1
+  HasDuration: 0
+  EffectDuration: 5
+  HasConsumptionTime: 0
+  ConsumptionTime: 1.5

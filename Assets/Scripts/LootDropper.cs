@@ -1,46 +1,82 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-// Instancie un objet de butin à une position via une LootTable
+// Ajoute directement un ItemData à l'inventaire joueur.
 public class LootDropper : MonoBehaviour
 {
-    // Table de butin utilisée pour tirer le préfab à instancier
+    // Référence au gestionnaire d'inventaire du joueur.
+    [SerializeField] private InventoryManager _inventoryManager;
+
+    // Table de loot utilisée pour tirer l'ItemData à attribuer.
     [SerializeField] private LootTable _lootTable;
 
-    // Probabilité entre 0 et 1 qu'un butin soit effectivement généré
-    [SerializeField] private float _dropChance = 0.75f;
+    // Chance entre 0 et 1 qu'un objet soit effectivement trouvé.
+    [SerializeField] private float _dropChance = 0.85f;
 
-    // Événement déclenché avec le GameObject instancié après le drop
-    [SerializeField] private UnityEvent<GameObject> _onLootDropped;
+    // Déclenché après chaque drop traité par ce composant.
+    public UnityEvent OnLootDropped = new UnityEvent();
 
-    // Tente de dropper un butin à la position indiquée en paramètre
+    // Tente de donner un objet au joueur via l'inventaire.
     public void DropLoot(Vector2 position)
     {
-        // Abandonne le drop si la table de butin n'est pas assignée
+        // Vérifie que la référence à l'inventaire est assignée.
+        if (_inventoryManager == null)
+        {
+            // Signale la référence manquante dans la console.
+            Debug.LogWarning("[LootDropper] _inventoryManager non assigné.", this);
+            return;
+        }
+
+        // Vérifie que la référence à la table de loot est assignée.
         if (_lootTable == null)
         {
+            // Signale la table de loot manquante dans la console.
+            Debug.LogWarning("[LootDropper] _lootTable non assignée.", this);
             return;
         }
 
-        // Abandonne si le tirage aléatoire dépasse la chance configurée
-        if (Random.value > _dropChance)
+        // Tire le dé pour déterminer si un drop a lieu.
+        float roll = Random.Range(0f, 1f);
+
+        // Abandonne si le tirage dépasse la chance configurée.
+        if (roll > _dropChance)
+            return;
+
+        // Tire un ItemData aléatoire dans la table de loot.
+        ItemData item = _lootTable.Roll();
+
+        // Abandonne si la table n'a retourné aucun item valide.
+        if (item == null)
+            return;
+
+        // Construit l'InventoryItem à partir de l'ItemData tiré.
+        InventoryItem invItem = new InventoryItem
         {
-            return;
-        }
+            // Nom de l'objet affiché dans l'inventaire joueur.
+            Name = item.ItemName,
+            // Description affichée dans le panneau de détail.
+            Description = item.Description,
+            // Type d'effet converti depuis ItemEffectType.
+            Effect = LootEffect.PowerUp,
+            // Champs étendus portant les données complètes.
+            EffectType = item.EffectType,
+            EffectValue = item.EffectValue,
+            HasDuration = item.HasDuration,
+            EffectDuration = item.EffectDuration,
+            Icon = item.Icon,
+            SourceData = item
+        };
 
-        // Tire un préfab pondéré depuis la table de butin configurée
-        GameObject prefab = _lootTable.Roll();
+        // Tente d'insérer l'item dans le premier slot libre.
+        bool added = _inventoryManager.AddItem(invItem);
 
-        // Abandonne si la table n'a retourné aucun préfab valide
-        if (prefab == null)
-        {
-            return;
-        }
+        // Informe si l'inventaire est plein et l'item non ajouté.
+        if (!added)
+            Debug.Log("[LootDropper] Inventaire plein — objet non ajouté.");
+        else
+            Debug.Log($"[LootDropper] Objet ajouté : {item.ItemName} ({item.Rarity})");
 
-        // Instancie le préfab tiré à la position transmise en paramètre
-        GameObject lootObject = Instantiate(prefab, position, Quaternion.identity);
-
-        // Notifie les abonnés avec le GameObject instancié comme argument
-        _onLootDropped?.Invoke(lootObject);
+        // Notifie les abonnés que le drop a été traité.
+        OnLootDropped.Invoke();
     }
 }

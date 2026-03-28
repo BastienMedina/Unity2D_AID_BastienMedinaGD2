@@ -77,16 +77,27 @@ public class LootPickup : MonoBehaviour
         _livesManager.Heal(_healAmount);
     }
 
-    // Ajoute cet objet à l'inventaire du joueur via le gestionnaire
+    // Construit un InventoryItem et l'ajoute à l'inventaire joueur.
     private void ApplyInventoryAdd()
     {
-        // Ignore l'ajout si le gestionnaire d'inventaire n'est pas assigné
+        // Ignore l'ajout si le gestionnaire d'inventaire n'est pas assigné.
         if (_inventoryManager == null)
         {
             return;
         }
 
-        // Transmet ce GameObject au gestionnaire d'inventaire du joueur
-        _inventoryManager.AddItem(gameObject);
+        // Crée un InventoryItem à partir des données de ce pickup.
+        InventoryItem item = new InventoryItem
+        {
+            // Utilise le nom du GameObject comme nom d'item par défaut.
+            Name = gameObject.name,
+            Description = string.Empty,
+            Effect = _effect,
+            HealAmount = _healAmount,
+            Icon = null
+        };
+
+        // Transmet l'InventoryItem au gestionnaire d'inventaire joueur.
+        _inventoryManager.AddItem(item);
     }
 }
