@@ -4,6 +4,9 @@ using UnityEngine.Events;
 // Gère le nombre de vies restantes du joueur.
 public class LivesManager : MonoBehaviour
 {
+    // Instance statique accessible depuis n'importe quel script
+    public static LivesManager Instance { get; private set; }
+
     // -------------------------------------------------------------------------
     // Paramètres configurables
     // -------------------------------------------------------------------------
@@ -35,6 +38,17 @@ public class LivesManager : MonoBehaviour
     // Initialise les vies et notifie les abonnés au démarrage.
     private void Awake()
     {
+        // Enregistre l'instance unique ou détruit le doublon
+        if (Instance != null && Instance != this)
+        {
+            // Supprime le doublon si un LivesManager existe déjà
+            Destroy(gameObject);
+            return;
+        }
+
+        // Assigne cette instance comme référence singleton globale
+        Instance = this;
+
         // Copie la valeur maximale dans le compteur courant.
         _currentLives = _maxLives;
 
