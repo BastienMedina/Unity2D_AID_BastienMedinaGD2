@@ -60,7 +60,7 @@ public class SI_PlayerBullet : MonoBehaviour
     // Détecte les virus et les murs via le trigger CircleCollider2D
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Tente de récupérer l'interface IVirusDamageable sur le collider
+        // Tente de récupérer l'interface IVirusDamageable sur le collider direct
         IVirusDamageable target = null;
         other.TryGetComponent(out target);
 
@@ -70,13 +70,25 @@ public class SI_PlayerBullet : MonoBehaviour
             target = other.GetComponentInParent<IVirusDamageable>();
         }
 
-        // Applique les dégâts et détruit la balle si la cible est un virus
+        // Applique les dégâts et détruit la balle si l'interface est trouvée
         if (target != null)
         {
             // Inflige les dégâts configurés au virus touché
             target.TakeDamage(_damage);
 
             // Supprime la balle immédiatement après l'impact sur le virus
+            Destroy(gameObject);
+            return;
+        }
+
+        // Fallback : virus sans interface mais avec tag sur l'objet ou son parent
+        bool hitVirusByTag = other.CompareTag("Virus")
+            || (other.transform.parent != null && other.transform.parent.CompareTag("Virus"));
+
+        // Détruit la balle si le tag Virus est trouvé sans interface
+        if (hitVirusByTag)
+        {
+            // Supprime la balle au contact d'un objet tagué Virus
             Destroy(gameObject);
             return;
         }

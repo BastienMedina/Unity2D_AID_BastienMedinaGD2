@@ -25,8 +25,8 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
     // Santé courante initialisée à la valeur maximale au démarrage
     private int _currentHealth;
 
-    // Rigidbody2D partagé pour le déplacement vertical de base
-    private Rigidbody2D _rigidbody;
+    // Rigidbody2D partagé, non sérialisé pour éviter les conflits héritage
+    [System.NonSerialized] protected Rigidbody2D _rigidbody;
 
     // Initialise la santé courante et récupère le Rigidbody2D
     protected virtual void Awake()

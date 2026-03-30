@@ -18,9 +18,6 @@ public class VirusMini : VirusBase
     // Référence au serveur pour infliger des dégâts à l'impact
     [SerializeField] private SI_ServerHealth _serverHealth;
 
-    // Rigidbody2D utilisé pour tous les déplacements physiques
-    private Rigidbody2D _rigidbody;
-
     // Direction horizontale choisie aléatoirement au spawn (-1 ou +1)
     private float _scatterDirection;
 
@@ -43,20 +40,11 @@ public class VirusMini : VirusBase
         Dead
     }
 
-    // Initialise le Rigidbody2D et choisit la direction de dispersion
+    // Initialise la santé et choisit la direction de dispersion au spawn
     protected override void Awake()
     {
-        // Appelle Awake de VirusBase pour initialiser la santé à 1
+        // Appelle Awake de VirusBase pour initialiser la santé et le Rigidbody2D
         base.Awake();
-
-        // Récupère le Rigidbody2D requis pour les déplacements physiques
-        _rigidbody = GetComponent<Rigidbody2D>();
-
-        // Signale si le Rigidbody2D est manquant sur le mini-virus
-        if (_rigidbody == null)
-        {
-            Debug.LogError("[VIRUS_MINI] Rigidbody2D manquant sur VirusMini");
-        }
 
         // Vérifie que SI_ServerHealth est assigné dans l'inspecteur
         if (_serverHealth == null)

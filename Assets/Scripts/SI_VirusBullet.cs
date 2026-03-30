@@ -1,6 +1,6 @@
 using UnityEngine;
 
-// Déplace la balle vers le bas et détecte les impacts joueur et murs
+// Déplace la balle virus et détecte les impacts joueur et murs
 public class SI_VirusBullet : MonoBehaviour
 {
     // Distance maximale parcourue avant auto-destruction de la balle
@@ -15,16 +15,16 @@ public class SI_VirusBullet : MonoBehaviour
     // Position enregistrée au spawn pour le calcul de distance parcourue
     private Vector2 _spawnPosition;
 
-    // Rigidbody2D utilisé pour déplacer la balle via vélocité
+    // Rigidbody2D cinématique utilisé pour déplacer la balle via MovePosition
     private Rigidbody2D _rigidbody;
 
-    // Indique si la balle a été initialisée par VirusShooter
+    // Indique si la balle a été initialisée avant de se déplacer
     private bool _isInitialized;
 
     // Récupère le Rigidbody2D et mémorise la position de spawn
     private void Awake()
     {
-        // Récupère le Rigidbody2D requis pour le déplacement physique
+        // Récupère le Rigidbody2D requis pour MovePosition
         _rigidbody = GetComponent<Rigidbody2D>();
 
         // Signale si le Rigidbody2D est manquant sur la balle virus
@@ -37,28 +37,21 @@ public class SI_VirusBullet : MonoBehaviour
         _spawnPosition = transform.position;
     }
 
-    /// <summary>Initialise la balle avec direction et vitesse depuis VirusShooter.</summary>
+    /// <summary>Initialise la direction et la vitesse de la balle depuis VirusShooter.</summary>
     // Reçoit les paramètres de vol depuis le virus tireur
     public void Initialize(Vector2 direction, float speed)
     {
         // Stocke la direction normalisée reçue depuis VirusShooter
-        _direction = direction;
+        _direction = direction.normalized;
 
         // Stocke la vitesse de déplacement reçue depuis VirusShooter
         _speed = speed;
 
-        // Marque la balle comme prête à se déplacer
+        // Marque la balle comme prête à se déplacer en FixedUpdate
         _isInitialized = true;
-
-        // Applique immédiatement la vélocité pour éviter le délai d'un frame
-        if (_rigidbody != null)
-        {
-            // Définit la vélocité directement sur le Rigidbody2D
-            _rigidbody.linearVelocity = _direction * _speed;
-        }
     }
 
-    // Vérifie la portée maximale chaque frame physique
+    // Déplace la balle et vérifie la portée maximale chaque frame physique
     private void FixedUpdate()
     {
         // Abandonne si la balle n'a pas encore été initialisée
@@ -66,6 +59,12 @@ public class SI_VirusBullet : MonoBehaviour
         {
             return;
         }
+
+        // Calcule la prochaine position selon direction et vitesse
+        Vector2 nextPosition = _rigidbody.position + (_direction * (_speed * Time.fixedDeltaTime));
+
+        // Déplace la balle via MovePosition compatible Kinematic et Dynamic
+        _rigidbody.MovePosition(nextPosition);
 
         // Détruit la balle si la distance parcourue dépasse la portée maximale
         if (Vector2.Distance(_spawnPosition, _rigidbody.position) >= _maxRange)

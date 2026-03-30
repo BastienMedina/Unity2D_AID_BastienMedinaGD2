@@ -15,12 +15,21 @@ public class VirusFastVisual : MonoBehaviour
     // Ordre de tri dans le layer de rendu par défaut
     [SerializeField] private int _sortingOrder = 2;
 
+    // Rayon local du collider pour obtenir 0.25u en espace monde
+    [SerializeField] private float _colliderRadius = 0.833f;
+
     // Nom du shader URP 2D non éclairé utilisé partout
     private const string ShaderName = "Universal Render Pipeline/2D/Sprite-Unlit-Default";
 
-    // Initialise le visuel du virus rapide rouge
-    private void Awake() =>
+    // Initialise le visuel et le collider du virus rapide
+    private void Awake()
+    {
+        // Construit le sprite coloré sur ce GameObject
         BuildSprite(_color, _scaleX, _scaleY, _sortingOrder);
+
+        // Configure le collider trigger avec le rayon local calculé
+        SetupCollider(_colliderRadius);
+    }
 
     // Crée un sprite de couleur unie sur ce GameObject
     private void BuildSprite(Color color, float scaleX, float scaleY, int order)
@@ -45,5 +54,19 @@ public class VirusFastVisual : MonoBehaviour
         // Définit l'ordre de rendu et l'échelle
         sr.sortingOrder = order;
         transform.localScale = new Vector3(scaleX, scaleY, 1f);
+    }
+
+    // Configure le CircleCollider2D trigger avec le rayon local fourni
+    private void SetupCollider(float radius)
+    {
+        // Récupère ou ajoute un CircleCollider2D sur ce GameObject
+        CircleCollider2D col = GetComponent<CircleCollider2D>();
+        if (col == null) col = gameObject.AddComponent<CircleCollider2D>();
+
+        // Active le mode trigger pour les détections sans physique rigide
+        col.isTrigger = true;
+
+        // Assigne le rayon exprimé en espace local du transform
+        col.radius = radius;
     }
 }
