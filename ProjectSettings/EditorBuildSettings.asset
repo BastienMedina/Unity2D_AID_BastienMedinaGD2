@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Scene_MainMenu.unity
+    guid: 15c925e7db7d3e9498fbded492e9ffa0
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/TestScene_Exploration.unity
+    guid: f107c36466cad064d8af4f2089bf26ee
+  - enabled: 1
+    path: Assets/Scenes/TestScene_GameAndWatch.unity
+    guid: 74ed58f524fe7f64485fe13726e09c8f
+  - enabled: 1
+    path: Assets/Scenes/TestScene_SpaceInvaders.unity
+    guid: 4951704cd85b87d4bb46e2769d806d97
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
