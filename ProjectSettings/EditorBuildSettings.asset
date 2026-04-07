@@ -20,6 +20,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TestScene_SpaceInvaders.unity
     guid: 4951704cd85b87d4bb46e2769d806d97
+  - enabled: 1
+    path: Assets/Scenes/Scene_BulletHell.unity
+    guid: 8ae6a360a83468f489a0fcd4779f48e7
+  - enabled: 1
+    path: Assets/Scenes/Scene_GameAndWatch.unity
+    guid: b2dd9571d76a8f14384ea908561ecfca
+  - enabled: 1
+    path: Assets/Scenes/Scene_SpaceInvaders.unity
+    guid: 621fc14085d77104c83c7a73e1848c88
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

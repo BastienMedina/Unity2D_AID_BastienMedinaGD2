@@ -176,6 +176,12 @@ public class SearchableObject : MonoBehaviour
         return _objectLabel;
     }
 
+    /// <summary>Définit l'étiquette textuelle de cet objet fouillable depuis l'extérieur.</summary>
+    public void SetLabel(string label)
+    {
+        _objectLabel = label;
+    }
+
     // -------------------------------------------------------------------------
     // Vérification de proximité
     // -------------------------------------------------------------------------

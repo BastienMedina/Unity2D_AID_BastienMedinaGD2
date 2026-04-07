@@ -55,6 +55,9 @@ public class InventoryUI : MonoBehaviour
     // Bouton déclenchant la consommation de l'item sélectionné.
     [SerializeField] private Button _useButton;
 
+    // Bouton ouvrant/fermant le panneau d'inventaire (optionnel, trouvé par nom si null).
+    [SerializeField] private Button _toggleButton;
+
     // -------------------------------------------------------------------------
     // État interne
     // -------------------------------------------------------------------------
@@ -103,6 +106,20 @@ public class InventoryUI : MonoBehaviour
         if (_useButton != null)
             _useButton.onClick.AddListener(OnUseButtonClicked);
 
+        // Cherche Button_Inventory par nom si le champ n'est pas assigné en Inspector.
+        if (_toggleButton == null)
+        {
+            GameObject toggleGO = GameObject.Find("Button_Inventory");
+            if (toggleGO != null)
+                _toggleButton = toggleGO.GetComponent<Button>();
+            else
+                Debug.LogWarning("[InventoryUI] Button_Inventory introuvable dans la scène.", this);
+        }
+
+        // Abonne le bouton d'ouverture de l'inventaire à ToggleInventory.
+        if (_toggleButton != null)
+            _toggleButton.onClick.AddListener(ToggleInventory);
+
         // Masque le panneau d'inventaire par défaut au démarrage.
         if (_inventoryPanel != null)
             _inventoryPanel.SetActive(false);
@@ -145,6 +162,10 @@ public class InventoryUI : MonoBehaviour
         // Retire le listener pour éviter des références mortes.
         if (_useButton != null)
             _useButton.onClick.RemoveListener(OnUseButtonClicked);
+
+        // Retire le listener du bouton de toggle pour éviter des références mortes.
+        if (_toggleButton != null)
+            _toggleButton.onClick.RemoveListener(ToggleInventory);
     }
 
     // -------------------------------------------------------------------------

@@ -22,6 +22,12 @@ public class BuffDisplayUI : MonoBehaviour
     // Abonne l'UI aux événements de buff
     private void OnEnable()
     {
+        // Masque le conteneur dès l'activation — pas de buff au départ
+        RefreshContainerVisibility();
+
+        // Ignore silencieusement si le statsManager n'est pas encore câblé
+        if (_statsManager == null) return;
+
         // Écoute les ajouts de buffs
         _statsManager.OnBuffAdded.AddListener(AddBuffSlot);
 
@@ -32,6 +38,9 @@ public class BuffDisplayUI : MonoBehaviour
     // Désabonne l'UI des événements de buff
     private void OnDisable()
     {
+        // Ignore silencieusement si le statsManager n'est pas câblé
+        if (_statsManager == null) return;
+
         // Retire les listeners pour éviter les fuites mémoire
         _statsManager.OnBuffAdded.RemoveListener(AddBuffSlot);
         _statsManager.OnBuffRemoved.RemoveListener(RemoveBuffSlot);
@@ -90,6 +99,9 @@ public class BuffDisplayUI : MonoBehaviour
 
         // Enregistre le slot dans le dictionnaire
         _buffSlots[buff] = slot;
+
+        // Rend le conteneur visible dès qu'un buff est ajouté
+        RefreshContainerVisibility();
     }
 
     // Supprime le slot UI d'un buff expiré
@@ -103,5 +115,17 @@ public class BuffDisplayUI : MonoBehaviour
 
         // Retire l'entrée du dictionnaire
         _buffSlots.Remove(buff);
+
+        // Masque le conteneur s'il ne reste plus aucun buff
+        RefreshContainerVisibility();
+    }
+
+    // Affiche ou masque le conteneur selon le nombre de buffs actifs
+    private void RefreshContainerVisibility()
+    {
+        if (_buffContainer == null) return;
+
+        // Le conteneur (ou son GameObject parent) est visible uniquement s'il y a des slots
+        _buffContainer.gameObject.SetActive(_buffSlots.Count > 0);
     }
 }

@@ -50,41 +50,31 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // Cherche le joystick dans la scène si non assigné en Inspector
+    private void Start()
+    {
+        // Tente de résoudre automatiquement la référence joystick manquante
+        if (_virtualJoystick == null)
+        {
+            _virtualJoystick = FindObjectOfType<VirtualJoystick>();
+
+            if (_virtualJoystick == null)
+                Debug.LogError("[PlayerMovement] VirtualJoystick introuvable dans la scène.");
+        }
+    }
+
     // Lit la direction du joystick et met à jour le sprite chaque frame
     private void Update()
     {
-        // Vérifie si la référence joystick est assignée
-        if (_virtualJoystick == null)
-            Debug.LogError("[JOY] PlayerMovement — _virtualJoystick is NULL");
-
-        // Vérifie que la référence joystick est bien assignée dans l'inspecteur
-        if (_virtualJoystick == null)
-        {
-            Debug.LogError("[PM] _joystick reference is NULL — wire it in Inspector");
-            return;
-        }
-
-        // Affiche la vitesse configurée pour vérifier la valeur en jeu
-        Debug.Log($"[PM] _moveSpeed = {_moveSpeed}");
+        // Abandonne si la référence joystick est toujours absente
+        if (_virtualJoystick == null) return;
 
         // Lit la direction normalisée depuis le joystick virtuel
         Vector2 dir = _virtualJoystick.GetDirection();
 
-        // Affiche la direction lue depuis le joystick
-        Debug.Log($"[JOY] PlayerMovement.Update() — direction={_currentDirection} magnitude={_currentDirection.magnitude}");
-
-        // Affiche la direction lue depuis le joystick à chaque frame
-        Debug.Log($"[PM] joystick direction = {dir} | magnitude = {dir.magnitude}");
-
-        // Signale que le seuil bloque le déplacement si magnitude trop faible
+        // Remet la direction à zéro si sous le seuil minimal
         if (dir.magnitude < _deadZoneThreshold)
         {
-            Debug.Log($"[PM] BLOCKED — magnitude {dir.magnitude} below threshold {_deadZoneThreshold}");
-
-            // Signale que la direction est sous le seuil minimal
-            Debug.Log($"[JOY] PlayerMovement — DEAD ZONE magnitude={_currentDirection.magnitude}");
-
-            // Arrête le Rigidbody2D quand le joystick est relâché
             _currentDirection = Vector2.zero;
             return;
         }
@@ -103,31 +93,17 @@ public class PlayerMovement : MonoBehaviour
     private void FixedUpdate()
     {
         // Ignore si le Rigidbody2D est absent du joueur
-        if (_rigidbody == null)
-        {
-            return;
-        }
+        if (_rigidbody == null) return;
 
         // Applique la vélocité au Rigidbody2D selon la direction courante
         _rigidbody.linearVelocity = _currentDirection * _moveSpeed;
 
         // Met à jour la direction de visée si le joueur bouge
         if (_currentDirection.magnitude >= _deadZoneThreshold)
-        {
             _lastFacingDirection = _currentDirection.normalized;
-        }
-
-        // Affiche la vélocité appliquée au Rigidbody2D
-        Debug.Log($"[JOY] PlayerMovement.FixedUpdate() — velocity={_rigidbody.linearVelocity}");
-
-        // Confirme le déplacement appliqué à la position du joueur
-        Debug.Log($"[PM] transform.position = {transform.position}");
 
         // Ignore la rotation si le joueur est immobile
-        if (_currentDirection.magnitude < _deadZoneThreshold)
-        {
-            return;
-        }
+        if (_currentDirection.magnitude < _deadZoneThreshold) return;
 
         // Calcule l'angle cible depuis la direction de déplacement
         float targetAngle = Mathf.Atan2(_currentDirection.y, _currentDirection.x)
@@ -136,17 +112,13 @@ public class PlayerMovement : MonoBehaviour
         // Choisit entre rotation lisse ou instantanée selon le réglage
         if (_smoothRotation)
         {
-            // Interpole vers l'angle cible à vitesse constante
             float currentAngle = _rigidbody.rotation;
             float nextAngle = Mathf.MoveTowardsAngle(currentAngle, targetAngle,
                                   _rotationSpeed * Time.fixedDeltaTime);
-
-            // Applique la rotation interpolée via le Rigidbody2D
             _rigidbody.MoveRotation(nextAngle);
         }
         else
         {
-            // Applique l'angle cible instantanément via le Rigidbody2D
             _rigidbody.MoveRotation(targetAngle);
         }
     }

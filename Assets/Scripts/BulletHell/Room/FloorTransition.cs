@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class FloorTransition : MonoBehaviour
 {
     // Étage limite pour rester dans la scène Bullet Hell
-    [SerializeField] private int _bulletHellMaxFloor = 2;
+    [SerializeField] private int _bulletHellMaxFloor = 3;
 
     // Nom de la scène Bullet Hell procédurale
     [SerializeField] private string _bulletHellScene = "Scene_BulletHell";
@@ -30,7 +30,7 @@ public class FloorTransition : MonoBehaviour
         }
         else
         {
-            // Charge le mini-jeu Game & Watch à l'étage 3
+            // Charge le mini-jeu Game & Watch à l'étage 4
             SceneManager.LoadScene(_gameAndWatchScene);
         }
     }

@@ -20,16 +20,13 @@ public static class SaveSystem
     }
 
     /// <summary>Restaure la progression depuis la sauvegarde.</summary>
-    // Relit l'étage sauvegardé et avance GameProgress en conséquence
+    // Définit directement l'étage sans boucler sur AdvanceFloor
     public static void LoadGame()
     {
         int savedFloor = PlayerPrefs.GetInt(SaveKey, 1);
 
-        // Avance le singleton jusqu'à l'étage sauvegardé
-        for (int i = 1; i < savedFloor; i++)
-        {
-            GameProgress.Instance.AdvanceFloor();
-        }
+        // Restaure directement l'étage sauvegardé
+        GameProgress.Instance.SetFloor(savedFloor);
     }
 
     /// <summary>Supprime la sauvegarde existante.</summary>

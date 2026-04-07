@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Adapte l'entrée souris pour les tests en éditeur Unity
+// Adapte l'entrée souris/bouton pour déclencher les attaques du joueur
 public class EditorInputAdapter : MonoBehaviour
 {
     // Référence au héros pour déclencher les attaques via souris
@@ -13,36 +13,56 @@ public class EditorInputAdapter : MonoBehaviour
     // Bouton UI ATK relié pour déclencher l'attaque depuis l'interface
     [SerializeField] private Button _attackButton;
 
-    // Abonne le bouton ATK au déclenchement de l'attaque
+    // Noms possibles du bouton ATK dans la hiérarchie UI (ordre de priorité)
+    private static readonly string[] AttackButtonNames =
+        { "Btn_Attack", "AttackButton", "Button_Attack", "ATK" };
+
+    // Résout toutes les références manquantes après l'init de tous les Awake
+    private void Start()
+    {
+        if (_hero == null)
+            _hero = FindFirstObjectByType<HeroDonkeyKong>();
+
+        if (_playerMovement == null)
+            _playerMovement = FindFirstObjectByType<PlayerMovement>();
+
+        if (_attackButton == null)
+            _attackButton = FindAttackButton();
+
+        // Abonne ici car OnEnable s'exécute avant Start (bouton peut être null à ce moment)
+        if (_attackButton != null)
+            _attackButton.onClick.AddListener(TriggerAttack);
+        else
+            Debug.LogWarning(
+                "[EditorInputAdapter] Bouton ATK introuvable. " +
+                "Vérifiez que son nom correspond à : Btn_Attack, AttackButton, Button_Attack ou ATK.", this);
+    }
+
+    private void Awake() { }
+
+    // OnEnable abonne le bouton uniquement s'il était déjà assigné en Inspector avant Start
     private void OnEnable()
     {
-        // Ignore l'abonnement si aucun bouton n'est assigné dans l'inspecteur
-        if (_attackButton == null)
-        {
-            return;
-        }
-
-        // Abonne HandleAttackButtonPressed au clic du bouton ATK
-        _attackButton.onClick.AddListener(HandleAttackButtonPressed);
+        if (_attackButton != null)
+            _attackButton.onClick.AddListener(TriggerAttack);
     }
 
     // Désabonne le bouton ATK pour éviter les fuites mémoire
     private void OnDisable()
     {
-        // Retire l'abonnement si le bouton était bien assigné
         if (_attackButton != null)
-        {
-            _attackButton.onClick.RemoveListener(HandleAttackButtonPressed);
-        }
+            _attackButton.onClick.RemoveListener(TriggerAttack);
     }
 
-    /// <summary>Déclenche une attaque dans la direction du déplacement — appelé par le bouton ATK de l'UI.</summary>
-    // Lance l'attaque depuis le bouton ATK de l'interface mobile
-    public void AttackFromUI()
+    /// <summary>Déclenche une attaque dans la direction du déplacement — appelé par le bouton ATK de l'UI ou depuis l'extérieur.</summary>
+    public void AttackFromUI() => TriggerAttack();
+
+    // Lance l'attaque dans la direction de visée courante du joueur
+    private void TriggerAttack()
     {
-        // Ignore si aucun héros n'est assigné dans l'inspecteur
         if (_hero == null)
         {
+            Debug.LogWarning("[EditorInputAdapter] HeroDonkeyKong non assigné.", this);
             return;
         }
 
@@ -51,25 +71,21 @@ public class EditorInputAdapter : MonoBehaviour
             ? _playerMovement.GetFacingDirection()
             : Vector2.up;
 
-        // Lance l'attaque dans la direction du joueur
         _hero.Attack(attackDirection);
     }
 
-    // Déclenche l'attaque dans la direction de visée courante
-    private void HandleAttackButtonPressed()
+    // Cherche le bouton ATK par nom parmi tous les boutons (actifs et inactifs)
+    private static Button FindAttackButton()
     {
-        // Ignore si aucun héros n'est assigné dans l'inspecteur
-        if (_hero == null)
+        Button[] all = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (Button btn in all)
         {
-            return;
+            foreach (string candidateName in AttackButtonNames)
+            {
+                if (btn.gameObject.name == candidateName)
+                    return btn;
+            }
         }
-
-        // Récupère la direction de visée depuis le déplacement
-        Vector2 attackDirection = _playerMovement != null
-            ? _playerMovement.GetFacingDirection()
-            : Vector2.up;
-
-        // Lance l'attaque dans la direction du joueur
-        _hero.Attack(attackDirection);
+        return null;
     }
 }

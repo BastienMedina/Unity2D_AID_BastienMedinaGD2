@@ -6,11 +6,14 @@ public class GameProgress : MonoBehaviour
     // Instance singleton accessible globalement
     public static GameProgress Instance { get; private set; }
 
-    // Étage actuel du joueur entre 1 et 3
+    // Étage actuel du joueur entre 1 et 5
     public int CurrentFloor { get; private set; } = 1;
 
-    // Nombre minimum d'étages jouables
+    // Étage minimum possible dans le jeu
     private const int MinFloor = 1;
+
+    // Étage maximum possible dans le jeu
+    private const int MaxFloor = 5;
 
     // Nom de la scène Bullet Hell procédurale
     private const string SceneBulletHell = "Scene_BulletHell";
@@ -20,6 +23,9 @@ public class GameProgress : MonoBehaviour
 
     // Nom de la scène Space Invaders finale
     private const string SceneSpaceInvaders = "Scene_SpaceInvaders";
+
+    // Nom de la scène du menu principal
+    private const string SceneMainMenu = "Scene_MainMenu";
 
     // Initialise le singleton et le rend persistant entre scènes
     private void Awake()
@@ -36,11 +42,18 @@ public class GameProgress : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    /// <summary>Avance le joueur à l'étage suivant.</summary>
-    // Incrémente l'étage courant de un
+    /// <summary>Avance le joueur à l'étage suivant, plafonné à MaxFloor.</summary>
+    // Incrémente l'étage courant sans dépasser le maximum
     public void AdvanceFloor()
     {
-        CurrentFloor++;
+        CurrentFloor = Mathf.Min(CurrentFloor + 1, MaxFloor);
+    }
+
+    /// <summary>Définit directement l'étage sans incrémenter.</summary>
+    // Restaure l'étage depuis la sauvegarde sans boucler
+    public void SetFloor(int floor)
+    {
+        CurrentFloor = Mathf.Clamp(floor, MinFloor, MaxFloor);
     }
 
     /// <summary>Remet la progression à l'étage de départ.</summary>
@@ -58,8 +71,10 @@ public class GameProgress : MonoBehaviour
         {
             1 => SceneBulletHell,
             2 => SceneBulletHell,
-            3 => SceneGameAndWatch,
-            _ => SceneSpaceInvaders
+            3 => SceneBulletHell,
+            4 => SceneGameAndWatch,
+            5 => SceneSpaceInvaders,
+            _ => SceneMainMenu
         };
     }
 }

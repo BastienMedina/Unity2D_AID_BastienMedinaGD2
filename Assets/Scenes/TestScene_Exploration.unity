@@ -5974,6 +5974,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollow
   _target: {fileID: 1314862203}
   _smoothSpeed: 5
+  _deadZoneFraction: 0.3
 --- !u!20 &1096966922
 Camera:
   m_ObjectHideFlags: 0

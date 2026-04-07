@@ -34,6 +34,13 @@ public class MainMenuController : MonoBehaviour
     // Charge la save si elle existe, sinon repart à zéro
     public void OnPlayClicked()
     {
+        // Protège contre l'absence du singleton GameProgress dans la scène
+        if (GameProgress.Instance == null)
+        {
+            Debug.LogError("[MainMenuController] GameProgress.Instance est null — vérifie que GO_GameProgress est présent dans Scene_MainMenu.");
+            return;
+        }
+
         if (SaveSystem.HasSave())
         {
             // Restaure la progression existante avant de charger
@@ -54,6 +61,13 @@ public class MainMenuController : MonoBehaviour
     {
         // Ignore si aucune sauvegarde n'est disponible
         if (!SaveSystem.HasSave()) return;
+
+        // Protège contre l'absence du singleton GameProgress dans la scène
+        if (GameProgress.Instance == null)
+        {
+            Debug.LogError("[MainMenuController] GameProgress.Instance est null — vérifie que GO_GameProgress est présent dans Scene_MainMenu.");
+            return;
+        }
 
         SaveSystem.LoadGame();
 

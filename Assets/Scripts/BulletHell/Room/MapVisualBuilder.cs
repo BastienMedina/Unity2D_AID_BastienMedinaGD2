@@ -40,13 +40,11 @@ public class MapVisualBuilder : MonoBehaviour
     // Cycle de vie Unity
     // -----------------------------------------------------------------------
 
-    // Construit toutes les salles et les triggers au démarrage
+    // Construit uniquement l'Open Space — les salles secondaires sont générées procéduralement
     private void Awake()
     {
         BuildRoomOpenSpace();
-        BuildRoomOffice();
-        BuildRoomBreak();
-        BuildDoorwayTriggers();
+        HideStaticRooms();
     }
 
     // -----------------------------------------------------------------------
@@ -76,24 +74,18 @@ public class MapVisualBuilder : MonoBehaviour
         ApplyWall(roomRoot, "Wall_Bottom",
             new Vector3(20.3f, 0.3f, 1f), new Vector3(0f, -7.15f, 0f), wallColor);
 
-        // Mur gauche — couvre toute la hauteur du sol + demi-épaisseurs
+        // Mur gauche — plein sur toute la hauteur
         ApplyWall(roomRoot, "Wall_Left",
             new Vector3(0.3f, 14.3f, 1f), new Vector3(-10.15f, 0f, 0f), wallColor);
 
-        // Segment A du mur droit — du haut (y=7.15) à doorway AB (y=3.0)
-        ApplyWall(roomRoot, "Wall_Right_A",
-            new Vector3(0.3f, 4.15f, 1f), new Vector3(10.15f, 5.075f, 0f), wallColor);
+        // Mur droit — plein ; les ouvertures procédurales seront percées par ProceduralMapGenerator
+        ApplyWall(roomRoot, "Wall_Right",
+            new Vector3(0.3f, 14.3f, 1f), new Vector3(10.15f, 0f, 0f), wallColor);
 
-        // Segment B du mur droit — entre doorway AB (y=1.0) et AC (y=-4.0)
-        ApplyWall(roomRoot, "Wall_Right_B",
-            new Vector3(0.3f, 5.0f, 1f), new Vector3(10.15f, -1.5f, 0f), wallColor);
-
-        // Segment C du mur droit — de doorway AC (y=-6.0) au bas (y=-7.15)
-        ApplyWall(roomRoot, "Wall_Right_C",
-            new Vector3(0.3f, 1.15f, 1f), new Vector3(10.15f, -6.575f, 0f), wallColor);
-
-        // Désactive les anciens noms de mur droit devenus obsolètes
-        DisableObsoleteChild(roomRoot, "Wall_Right");
+        // Désactive les anciens segments de mur droit devenus obsolètes
+        DisableObsoleteChild(roomRoot, "Wall_Right_A");
+        DisableObsoleteChild(roomRoot, "Wall_Right_B");
+        DisableObsoleteChild(roomRoot, "Wall_Right_C");
         DisableObsoleteChild(roomRoot, "Wall_Right_Top");
         DisableObsoleteChild(roomRoot, "Wall_Right_Mid");
         DisableObsoleteChild(roomRoot, "Wall_Right_Bottom");
@@ -126,119 +118,21 @@ public class MapVisualBuilder : MonoBehaviour
     }
 
     // -----------------------------------------------------------------------
-    // Room B — Room_Office (haut-droit, petite)
+    // Room B/C — Salles statiques remplacées par la génération procédurale
     // -----------------------------------------------------------------------
 
-    // Construit sol, murs avec passage et bureaux du bureau
-    private void BuildRoomOffice()
+    // Désactive Room_Office et Room_Break présents dans la hiérarchie de scène
+    private void HideStaticRooms()
     {
-        // Récupère le parent de la salle Bureau dans la hiérarchie
-        Transform roomRoot = FindChild(transform, "Room_Office");
-        if (roomRoot == null)
-        {
-            Debug.LogError("[MapVisualBuilder] Room_Office introuvable sous Map.");
-            return;
-        }
-
-        // Sol 8×8, centré en (14, 5) — bord gauche à x=10, bas à y=1
-        ApplyFloor(roomRoot, "Floor_Office", floorColorOffice,
-            new Vector3(8f, 8f, 1f), new Vector3(14f, 5f, 1f), -2);
-
-        // Mur du haut de la salle Bureau — au-dessus du sol (y=9.15)
-        ApplyWall(roomRoot, "Wall_Top",
-            new Vector3(8.3f, 0.3f, 1f), new Vector3(14f, 9.15f, 0f), wallColor);
-
-        // Mur droit de la salle Bureau — plein, de y=1 à y=9
-        ApplyWall(roomRoot, "Wall_Right",
-            new Vector3(0.3f, 8.3f, 1f), new Vector3(18.15f, 5f, 0f), wallColor);
-
-        // Mur du bas de la salle Bureau — en-dessous du sol (y=0.85)
-        ApplyWall(roomRoot, "Wall_Bottom",
-            new Vector3(8.3f, 0.3f, 1f), new Vector3(14f, 0.85f, 0f), wallColor);
-
-        // Mur gauche haut — de y=3.0 (doorway AB top) à y=9.0 (top edge)
-        ApplyWall(roomRoot, "Wall_Left_Top",
-            new Vector3(0.3f, 6.0f, 1f), new Vector3(10.15f, 6.0f, 0f), wallColor);
-
-        // Désactive l'ancien segment bas gauche (bord = doorway AB bas)
-        DisableObsoleteChild(roomRoot, "Wall_Left_Bottom");
-
-        // Échelle des bureaux de la salle Bureau
-        Vector3 deskScale = new Vector3(deskSize.x, deskSize.y, 1f);
-
-        // Bureau 1 de la salle Bureau (coin haut)
-        ApplyDesk(roomRoot, "Desk_01", deskColor, deskScale, new Vector3(13f, 7f, 0f));
-
-        // Bureau 2 de la salle Bureau (coin bas)
-        ApplyDesk(roomRoot, "Desk_02", deskColor, deskScale, new Vector3(15f, 5f, 0f));
+        HideChildIfExists("Room_Office");
+        HideChildIfExists("Room_Break");
     }
 
-    // -----------------------------------------------------------------------
-    // Room C — Room_Break (bas-droit, petite)
-    // -----------------------------------------------------------------------
-
-    // Construit sol, murs avec passage et casier de la salle Pause
-    private void BuildRoomBreak()
+    // Désactive un enfant direct du Map par nom s'il existe
+    private void HideChildIfExists(string goName)
     {
-        // Récupère le parent de la salle de pause dans la hiérarchie
-        Transform roomRoot = FindChild(transform, "Room_Break");
-        if (roomRoot == null)
-        {
-            Debug.LogError("[MapVisualBuilder] Room_Break introuvable sous Map.");
-            return;
-        }
-
-        // Sol 8×6, centré en (14, -5) — bord gauche à x=10, top à y=-2
-        ApplyFloor(roomRoot, "Floor_Break", floorColorBreak,
-            new Vector3(8f, 6f, 1f), new Vector3(14f, -5f, 1f), -2);
-
-        // Mur du haut de la salle Pause — au-dessus du sol (y=-1.85)
-        ApplyWall(roomRoot, "Wall_Top",
-            new Vector3(8.3f, 0.3f, 1f), new Vector3(14f, -1.85f, 0f), wallColor);
-
-        // Mur droit de la salle Pause — plein, de y=-2 à y=-8
-        ApplyWall(roomRoot, "Wall_Right",
-            new Vector3(0.3f, 6.3f, 1f), new Vector3(18.15f, -5f, 0f), wallColor);
-
-        // Mur du bas de la salle Pause — en-dessous du sol (y=-8.15)
-        ApplyWall(roomRoot, "Wall_Bottom",
-            new Vector3(8.3f, 0.3f, 1f), new Vector3(14f, -8.15f, 0f), wallColor);
-
-        // Mur gauche haut — de y=-2.0 (top) à y=-4.0 (doorway AC top)
-        ApplyWall(roomRoot, "Wall_Left_Top",
-            new Vector3(0.3f, 2.0f, 1f), new Vector3(10.15f, -3.0f, 0f), wallColor);
-
-        // Mur gauche bas — de y=-6.0 (doorway AC bottom) à y=-8.0 (bottom)
-        ApplyWall(roomRoot, "Wall_Left_Bottom",
-            new Vector3(0.3f, 2.0f, 1f), new Vector3(10.15f, -7.0f, 0f), wallColor);
-
-        // Casier unique de la salle Pause
-        ApplyDesk(roomRoot, "Locker_01", lockerColor,
-            new Vector3(0.8f, 1.8f, 1f), new Vector3(16f, -5f, 0f));
-    }
-
-    // -----------------------------------------------------------------------
-    // Triggers de passage entre les salles
-    // -----------------------------------------------------------------------
-
-    // Crée les deux triggers de porte entre les salles connectées
-    private void BuildDoorwayTriggers()
-    {
-        // Récupère la racine de Room_OpenSpace pour y parenter les triggers
-        Transform roomRoot = FindChild(transform, "Room_OpenSpace");
-        if (roomRoot == null) return;
-
-        // Trigger AB — centre du passage vers Room_Office, x=10.15, y=2.0
-        ApplyTrigger(roomRoot, "Trigger_AB",
-            new Vector3(0.5f, 2f, 1f), new Vector3(10.15f, 2.0f, 0f));
-
-        // Trigger AC — centre du passage vers Room_Break, x=10.15, y=-5.0
-        ApplyTrigger(roomRoot, "Trigger_AC",
-            new Vector3(0.5f, 2f, 1f), new Vector3(10.15f, -5.0f, 0f));
-
-        // Désactive les anciens Doorway devenus obsolètes
-        DisableObsoleteChild(roomRoot, "Doorway_AB");
-        DisableObsoleteChild(roomRoot, "Doorway_AC");
+        Transform t = FindChild(transform, goName);
+        if (t != null) t.gameObject.SetActive(false);
     }
 
     // -----------------------------------------------------------------------

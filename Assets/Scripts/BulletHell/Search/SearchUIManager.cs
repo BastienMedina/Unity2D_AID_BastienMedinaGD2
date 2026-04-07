@@ -6,6 +6,14 @@ using UnityEngine.UI;
 public class SearchUIManager : MonoBehaviour
 {
     // -------------------------------------------------------------------------
+    // Noms des GameObjects UI à résoudre automatiquement
+    // -------------------------------------------------------------------------
+
+    private const string SearchButtonGOName   = "Button_Search";
+    private const string ProgressBarGOName    = "SearchProgressBar_Root";
+    private const string SearchLabelName      = "Label";
+
+    // -------------------------------------------------------------------------
     // Références UI configurables
     // -------------------------------------------------------------------------
 
@@ -35,36 +43,137 @@ public class SearchUIManager : MonoBehaviour
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
-    // Masque le bouton et abonne le bouton au clic au démarrage.
+    // Résout les références manquantes puis masque le bouton au démarrage.
     private void Awake()
     {
-        // Masque le bouton de fouille dès l'initialisation.
-        HideSearchButton();
-
-        // Masque la barre de progression dès l'initialisation.
-        HideProgressBar();
-
-        // Vérifie que la référence au bouton est bien assignée.
         if (_searchButton == null)
         {
-            Debug.LogWarning("[SearchUIManager] _searchButton non assigné.", this);
+            Debug.LogWarning("[SearchUIManager] _searchButton non trouvé.", this);
             return;
         }
 
-        // Abonne la méthode de clic à l'événement OnClick du bouton.
         _searchButton.onClick.AddListener(OnSearchButtonClicked);
+    }
+
+    // Résolution différée dans Start — tous les Awake de la scène sont terminés.
+    private void Start()
+    {
+        ResolveReferences();
+        HideSearchButton();
+        HideProgressBar();
+
+        // Second abonnement si le bouton n'était pas encore prêt dans Awake
+        if (_searchButton != null && !_searchButton.onClick.GetPersistentEventCount().Equals(0))
+            return;
+        if (_searchButton != null)
+            _searchButton.onClick.AddListener(OnSearchButtonClicked);
     }
 
     // Désabonne le clic bouton quand ce composant est détruit.
     private void OnDestroy()
     {
-        // Retire l'abonnement au clic pour éviter des fuites.
         if (_searchButton != null)
             _searchButton.onClick.RemoveListener(OnSearchButtonClicked);
 
-        // Retire les abonnements encore actifs sur la cible courante.
         if (_currentTarget != null)
             UnsubscribeFromTarget(_currentTarget);
+    }
+
+    // -------------------------------------------------------------------------
+    // Résolution automatique des références UI
+    // -------------------------------------------------------------------------
+
+    // Cherche les éléments UI dans toute la scène si non assignés en Inspector
+    private void ResolveReferences()
+    {
+        if (_searchButtonGO == null)
+            _searchButtonGO = FindUIGameObject(SearchButtonGOName);
+
+        if (_searchButton == null && _searchButtonGO != null)
+            _searchButton = _searchButtonGO.GetComponentInChildren<Button>(true);
+
+        // Fallback direct par type si la recherche par nom a échoué
+        if (_searchButton == null)
+        {
+            Button[] all = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (Button b in all)
+            {
+                if (b.gameObject.name == SearchButtonGOName)
+                {
+                    _searchButton   = b;
+                    _searchButtonGO = b.gameObject;
+                    break;
+                }
+            }
+        }
+
+        if (_searchProgressBarGO == null)
+            _searchProgressBarGO = FindUIGameObject(ProgressBarGOName);
+
+        // Cherche SearchBar_Fill spécifiquement pour éviter de prendre le fond
+        if (_searchProgressBar == null && _searchProgressBarGO != null)
+        {
+            Transform fillTransform = _searchProgressBarGO.transform.Find("SearchBar_Fill");
+            if (fillTransform != null)
+                _searchProgressBar = fillTransform.GetComponent<Image>();
+
+            // Fallback : premier Image avec type Filled
+            if (_searchProgressBar == null)
+            {
+                Image[] images = _searchProgressBarGO.GetComponentsInChildren<Image>(true);
+                foreach (Image img in images)
+                {
+                    if (img.type == Image.Type.Filled)
+                    {
+                        _searchProgressBar = img;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Cherche SearchBar_Label dans le progress bar (nom non ambigu)
+        if (_searchLabel == null && _searchProgressBarGO != null)
+        {
+            Transform labelT = _searchProgressBarGO.transform.Find("SearchBar_Label");
+            if (labelT != null)
+                _searchLabel = labelT.GetComponent<TextMeshProUGUI>();
+        }
+
+        // Fallback : label du bouton lui-même
+        if (_searchLabel == null && _searchButtonGO != null)
+        {
+            Transform labelT = _searchButtonGO.transform.Find("Label");
+            if (labelT != null)
+                _searchLabel = labelT.GetComponent<TextMeshProUGUI>();
+        }
+    }
+
+    // Cherche un GameObject par nom dans toute la scène chargée (actif ou inactif)
+    private static GameObject FindUIGameObject(string goName)
+    {
+        // GetRootGameObjects ne retourne que les instances de scène, pas les assets
+        UnityEngine.SceneManagement.Scene active =
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+
+        foreach (GameObject root in active.GetRootGameObjects())
+        {
+            GameObject found = FindInHierarchy(root, goName);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
+    // Cherche récursivement un GO par nom dans toute la hiérarchie d'un racine
+    private static GameObject FindInHierarchy(GameObject root, string goName)
+    {
+        if (root.name == goName) return root;
+        foreach (Transform child in root.transform)
+        {
+            GameObject found = FindInHierarchy(child.gameObject, goName);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     // -------------------------------------------------------------------------
@@ -110,10 +219,10 @@ public class SearchUIManager : MonoBehaviour
         _currentTarget = null;
 
         // Cache le bouton si le joueur s'éloigne.
-        _searchButtonGO.SetActive(false);
+        HideSearchButton();
 
         // Cache aussi la barre si fouille annulée.
-        _searchProgressBarGO.SetActive(false);
+        HideProgressBar();
 
         // Réinitialise la barre à zéro.
         if (_searchProgressBar != null)
@@ -124,13 +233,15 @@ public class SearchUIManager : MonoBehaviour
     public void OnSearchStarted()
     {
         // Masque le bouton de fouille immédiatement.
-        _searchButtonGO.SetActive(false);
+        HideSearchButton();
 
         // Affiche la barre de progression en bas.
-        _searchProgressBarGO.SetActive(true);
+        if (_searchProgressBarGO != null)
+            _searchProgressBarGO.SetActive(true);
 
         // Réinitialise la barre à zéro au démarrage.
-        _searchProgressBar.fillAmount = 0f;
+        if (_searchProgressBar != null)
+            _searchProgressBar.fillAmount = 0f;
     }
 
     // -------------------------------------------------------------------------
@@ -152,7 +263,7 @@ public class SearchUIManager : MonoBehaviour
     private void HandleSearchComplete()
     {
         // Cache la barre de progression à la fin.
-        _searchProgressBarGO.SetActive(false);
+        HideProgressBar();
     }
 
     // Transmet l'ordre de fouille à la cible courante si disponible.
