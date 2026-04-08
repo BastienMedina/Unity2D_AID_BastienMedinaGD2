@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Patrouille, détecte le joueur, fonce dessus et se repose
-public class EnemyCharger : EnemyBase
+public class EnemyCharger : EnemyBase, IEnemyInjectable
 {
     // Énumère les quatre états possibles de l'ennemi chargeur
     private enum State { Patrol, Chase, Charge, Cooldown }
@@ -41,6 +41,13 @@ public class EnemyCharger : EnemyBase
 
     // Timer décroissant pendant la phase de cooldown post-charge
     private float _cooldownTimer = 0f;
+
+    /// <summary>Injecte playerTransform et livesManager après un Instantiate runtime.</summary>
+    public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
+    {
+        _playerTransform = playerTransform;
+        _livesManager    = livesManager;
+    }
 
     // Initialise la référence de base et vérifie les dépendances
     protected override void Awake()
@@ -194,8 +201,11 @@ public class EnemyCharger : EnemyBase
         // Inflige des dégâts au joueur si le collider est bien le sien
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Appelle le gestionnaire de vies pour retirer une vie
-            _livesManager.TakeDamage();
+            // Ignore si le gestionnaire de vies n'est pas injecté
+            if (_livesManager != null)
+            {
+                _livesManager.TakeDamage();
+            }
 
             // Réarme le timer de cooldown après une charge réussie
             _cooldownTimer = _chargeCooldown;

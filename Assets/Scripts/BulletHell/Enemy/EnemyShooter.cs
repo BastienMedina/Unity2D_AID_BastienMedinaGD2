@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Détecte le joueur, maintient une distance et tire des projectiles
-public class EnemyShooter : EnemyBase
+public class EnemyShooter : EnemyBase, IEnemyInjectable
 {
     // Énumère les quatre états du tireur à distance
     private enum State { Idle, Aim, Shoot, Retreat }
@@ -47,6 +47,14 @@ public class EnemyShooter : EnemyBase
 
     // Timer décroissant entre deux tirs successifs
     private float _shootCooldownTimer = 0f;
+
+    /// <summary>Injecte playerTransform, livesManager et lootSystem après un Instantiate runtime.</summary>
+    public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
+    {
+        _playerTransform = playerTransform;
+        _livesManager    = livesManager;
+        _lootSystem      = lootSystem;
+    }
 
     // Initialise la santé et démarre la vérification périodique
     protected override void Awake()
@@ -216,6 +224,6 @@ public class EnemyShooter : EnemyBase
         gameObject.SetActive(false);
 
         // Demande au système de butin de spawner le loot à cet endroit
-        _lootSystem.SpawnLoot(transform.position);
+        _lootSystem?.SpawnLoot(transform.position);
     }
 }

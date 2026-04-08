@@ -16,6 +16,18 @@ public class LootDropper : MonoBehaviour
     // Déclenché après chaque drop traité par ce composant.
     public UnityEvent OnLootDropped = new UnityEvent();
 
+    /// <summary>Assigne l'InventoryManager depuis l'extérieur (câblage runtime).</summary>
+    public void SetInventoryManager(InventoryManager inventoryManager)
+    {
+        _inventoryManager = inventoryManager;
+    }
+
+    /// <summary>Assigne la LootTable depuis l'extérieur (câblage runtime).</summary>
+    public void SetLootTable(LootTable lootTable)
+    {
+        _lootTable = lootTable;
+    }
+
     // Tente de donner un objet au joueur via l'inventaire.
     public void DropLoot(Vector2 position)
     {

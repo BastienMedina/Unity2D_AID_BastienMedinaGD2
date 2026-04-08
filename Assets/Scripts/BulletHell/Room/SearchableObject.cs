@@ -182,6 +182,12 @@ public class SearchableObject : MonoBehaviour
         _objectLabel = label;
     }
 
+    /// <summary>Assigne le LootDropper depuis l'extérieur (câblage runtime).</summary>
+    public void SetLootDropper(LootDropper lootDropper)
+    {
+        _lootDropper = lootDropper;
+    }
+
     // -------------------------------------------------------------------------
     // Vérification de proximité
     // -------------------------------------------------------------------------

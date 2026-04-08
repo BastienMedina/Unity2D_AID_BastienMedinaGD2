@@ -19,7 +19,7 @@ public class LivesDisplay : MonoBehaviour
     // -------------------------------------------------------------------------
 
     // Préfixe affiché devant le nombre de vies courant.
-    private const string LivesPrefix = "❤ ";
+    private const string LivesPrefix = "VIE ";
 
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
@@ -28,10 +28,14 @@ public class LivesDisplay : MonoBehaviour
     // Affiche immédiatement les vies courantes au réveil.
     private void Awake()
     {
-        // Journalise un avertissement si la référence est absente.
+        // Cherche le LivesManager dans la scène si non assigné en Inspector.
+        if (_livesManager == null)
+            _livesManager = FindFirstObjectByType<LivesManager>();
+
+        // Journalise un avertissement si la référence reste absente.
         if (_livesManager == null)
         {
-            Debug.LogWarning("[LivesDisplay] Référence LivesManager non assignée.", this);
+            Debug.LogWarning("[LivesDisplay] LivesManager introuvable dans la scène.", this);
             return;
         }
 

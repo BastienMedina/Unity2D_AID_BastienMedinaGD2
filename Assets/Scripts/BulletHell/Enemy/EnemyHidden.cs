@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // Reste caché, se révèle à proximité du joueur, puis charge
-public class EnemyHidden : EnemyBase
+public class EnemyHidden : EnemyBase, IEnemyInjectable
 {
     // Énumère les trois états du cycle de vie de l'ennemi caché
     private enum State { Hidden, Revealing, Active }
@@ -33,6 +33,19 @@ public class EnemyHidden : EnemyBase
     // État courant dans le cycle Hidden → Revealing → Active
     private State _currentState = State.Hidden;
 
+    /// <summary>Injecte playerTransform et lootSystem après un Instantiate runtime.</summary>
+    public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
+    {
+        _playerTransform = playerTransform;
+        _lootSystem      = lootSystem;
+
+        // Transmet également les dépendances au chargeur interne
+        if (_charger != null)
+        {
+            _charger.InjectDependencies(playerTransform, livesManager, lootSystem);
+        }
+    }
+
     // Initialise les visuels et démarre la vérification de proximité
     protected override void Awake()
     {
@@ -40,11 +53,11 @@ public class EnemyHidden : EnemyBase
         base.Awake();
 
         // Affiche la cachette et masque l'ennemi au démarrage
-        _hiddenVisual.SetActive(true);
-        _enemyVisual.SetActive(false);
+        if (_hiddenVisual != null) _hiddenVisual.SetActive(true);
+        if (_enemyVisual  != null) _enemyVisual.SetActive(false);
 
         // Désactive le chargeur jusqu'à la fin de la révélation
-        _charger.enabled = false;
+        if (_charger != null) _charger.enabled = false;
 
         // Lance la vérification périodique de la proximité joueur
         InvokeRepeating(nameof(CheckPlayerProximity), 0f, _proximityCheckInterval);
@@ -104,12 +117,12 @@ public class EnemyHidden : EnemyBase
         CancelInvoke();
 
         // Désactive le chargeur pour stopper tout mouvement résiduel
-        _charger.enabled = false;
+        if (_charger != null) _charger.enabled = false;
 
         // Cache le visuel de l'ennemi mort
-        _enemyVisual.SetActive(false);
+        if (_enemyVisual != null) _enemyVisual.SetActive(false);
 
         // Demande au système de butin de générer le loot à la position
-        _lootSystem.SpawnLoot(transform.position);
+        _lootSystem?.SpawnLoot(transform.position);
     }
 }

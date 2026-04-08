@@ -1,6 +1,7 @@
 using UnityEngine;
 
 // Génère la disposition de l'étage procéduralement au chargement
+[DefaultExecutionOrder(10)]
 public class ProceduralMapGenerator : MonoBehaviour
 {
     // -------------------------------------------------------------------------
@@ -102,6 +103,15 @@ public class ProceduralMapGenerator : MonoBehaviour
     // Référence au gestionnaire d'UI de fouille pour câbler les SearchableObject
     [SerializeField] private SearchUIManager _searchUIManager;
 
+    // Table de loot par défaut assignée à chaque SearchableObject spawné en runtime
+    [SerializeField] private LootTable _defaultLootTable;
+
+    // Référence à l'InventoryManager de la scène pour câbler les LootDropper spawned
+    private InventoryManager _inventoryManager;
+
+    // Référence au LootSystem de la scène pour l'injecter dans les ennemis spawned
+    private LootSystem _lootSystem;
+
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
@@ -109,19 +119,46 @@ public class ProceduralMapGenerator : MonoBehaviour
     // Référence vers le GO Map qui contient MapVisualBuilder et Room_OpenSpace
     [SerializeField] private Transform _mapRoot;
 
-    // Génère la carte complète dès le chargement de la scène
-    private void Awake()
+    // Génère la carte complète après que tous les Awake() de la scène sont terminés.
+    private void Start()
     {
-        // Cherche Map dans la scène si non assigné en Inspector
+        Debug.Log("[ProceduralMapGenerator] Start() appelé.");
+
+        // Cherche Map dans la scène si non assigné en Inspector.
         if (_mapRoot == null)
         {
             GameObject mapGO = GameObject.Find("Map");
-            if (mapGO != null) _mapRoot = mapGO.transform;
+            if (mapGO != null)
+            {
+                _mapRoot = mapGO.transform;
+                Debug.Log("[ProceduralMapGenerator] _mapRoot trouvé : " + _mapRoot.name);
+            }
+            else
+            {
+                Debug.LogError("[ProceduralMapGenerator] GameObject 'Map' introuvable dans la scène !");
+            }
         }
 
-        // Cherche le SearchUIManager dans la scène si non assigné en Inspector
+        // Cherche le SearchUIManager dans la scène si non assigné en Inspector.
+        // Appelé dans Start (et non Awake) pour garantir que tous les Awake()
+        // sont terminés et que SearchUIManager est bien initialisé.
         if (_searchUIManager == null)
             _searchUIManager = FindFirstObjectByType<SearchUIManager>();
+
+        if (_searchUIManager == null)
+            Debug.LogWarning("[ProceduralMapGenerator] SearchUIManager introuvable — les objets fouillables ne seront pas câblés.", this);
+
+        // Cherche l'InventoryManager pour le câbler aux LootDropper spawned.
+        _inventoryManager = FindFirstObjectByType<InventoryManager>();
+
+        if (_inventoryManager == null)
+            Debug.LogWarning("[ProceduralMapGenerator] InventoryManager introuvable — le loot ne sera pas ajouté à l'inventaire.", this);
+
+        // Cherche le LootSystem pour l'injecter dans les ennemis spawned.
+        _lootSystem = FindFirstObjectByType<LootSystem>();
+
+        if (_lootSystem == null)
+            Debug.LogWarning("[ProceduralMapGenerator] LootSystem introuvable — le loot ennemi ne sera pas spawné.", this);
 
         GenerateFloor();
     }
@@ -132,6 +169,18 @@ public class ProceduralMapGenerator : MonoBehaviour
 
     // Orchestre la génération de toutes les salles et ennemis
     private void GenerateFloor()
+    {
+        try
+        {
+            GenerateFloorInternal();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ProceduralMapGenerator] Exception dans GenerateFloor : {e}", this);
+        }
+    }
+
+    private void GenerateFloorInternal()
     {
         // Tire deux types de salles distincts sans doublons
         RoomType room1Type = (RoomType)Random.Range(0, 4);
@@ -389,28 +438,51 @@ public class ProceduralMapGenerator : MonoBehaviour
 
     // Calcule le nombre d'ennemis selon l'étage actuel
     private int GetEnemyCount()
-        => _baseEnemyCount + (GameProgress.Instance.CurrentFloor - 1) * 2;
+    {
+        int floor = GameProgress.Instance != null ? GameProgress.Instance.CurrentFloor : 1;
+        return _baseEnemyCount + (floor - 1) * 2;
+    }
 
     // Instancie les ennemis aléatoirement dans les bornes de l'Open Space
     private void SpawnEnemies()
     {
-        if (_enemyPrefabs == null || _enemyPrefabs.Length == 0) return;
+        if (_enemyPrefabs == null || _enemyPrefabs.Length == 0)
+        {
+            Debug.LogWarning("[SpawnEnemies] _enemyPrefabs est null ou vide — aucun ennemi spawné.", this);
+            return;
+        }
 
-        int count      = GetEnemyCount();
-        float halfW    = _openSpaceWidth  * 0.5f - 1f;
-        float halfH    = _openSpaceHeight * 0.5f - 1f;
+        int count   = GetEnemyCount();
+        float halfW = _openSpaceWidth  * 0.5f - 1f;
+        float halfH = _openSpaceHeight * 0.5f - 1f;
 
-        // Cherche le joueur pour éviter de spawner sur sa position
+        Debug.Log($"[SpawnEnemies] Tentative de spawn de {count} ennemis dans bounds ±{halfW} x ±{halfH}");
+
+        // Cherche le joueur pour l'injection de dépendances et pour éviter de spawner sur sa position
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        Vector2 playerPos = player != null
-            ? (Vector2)player.transform.position
+        Transform playerTransform = player != null ? player.transform : null;
+        Vector2 playerPos = playerTransform != null
+            ? (Vector2)playerTransform.position
             : new Vector2(float.MaxValue, float.MaxValue);
+
+        // Cherche le LivesManager pour l'injection dans les ennemis
+        LivesManager livesManager = FindFirstObjectByType<LivesManager>();
+
+        if (playerTransform == null)
+            Debug.LogWarning("[SpawnEnemies] Joueur introuvable — les ennemis seront inertes.", this);
+
+        if (livesManager == null)
+            Debug.LogWarning("[SpawnEnemies] LivesManager introuvable — les ennemis ne pourront pas infliger de dégâts.", this);
 
         for (int i = 0; i < count; i++)
         {
             // Choisit un prefab ennemi aléatoire dans le tableau
             GameObject prefab = _enemyPrefabs[Random.Range(0, _enemyPrefabs.Length)];
-            if (prefab == null) continue;
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[SpawnEnemies] prefab null à l'index {i} — ignoré.", this);
+                continue;
+            }
 
             // Cherche une position qui ne chevauche pas le joueur
             Vector3 spawnPos;
@@ -425,7 +497,27 @@ public class ProceduralMapGenerator : MonoBehaviour
             }
             while (Vector2.Distance(spawnPos, playerPos) < 2f && maxAttempts > 0);
 
-            Instantiate(prefab, spawnPos, Quaternion.identity);
+            Debug.Log($"[SpawnEnemies] Spawn {prefab.name} à {spawnPos}");
+            GameObject enemyGO = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+            // Injecte les dépendances runtime dans l'ennemi instancié
+            IEnemyInjectable injectable = enemyGO.GetComponent<IEnemyInjectable>();
+            if (injectable != null)
+            {
+                injectable.InjectDependencies(playerTransform, livesManager, _lootSystem);
+            }
+            else
+            {
+                Debug.LogWarning($"[SpawnEnemies] {prefab.name} n'implémente pas IEnemyInjectable — dépendances non injectées.", this);
+            }
+
+            // Applique les visuels selon le type d'ennemi instancié
+            if (enemyGO.GetComponent<EnemyHidden>() != null)
+                EnemyVisualBuilder.ApplyHiddenVisual(enemyGO);
+            else if (enemyGO.GetComponent<EnemyShooter>() != null)
+                EnemyVisualBuilder.ApplyShooterVisual(enemyGO);
+            else if (enemyGO.GetComponent<EnemyCharger>() != null)
+                EnemyVisualBuilder.ApplyChargerVisual(enemyGO);
         }
     }
 
@@ -713,6 +805,12 @@ public class ProceduralMapGenerator : MonoBehaviour
             SearchableObject searchable = prop.AddComponent<SearchableObject>();
             string label = string.IsNullOrEmpty(searchLabel) ? goName : searchLabel;
             searchable.SetLabel(label);
+
+            // Ajoute un LootDropper et le câble à l'InventoryManager et à la LootTable par défaut.
+            LootDropper dropper = prop.AddComponent<LootDropper>();
+            dropper.SetInventoryManager(_inventoryManager);
+            dropper.SetLootTable(_defaultLootTable);
+            searchable.SetLootDropper(dropper);
 
             searchable.OnPlayerEnterRange.AddListener(_searchUIManager.OnPlayerEnterRange);
             searchable.OnPlayerExitRange.AddListener(_searchUIManager.OnPlayerExitRange);

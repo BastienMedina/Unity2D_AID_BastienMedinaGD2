@@ -967,6 +967,7 @@ MonoBehaviour:
   _baseEnemyCount: 3
   _searchableObjectPrefab: {fileID: 8117251261067611453, guid: 3f86c697b6020ce429b9ba1cf52bdf4c, type: 3}
   _searchUIManager: {fileID: 0}
+  _defaultLootTable: {fileID: 11400000, guid: 01041dec3376e1a4f9f6700f0ea19ab0, type: 2}
   _mapRoot: {fileID: 0}
 --- !u!4 &1482418675
 Transform:

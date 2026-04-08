@@ -46,13 +46,7 @@ public class SearchUIManager : MonoBehaviour
     // Résout les références manquantes puis masque le bouton au démarrage.
     private void Awake()
     {
-        if (_searchButton == null)
-        {
-            Debug.LogWarning("[SearchUIManager] _searchButton non trouvé.", this);
-            return;
-        }
-
-        _searchButton.onClick.AddListener(OnSearchButtonClicked);
+        // L'abonnement au clic est différé dans Start après ResolveReferences().
     }
 
     // Résolution différée dans Start — tous les Awake de la scène sont terminés.
@@ -62,11 +56,10 @@ public class SearchUIManager : MonoBehaviour
         HideSearchButton();
         HideProgressBar();
 
-        // Second abonnement si le bouton n'était pas encore prêt dans Awake
-        if (_searchButton != null && !_searchButton.onClick.GetPersistentEventCount().Equals(0))
-            return;
         if (_searchButton != null)
             _searchButton.onClick.AddListener(OnSearchButtonClicked);
+        else
+            Debug.LogWarning("[SearchUIManager] Button_Search introuvable dans la scène.", this);
     }
 
     // Désabonne le clic bouton quand ce composant est détruit.

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 // Représente un objet stockable dans l'inventaire du joueur.
 [System.Serializable]
@@ -79,7 +81,7 @@ public class InventoryManager : MonoBehaviour
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
-    // Alloue le tableau de slots selon la capacité configurée.
+    // Alloue le tableau de slots selon la capacité configurée, puis restaure l'inventaire persisté.
     private void Awake()
     {
         // Initialise le tableau avec la capacité définie en Inspector.
@@ -89,6 +91,52 @@ public class InventoryManager : MonoBehaviour
         if (_livesManager == null)
         {
             Debug.LogWarning("[InventoryManager] _livesManager non assigné.", this);
+        }
+
+        // Restaure l'inventaire sauvegardé par GameProgress si disponible.
+        RestoreFromGameProgress();
+    }
+
+    // S'abonne à l'événement de déchargement de scène pour sauvegarder avant la transition.
+    private void OnEnable()
+    {
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+    }
+
+    // Se désabonne pour éviter les appels fantômes.
+    private void OnDisable()
+    {
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+    }
+
+    // Sauvegarde l'inventaire courant dans GameProgress juste avant que la scène soit déchargée.
+    private void OnSceneUnloaded(Scene scene)
+    {
+        if (GameProgress.Instance == null)
+            return;
+
+        GameProgress.Instance.SaveInventory(_slots);
+        Debug.Log("[InventoryManager] Inventaire sauvegardé dans GameProgress avant déchargement de scène.");
+    }
+
+    // Recharge les items persistés depuis GameProgress dans les slots locaux.
+    private void RestoreFromGameProgress()
+    {
+        if (GameProgress.Instance == null || !GameProgress.Instance.HasPersistedInventory())
+            return;
+
+        List<InventoryItem> persisted = GameProgress.Instance.PopInventory();
+
+        // Copie chaque item dans le slot correspondant, en respectant la capacité locale.
+        for (int i = 0; i < persisted.Count && i < _slots.Length; i++)
+        {
+            _slots[i] = persisted[i];
+
+            if (_slots[i] != null)
+            {
+                OnItemAdded.Invoke(i);
+                Debug.Log($"[InventoryManager] Slot {i} restauré : {_slots[i].Name}");
+            }
         }
     }
 
