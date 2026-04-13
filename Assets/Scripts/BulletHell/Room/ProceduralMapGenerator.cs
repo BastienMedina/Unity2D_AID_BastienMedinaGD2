@@ -70,19 +70,19 @@ public class ProceduralMapGenerator : MonoBehaviour
     // -------------------------------------------------------------------------
 
     // Couleur bleu clair pour la salle Toilettes
-    [SerializeField] private Color _colorToilettes = new Color(0.6f, 0.8f, 1.0f);
+    [SerializeField] private Color _colorToilettes = new Color(0f, 0f, 0f, 1f);
 
     // Couleur vert clair pour la salle de Réunion
-    [SerializeField] private Color _colorSalleReunion = new Color(0.8f, 0.9f, 0.6f);
+    [SerializeField] private Color _colorSalleReunion = new Color(0f, 0f, 0f, 1f);
 
     // Couleur orange clair pour le Vestiaire
-    [SerializeField] private Color _colorVestiaire = new Color(1.0f, 0.85f, 0.6f);
+    [SerializeField] private Color _colorVestiaire = new Color(0f, 0f, 0f, 1f);
 
     // Couleur violet clair pour la salle de Repos
-    [SerializeField] private Color _colorSalleRepos = new Color(0.9f, 0.7f, 0.9f);
+    [SerializeField] private Color _colorSalleRepos = new Color(0f, 0f, 0f, 1f);
 
     // Couleur gris foncé pour la salle ascenseur
-    [SerializeField] private Color _colorElevator = new Color(0.3f, 0.3f, 0.3f);
+    [SerializeField] private Color _colorElevator = new Color(0f, 0f, 0f, 1f);
 
     // Couleur blanche partagée par tous les murs générés
     [SerializeField] private Color _wallColor = Color.white;
@@ -106,6 +106,37 @@ public class ProceduralMapGenerator : MonoBehaviour
     // Table de loot par défaut assignée à chaque SearchableObject spawné en runtime
     [SerializeField] private LootTable _defaultLootTable;
 
+    // Bibliothèque de prefabs de props d'environnement — optionnelle, fallback couleur si non assignée
+    [SerializeField] private PropLibrary _propLibrary;
+
+    // Prefab EnemyHidden instancié depuis les bureaux infestés
+    [SerializeField] private GameObject _enemyHiddenPrefab;
+
+    // Probabilité (0-1) qu'un bureau fouillable soit infesté par un EnemyHidden
+    [SerializeField] [Range(0f, 1f)] private float _infestedChance = 0.25f;
+
+    // -------------------------------------------------------------------------
+    // Paramètres de génération procédurale de l'Open Space
+    // -------------------------------------------------------------------------
+
+    // Nombre de bureaux à placer dans l'Open Space
+    [SerializeField] private int _deskCount = 6;
+
+    // Nombre de plantes décoratives dans l'Open Space
+    [SerializeField] private int _plantCount = 3;
+
+    // Couleur de fallback pour les bureaux de l'Open Space
+    [SerializeField] private Color _deskColor = new Color(0.33f, 0.33f, 0.33f, 1f);
+
+    // Couleur de fallback pour les plantes de l'Open Space
+    [SerializeField] private Color _plantColor = new Color(0.2f, 0.6f, 0.2f, 1f);
+
+    // Marge par rapport aux bords de l'Open Space (évite les overlaps avec les murs)
+    [SerializeField] private float _openSpaceMargin = 1.5f;
+
+    // Espacement minimal entre deux props de l'Open Space
+    [SerializeField] private float _minPropSpacing = 2.0f;
+
     // Référence à l'InventoryManager de la scène pour câbler les LootDropper spawned
     private InventoryManager _inventoryManager;
 
@@ -122,21 +153,14 @@ public class ProceduralMapGenerator : MonoBehaviour
     // Génère la carte complète après que tous les Awake() de la scène sont terminés.
     private void Start()
     {
-        Debug.Log("[ProceduralMapGenerator] Start() appelé.");
-
         // Cherche Map dans la scène si non assigné en Inspector.
         if (_mapRoot == null)
         {
             GameObject mapGO = GameObject.Find("Map");
             if (mapGO != null)
-            {
                 _mapRoot = mapGO.transform;
-                Debug.Log("[ProceduralMapGenerator] _mapRoot trouvé : " + _mapRoot.name);
-            }
             else
-            {
                 Debug.LogError("[ProceduralMapGenerator] GameObject 'Map' introuvable dans la scène !");
-            }
         }
 
         // Cherche le SearchUIManager dans la scène si non assigné en Inspector.
@@ -145,20 +169,11 @@ public class ProceduralMapGenerator : MonoBehaviour
         if (_searchUIManager == null)
             _searchUIManager = FindFirstObjectByType<SearchUIManager>();
 
-        if (_searchUIManager == null)
-            Debug.LogWarning("[ProceduralMapGenerator] SearchUIManager introuvable — les objets fouillables ne seront pas câblés.", this);
-
         // Cherche l'InventoryManager pour le câbler aux LootDropper spawned.
         _inventoryManager = FindFirstObjectByType<InventoryManager>();
 
-        if (_inventoryManager == null)
-            Debug.LogWarning("[ProceduralMapGenerator] InventoryManager introuvable — le loot ne sera pas ajouté à l'inventaire.", this);
-
         // Cherche le LootSystem pour l'injecter dans les ennemis spawned.
         _lootSystem = FindFirstObjectByType<LootSystem>();
-
-        if (_lootSystem == null)
-            Debug.LogWarning("[ProceduralMapGenerator] LootSystem introuvable — le loot ennemi ne sera pas spawné.", this);
 
         GenerateFloor();
     }
@@ -223,6 +238,9 @@ public class ProceduralMapGenerator : MonoBehaviour
 
         // Instancie les ennemis dans l'Open Space selon l'étage
         SpawnEnemies();
+
+        // Place les props procéduraux dans l'Open Space (bureaux, plantes)
+        SpawnOpenSpaceProps();
     }
 
     // -------------------------------------------------------------------------
@@ -300,14 +318,7 @@ public class ProceduralMapGenerator : MonoBehaviour
     // Retourne la couleur associée au type de salle donné
     private Color GetRoomColor(RoomType type)
     {
-        return type switch
-        {
-            RoomType.Toilettes    => _colorToilettes,
-            RoomType.SalleReunion => _colorSalleReunion,
-            RoomType.Vestiaire    => _colorVestiaire,
-            RoomType.SalleRepos   => _colorSalleRepos,
-            _                     => Color.grey
-        };
+        return Color.black;
     }
 
     // Retourne le nombre d'objets fouillables selon le type de salle
@@ -345,21 +356,6 @@ public class ProceduralMapGenerator : MonoBehaviour
 
         room.transform.position   = new Vector3(pos.x, pos.y, 0f);
         room.transform.localScale = new Vector3(size.x, size.y, 1f);
-
-        // Ajoute le label de la salle au centre
-        GameObject labelGO = new GameObject("Label");
-        labelGO.transform.SetParent(room.transform, false);
-        labelGO.transform.localPosition = Vector3.zero;
-
-        TextMesh tm    = labelGO.AddComponent<TextMesh>();
-        tm.text        = label;
-        tm.fontSize    = 8;
-        tm.anchor      = TextAnchor.MiddleCenter;
-        tm.color       = Color.white;
-
-        // Corrige l'échelle du label pour annuler celle de la salle
-        labelGO.transform.localScale = new Vector3(
-            1f / size.x, 1f / size.y, 1f);
 
         // Instancie les objets fouillables en grille dans la salle
         for (int i = 0; i < searchableCount; i++)
@@ -402,21 +398,6 @@ public class ProceduralMapGenerator : MonoBehaviour
         elev.transform.position   = new Vector3(pos.x, pos.y, 0f);
         elev.transform.localScale = new Vector3(_elevatorWidth, _elevatorHeight, 1f);
 
-        // Ajoute le label Ascenseur centré dans la salle
-        GameObject labelGO = new GameObject("Label");
-        labelGO.transform.SetParent(elev.transform, false);
-        labelGO.transform.localPosition = Vector3.zero;
-
-        TextMesh tm = labelGO.AddComponent<TextMesh>();
-        tm.text     = "ASCENSEUR";
-        tm.fontSize = 8;
-        tm.anchor   = TextAnchor.MiddleCenter;
-        tm.color    = Color.white;
-
-        // Corrige l'échelle du label pour annuler celle de la salle
-        labelGO.transform.localScale = new Vector3(
-            1f / _elevatorWidth, 1f / _elevatorHeight, 1f);
-
         // Ajoute un BoxCollider2D trigger pour détecter le joueur
         BoxCollider2D col = elev.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
@@ -447,16 +428,11 @@ public class ProceduralMapGenerator : MonoBehaviour
     private void SpawnEnemies()
     {
         if (_enemyPrefabs == null || _enemyPrefabs.Length == 0)
-        {
-            Debug.LogWarning("[SpawnEnemies] _enemyPrefabs est null ou vide — aucun ennemi spawné.", this);
             return;
-        }
 
         int count   = GetEnemyCount();
         float halfW = _openSpaceWidth  * 0.5f - 1f;
         float halfH = _openSpaceHeight * 0.5f - 1f;
-
-        Debug.Log($"[SpawnEnemies] Tentative de spawn de {count} ennemis dans bounds ±{halfW} x ±{halfH}");
 
         // Cherche le joueur pour l'injection de dépendances et pour éviter de spawner sur sa position
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -468,21 +444,12 @@ public class ProceduralMapGenerator : MonoBehaviour
         // Cherche le LivesManager pour l'injection dans les ennemis
         LivesManager livesManager = FindFirstObjectByType<LivesManager>();
 
-        if (playerTransform == null)
-            Debug.LogWarning("[SpawnEnemies] Joueur introuvable — les ennemis seront inertes.", this);
-
-        if (livesManager == null)
-            Debug.LogWarning("[SpawnEnemies] LivesManager introuvable — les ennemis ne pourront pas infliger de dégâts.", this);
-
         for (int i = 0; i < count; i++)
         {
             // Choisit un prefab ennemi aléatoire dans le tableau
             GameObject prefab = _enemyPrefabs[Random.Range(0, _enemyPrefabs.Length)];
             if (prefab == null)
-            {
-                Debug.LogWarning($"[SpawnEnemies] prefab null à l'index {i} — ignoré.", this);
                 continue;
-            }
 
             // Cherche une position qui ne chevauche pas le joueur
             Vector3 spawnPos;
@@ -497,19 +464,12 @@ public class ProceduralMapGenerator : MonoBehaviour
             }
             while (Vector2.Distance(spawnPos, playerPos) < 2f && maxAttempts > 0);
 
-            Debug.Log($"[SpawnEnemies] Spawn {prefab.name} à {spawnPos}");
             GameObject enemyGO = Instantiate(prefab, spawnPos, Quaternion.identity);
 
             // Injecte les dépendances runtime dans l'ennemi instancié
             IEnemyInjectable injectable = enemyGO.GetComponent<IEnemyInjectable>();
             if (injectable != null)
-            {
                 injectable.InjectDependencies(playerTransform, livesManager, _lootSystem);
-            }
-            else
-            {
-                Debug.LogWarning($"[SpawnEnemies] {prefab.name} n'implémente pas IEnemyInjectable — dépendances non injectées.", this);
-            }
 
             // Applique les visuels selon le type d'ennemi instancié
             if (enemyGO.GetComponent<EnemyHidden>() != null)
@@ -632,6 +592,116 @@ public class ProceduralMapGenerator : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
+    // Props procéduraux de l'Open Space
+    // -------------------------------------------------------------------------
+
+    // Place bureaux en grille régulière et plantes dans les coins de l'Open Space
+    private void SpawnOpenSpaceProps()
+    {
+        if (_mapRoot == null) return;
+
+        Transform roomRoot = null;
+        for (int i = 0; i < _mapRoot.childCount; i++)
+        {
+            if (_mapRoot.GetChild(i).name == "Room_OpenSpace")
+            {
+                roomRoot = _mapRoot.GetChild(i);
+                break;
+            }
+        }
+
+        if (roomRoot == null)
+            return;
+
+        GameObject propsRoot = new GameObject("Props_OpenSpace");
+        // Parent direct sur _mapRoot (scale 1,1,1) et non sur Room_OpenSpace (scale 20×14)
+        // pour que les BoxCollider2D et transforms des props restent en espace monde cohérent.
+        propsRoot.transform.SetParent(_mapRoot, false);
+        Transform parent = propsRoot.transform;
+
+        // ── Dimensions utiles après marge ─────────────────────────────────────
+        float usableW = _openSpaceWidth  - 2f * _openSpaceMargin;   // 17u
+        float usableH = _openSpaceHeight - 2f * _openSpaceMargin;   // 11u
+
+        // ── Grille de bureaux ─────────────────────────────────────────────────
+        // cols/rows calculés pour remplir uniformément la zone utile
+        int cols = Mathf.Max(1, Mathf.RoundToInt(Mathf.Sqrt(_deskCount * (usableW / usableH))));
+        int rows = Mathf.CeilToInt((float)_deskCount / cols);
+
+        // Pas entre chaque cellule de grille
+        float colStep = usableW / cols;
+        float rowStep = usableH / rows;
+
+        // Jitter max = 15% du pas pour casser la monotonie sans désorganiser la grille
+        float jitterX = colStep * 0.15f;
+        float jitterY = rowStep * 0.15f;
+
+        // Coin haut-gauche de la première cellule, centré sur la salle (origine = 0,0)
+        float startX = -(usableW * 0.5f) + (colStep * 0.5f);
+        float startY = -(usableH * 0.5f) + (rowStep * 0.5f);
+
+        int deskIdx = 0;
+        for (int row = 0; row < rows && deskIdx < _deskCount; row++)
+        {
+            for (int col = 0; col < cols && deskIdx < _deskCount; col++)
+            {
+                float x = startX + col * colStep + Random.Range(-jitterX, jitterX);
+                float y = startY + row * rowStep + Random.Range(-jitterY, jitterY);
+
+                SpawnProp(parent, "Desk_" + (deskIdx + 1),
+                    _propLibrary?.deskPrefab, _deskColor,
+                    new Vector2(3.0f, 2.0f), new Vector2(x, y), 1,
+                    isSearchable: true, searchLabel: "Bureau");
+                deskIdx++;
+            }
+        }
+
+        // ── Plantes dans les quatre coins ─────────────────────────────────────
+        float halfW = usableW * 0.5f;
+        float halfH = usableH * 0.5f;
+
+        // Décalage depuis le coin pour garder la plante dans la salle
+        float cornerOffset = 0.5f;
+
+        Vector2[] cornerPositions = new Vector2[]
+        {
+            new Vector2(-halfW + cornerOffset,  halfH - cornerOffset),  // coin haut-gauche
+            new Vector2( halfW - cornerOffset,  halfH - cornerOffset),  // coin haut-droit
+            new Vector2(-halfW + cornerOffset, -halfH + cornerOffset),  // coin bas-gauche
+            new Vector2( halfW - cornerOffset, -halfH + cornerOffset),  // coin bas-droit
+        };
+
+        int plantCount = Mathf.Min(_plantCount, cornerPositions.Length);
+        for (int i = 0; i < plantCount; i++)
+        {
+            // Léger jitter sur la position de coin pour varier entre les runs
+            Vector2 pos = cornerPositions[i] + new Vector2(
+                Random.Range(-cornerOffset * 0.3f, cornerOffset * 0.3f),
+                Random.Range(-cornerOffset * 0.3f, cornerOffset * 0.3f));
+
+            SpawnProp(parent, "Plante_" + (i + 1),
+                _propLibrary?.plantePrefab, _plantColor,
+                new Vector2(1.2f, 1.2f), pos, 2);
+        }
+    }
+
+    // Retourne les bounds d'un GameObject instancié à localScale=1 en lisant son SpriteRenderer.
+    // Utilisé pour calculer le scale compensé indépendamment du PPU du sprite.
+    private Bounds CalculatePrefabBounds(GameObject go)
+    {
+        // Sauvegarde le scale courant et réinitialise à 1 pour lire les bounds natifs
+        Vector3 savedScale = go.transform.localScale;
+        go.transform.localScale = Vector3.one;
+
+        SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
+        Bounds b = sr != null ? sr.bounds : new Bounds(Vector3.zero, Vector3.zero);
+
+        // Restaure le scale original
+        go.transform.localScale = savedScale;
+        return b;
+    }
+
+    // -------------------------------------------------------------------------
     // Props thématiques par salle
     // -------------------------------------------------------------------------
 
@@ -683,12 +753,12 @@ public class ProceduralMapGenerator : MonoBehaviour
             float cy = pos.y + size.y * 0.25f;
 
             // Cloison de la cabine — fouillable
-            SpawnProp(parent, "Cabine_" + i, cabineColor,
+            SpawnProp(parent, "Cabine_" + i, _propLibrary?.cabinePrefab, cabineColor,
                 new Vector2(1.0f, 1.4f), new Vector2(cx, cy), 1,
                 isSearchable: true, searchLabel: "Cabine WC");
 
             // Cuvette à l'intérieur (déco uniquement)
-            SpawnProp(parent, "WC_" + i, wcColor,
+            SpawnProp(parent, "WC_" + i, _propLibrary?.wcPrefab, wcColor,
                 new Vector2(0.45f, 0.45f), new Vector2(cx, cy - 0.1f), 2);
         }
 
@@ -697,34 +767,21 @@ public class ProceduralMapGenerator : MonoBehaviour
         for (int i = 0; i < lavaboCount; i++)
         {
             float lx = pos.x + (i - lavaboCount * 0.5f + 0.5f) * 1.2f;
-            SpawnProp(parent, "Lavabo_" + i, lavaboColor,
+            SpawnProp(parent, "Lavabo_" + i, _propLibrary?.lavaboPrefab, lavaboColor,
                 new Vector2(0.7f, 0.4f), new Vector2(lx, pos.y - size.y * 0.3f), 2,
                 isSearchable: true, searchLabel: "Lavabo");
         }
     }
 
-    // Salle de réunion : grande table centrale + chaises
+    // Salle de réunion : grande table centrale (les chaises sont incluses dans le sprite)
     private void SpawnSalleReunionProps(Vector2 pos, Vector2 size, Transform parent)
     {
-        Color tableColor  = new Color(0.45f, 0.3f, 0.15f);
-        Color chaiseColor = new Color(0.3f, 0.3f, 0.35f);
+        Color tableColor = new Color(0.45f, 0.3f, 0.15f);
 
-        // Table centrale — fouillable
-        SpawnProp(parent, "Table", tableColor,
+        // Table centrale — fouillable (sprite inclut déjà les chaises)
+        SpawnProp(parent, "Table", _propLibrary?.tableReunionPrefab, tableColor,
             new Vector2(3.0f, 1.2f), pos, 1,
             isSearchable: true, searchLabel: "Table de réunion");
-
-        // Chaises autour de la table (déco uniquement)
-        int chairsPerSide = Random.Range(2, 4);
-        for (int i = 0; i < chairsPerSide; i++)
-        {
-            float xOff = (i - chairsPerSide * 0.5f + 0.5f) * 0.9f;
-
-            SpawnProp(parent, "Chaise_Top_" + i, chaiseColor,
-                new Vector2(0.5f, 0.4f), new Vector2(pos.x + xOff, pos.y + 0.9f), 2);
-            SpawnProp(parent, "Chaise_Bot_" + i, chaiseColor,
-                new Vector2(0.5f, 0.4f), new Vector2(pos.x + xOff, pos.y - 0.9f), 2);
-        }
     }
 
     // Vestiaire : rangée de casiers + banc
@@ -740,13 +797,13 @@ public class ProceduralMapGenerator : MonoBehaviour
         {
             float cx = startX + i * 0.7f;
             // Casiers — fouillables
-            SpawnProp(parent, "Casier_" + i, casierColor,
+            SpawnProp(parent, "Casier_" + i, _propLibrary?.casierPrefab, casierColor,
                 new Vector2(0.6f, 1.4f), new Vector2(cx, pos.y + size.y * 0.2f), 1,
                 isSearchable: true, searchLabel: "Casier");
         }
 
         // Banc devant les casiers (déco uniquement)
-        SpawnProp(parent, "Banc", bancColor,
+        SpawnProp(parent, "Banc", _propLibrary?.bancPrefab, bancColor,
             new Vector2(casierCount * 0.7f * 0.8f, 0.3f),
             new Vector2(pos.x, pos.y - 0.2f), 1);
     }
@@ -760,60 +817,102 @@ public class ProceduralMapGenerator : MonoBehaviour
         Color plantColor   = new Color(0.2f, 0.55f, 0.2f);
 
         // Canapé (déco uniquement)
-        SpawnProp(parent, "Canape", canapeColor,
+        SpawnProp(parent, "Canape", _propLibrary?.canapePrefab, canapeColor,
             new Vector2(2.0f, 0.7f), new Vector2(pos.x, pos.y + 0.5f), 1);
 
         // Table basse — fouillable
-        SpawnProp(parent, "TableBasse", tableColor,
+        SpawnProp(parent, "TableBasse", _propLibrary?.tableBassePrefab, tableColor,
             new Vector2(1.0f, 0.5f), new Vector2(pos.x, pos.y - 0.3f), 1,
             isSearchable: true, searchLabel: "Table basse");
 
         // Machine à café — fouillable, position légèrement aléatoire
         float machineX = pos.x + Random.Range(-size.x * 0.3f, size.x * 0.3f);
-        SpawnProp(parent, "MachineCafe", machineColor,
+        SpawnProp(parent, "MachineCafe", _propLibrary?.machineCafePrefab, machineColor,
             new Vector2(0.5f, 0.6f), new Vector2(machineX, pos.y - size.y * 0.3f), 2,
             isSearchable: true, searchLabel: "Machine à café");
 
         // Plante décorative dans un coin
         float plantX = pos.x + (Random.value > 0.5f ? size.x * 0.35f : -size.x * 0.35f);
-        SpawnProp(parent, "Plante", plantColor,
+        SpawnProp(parent, "Plante", _propLibrary?.plantePrefab, plantColor,
             new Vector2(0.4f, 0.6f), new Vector2(plantX, pos.y + size.y * 0.3f), 2);
     }
 
-    // Instancie un prop visuel simple avec SpriteRenderer et BoxCollider2D
-    // Si isSearchable est vrai, ajoute un SearchableObject câblé au SearchUIManager
-    private void SpawnProp(Transform parent, string goName, Color color,
+    // Instancie un prop depuis un prefab (si fourni) ou via un sprite couleur de fallback.
+    // Si isSearchable est vrai, ajoute un SearchableObject câblé au SearchUIManager.
+    private void SpawnProp(Transform parent, string goName, GameObject prefab, Color fallbackColor,
                             Vector2 size, Vector2 worldPos, int sortingOrder,
                             bool isSearchable = false, string searchLabel = "")
     {
-        GameObject prop = new GameObject("Prop_" + goName);
-        prop.transform.SetParent(parent, false);
-        prop.transform.position   = new Vector3(worldPos.x, worldPos.y, 0f);
-        prop.transform.localScale = new Vector3(size.x, size.y, 1f);
+        GameObject prop;
 
-        SpriteRenderer sr = prop.AddComponent<SpriteRenderer>();
-        sr.sprite         = CreateColorSprite(color);
-        sr.sharedMaterial = new Material(Shader.Find(URPShaderName));
-        sr.sortingOrder   = sortingOrder;
+        if (prefab != null)
+        {
+            prop = Instantiate(prefab, new Vector3(worldPos.x, worldPos.y, 0f),
+                               Quaternion.identity, parent);
+            prop.name = "Prop_" + goName;
 
-        BoxCollider2D col = prop.AddComponent<BoxCollider2D>();
-        col.size          = Vector2.one;
+            SpriteRenderer sr = prop.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sortingOrder = sortingOrder;
+
+            // Calcule la taille native du sprite en unités monde via les métadonnées de l'asset
+            // (sprite.rect / pixelsPerUnit) — indépendant de tout state de transform ou de rendu.
+            if (sr != null && sr.sprite != null)
+            {
+                float nativeW = sr.sprite.rect.width  / sr.sprite.pixelsPerUnit;
+                float nativeH = sr.sprite.rect.height / sr.sprite.pixelsPerUnit;
+                prop.transform.localScale = new Vector3(size.x / nativeW, size.y / nativeH, 1f);
+            }
+            else
+            {
+                prop.transform.localScale = new Vector3(size.x, size.y, 1f);
+            }
+        }
+        else
+        {
+            prop = new GameObject("Prop_" + goName);
+            prop.transform.SetParent(parent, false);
+            prop.transform.position   = new Vector3(worldPos.x, worldPos.y, 0f);
+            prop.transform.localScale = new Vector3(size.x, size.y, 1f);
+
+            SpriteRenderer sr  = prop.AddComponent<SpriteRenderer>();
+            sr.sprite          = CreateColorSprite(fallbackColor);
+            sr.sharedMaterial  = new Material(Shader.Find(URPShaderName));
+            sr.sortingOrder    = sortingOrder;
+        }
+
+        // Tous les props sont des obstacles solides — le BoxCollider2D n'est jamais un trigger.
+        // La détection de fouille est gérée par SearchableObject.CheckPlayerProximity()
+        // via Vector2.Distance, indépendamment du système physique.
+        BoxCollider2D col = prop.GetComponent<BoxCollider2D>()
+                         ?? prop.AddComponent<BoxCollider2D>();
+
+        // La size du BoxCollider2D s'exprime en espace local — on divise par le scale
+        // appliqué pour que le collider corresponde exactement aux dimensions monde du prop.
+        Vector3 s = prop.transform.localScale;
+        float colW = s.x != 0 ? size.x / s.x : 1f;
+        float colH = s.y != 0 ? size.y / s.y : 1f;
+        col.size      = new Vector2(colW, colH);
+        col.isTrigger = false;
 
         // Ajoute et câble un SearchableObject si le prop est fouillable
         if (isSearchable && _searchUIManager != null)
         {
-            SearchableObject searchable = prop.AddComponent<SearchableObject>();
+            SearchableObject searchable = prop.GetComponent<SearchableObject>()
+                                       ?? prop.AddComponent<SearchableObject>();
             string label = string.IsNullOrEmpty(searchLabel) ? goName : searchLabel;
             searchable.SetLabel(label);
 
-            // Ajoute un LootDropper et le câble à l'InventoryManager et à la LootTable par défaut.
-            LootDropper dropper = prop.AddComponent<LootDropper>();
+            LootDropper dropper = prop.GetComponent<LootDropper>()
+                                ?? prop.AddComponent<LootDropper>();
             dropper.SetInventoryManager(_inventoryManager);
             dropper.SetLootTable(_defaultLootTable);
             searchable.SetLootDropper(dropper);
 
             searchable.OnPlayerEnterRange.AddListener(_searchUIManager.OnPlayerEnterRange);
             searchable.OnPlayerExitRange.AddListener(_searchUIManager.OnPlayerExitRange);
+
+            // Configure la probabilité d'infestation et le prefab ennemi caché
+            searchable.SetInfested(_infestedChance, _enemyHiddenPrefab);
         }
     }
 

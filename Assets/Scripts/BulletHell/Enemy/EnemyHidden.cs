@@ -1,128 +1,239 @@
 using UnityEngine;
 
-// Reste caché, se révèle à proximité du joueur, puis charge
+// Spawne depuis un bureau fouillé infesté, attaque le joueur, puis se cache dans un autre bureau.
 public class EnemyHidden : EnemyBase, IEnemyInjectable
 {
-    // Énumère les trois états du cycle de vie de l'ennemi caché
-    private enum State { Hidden, Revealing, Active }
+    // -------------------------------------------------------------------------
+    // États de la machine à états
+    // -------------------------------------------------------------------------
 
-    // Rayon de détection du joueur pour déclencher la révélation
-    [SerializeField] private float _triggerRadius = 2f;
+    private enum State { Idle, Attacking, MovingToDesk, Hidden }
 
-    // Durée de la phase de révélation avant activation du chargeur
-    [SerializeField] private float _revealDuration = 0.8f;
+    // -------------------------------------------------------------------------
+    // Paramètres configurables
+    // -------------------------------------------------------------------------
 
-    // Intervalle de vérification de la distance joueur en secondes
-    [SerializeField] private float _proximityCheckInterval = 0.2f;
+    // Vitesse de déplacement vers le joueur ou vers un bureau
+    [SerializeField] private float _moveSpeed = 3f;
 
-    // Objet visible représentant la cachette (meuble, bureau, etc.)
-    [SerializeField] private GameObject _hiddenVisual;
+    // Durée de la phase d'attaque avant de chercher un bureau
+    [SerializeField] private float _attackDuration = 4f;
 
-    // Objet visible représentant l'ennemi révélé (caché au départ)
-    [SerializeField] private GameObject _enemyVisual;
+    // Délai minimum entre deux infligements de dégâts au joueur
+    [SerializeField] private float _damageCooldown = 1f;
 
-    // Composant EnemyCharger activé une fois l'ennemi révélé
-    [SerializeField] private EnemyCharger _charger;
+    // Distance de contact pour infliger des dégâts au joueur
+    [SerializeField] private float _contactRadius = 0.4f;
 
-    // Référence au Transform du joueur pour le calcul de distance
-    [SerializeField] private Transform _playerTransform;
+    // -------------------------------------------------------------------------
+    // Références résolues à l'exécution
+    // -------------------------------------------------------------------------
 
-    // Gestionnaire de butin à déclencher à la mort de l'ennemi
-    [SerializeField] private LootSystem _lootSystem;
+    private Transform _playerTransform;
+    private LivesManager _livesManager;
+    private LootSystem _lootSystem;
 
-    // État courant dans le cycle Hidden → Revealing → Active
-    private State _currentState = State.Hidden;
+    // -------------------------------------------------------------------------
+    // État interne
+    // -------------------------------------------------------------------------
 
-    /// <summary>Injecte playerTransform et lootSystem après un Instantiate runtime.</summary>
-    public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
-    {
-        _playerTransform = playerTransform;
-        _lootSystem      = lootSystem;
+    private State _currentState = State.Idle;
+    private SearchableObject _targetDesk;
+    private SearchableObject _currentDesk;
+    private float _attackTimer;
+    private float _damageTimer;
 
-        // Transmet également les dépendances au chargeur interne
-        if (_charger != null)
-        {
-            _charger.InjectDependencies(playerTransform, livesManager, lootSystem);
-        }
-    }
+    // -------------------------------------------------------------------------
+    // IEnemyInjectable — no-op : EnemyHidden résout ses propres dépendances
+    // -------------------------------------------------------------------------
 
-    // Initialise les visuels et démarre la vérification de proximité
+    /// <summary>No-op : EnemyHidden est spawné par les bureaux, pas par SpawnEnemies.</summary>
+    public void InjectDependencies(Transform playerTransform, LivesManager livesManager, LootSystem lootSystem) { }
+
+    // -------------------------------------------------------------------------
+    // Cycle de vie Unity
+    // -------------------------------------------------------------------------
+
     protected override void Awake()
     {
-        // Appelle l'initialisation de la santé définie dans EnemyBase
         base.Awake();
 
-        // Affiche la cachette et masque l'ennemi au démarrage
-        if (_hiddenVisual != null) _hiddenVisual.SetActive(true);
-        if (_enemyVisual  != null) _enemyVisual.SetActive(false);
+        // Résolution automatique des dépendances depuis la scène
+        _playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+        _livesManager    = FindFirstObjectByType<LivesManager>();
+        _lootSystem      = FindFirstObjectByType<LootSystem>();
 
-        // Désactive le chargeur jusqu'à la fin de la révélation
-        if (_charger != null) _charger.enabled = false;
+        // Applique le visuel orange caractéristique de cet ennemi
+        ApplyVisual();
 
-        // Lance la vérification périodique de la proximité joueur
-        InvokeRepeating(nameof(CheckPlayerProximity), 0f, _proximityCheckInterval);
+        // Inactif jusqu'à être déclenché par un bureau fouillé
+        gameObject.SetActive(false);
     }
 
-    // Vérifie si le joueur est entré dans le rayon de déclenchement
-    private void CheckPlayerProximity()
+    // -------------------------------------------------------------------------
+    // API publique — appelée par SearchableObject
+    // -------------------------------------------------------------------------
+
+    /// <summary>Spawne l'ennemi à la position donnée et déclenche la phase d'attaque.</summary>
+    public void SpawnAndAttack(Vector3 position)
     {
-        // Ignore la vérification si l'état n'est pas Hidden
-        if (_currentState != State.Hidden)
+        transform.position = position;
+        _currentDesk       = null;
+        _attackTimer       = _attackDuration;
+        _damageTimer       = 0f;
+        _currentState      = State.Attacking;
+        gameObject.SetActive(true);
+    }
+
+    /// <summary>Révèle l'ennemi depuis le bureau où il se cachait et relance l'attaque.</summary>
+    public void RevealFromDesk()
+    {
+        _currentDesk  = null;
+        _attackTimer  = _attackDuration;
+        _damageTimer  = 0f;
+        _currentState = State.Attacking;
+        gameObject.SetActive(true);
+    }
+
+    // -------------------------------------------------------------------------
+    // Boucle principale
+    // -------------------------------------------------------------------------
+
+    private void Update()
+    {
+        if (IsDead()) return;
+
+        switch (_currentState)
         {
+            case State.Attacking:    HandleAttacking();    break;
+            case State.MovingToDesk: HandleMovingToDesk(); break;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase d'attaque
+    // -------------------------------------------------------------------------
+
+    // Fonce vers le joueur, inflige des dégâts au contact, puis cherche un bureau
+    private void HandleAttacking()
+    {
+        _attackTimer -= Time.deltaTime;
+        _damageTimer -= Time.deltaTime;
+
+        if (_playerTransform != null)
+        {
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                _playerTransform.position,
+                _moveSpeed * Time.deltaTime);
+
+            if (_damageTimer <= 0f &&
+                Vector2.Distance(transform.position, _playerTransform.position) <= _contactRadius)
+            {
+                _livesManager?.TakeDamage();
+                _damageTimer = _damageCooldown;
+            }
+        }
+
+        if (_attackTimer <= 0f)
+            StartMoveToDesk();
+    }
+
+    // -------------------------------------------------------------------------
+    // Recherche d'un bureau disponible
+    // -------------------------------------------------------------------------
+
+    // Trouve le bureau non fouillé le plus proche et initialise le déplacement
+    private void StartMoveToDesk()
+    {
+        SearchableObject[] all = FindObjectsByType<SearchableObject>(FindObjectsSortMode.None);
+        SearchableObject best  = null;
+        float bestDist         = float.MaxValue;
+
+        foreach (SearchableObject desk in all)
+        {
+            // Ignore les bureaux déjà fouillés, le bureau précédent et ceux déjà occupés
+            if (desk.GetState() == SearchableObject.SearchState.Searched) continue;
+            if (desk == _currentDesk) continue;
+            if (!desk.CanHideEnemy()) continue;
+
+            float d = Vector2.Distance(transform.position, desk.transform.position);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = desk;
+            }
+        }
+
+        if (best == null)
+        {
+            // Aucun bureau disponible : l'ennemi disparaît
+            gameObject.SetActive(false);
             return;
         }
 
-        // Ignore si la référence au joueur n'est pas assignée
-        if (_playerTransform == null)
+        _targetDesk   = best;
+        _currentState = State.MovingToDesk;
+    }
+
+    // -------------------------------------------------------------------------
+    // Phase de déplacement vers un bureau
+    // -------------------------------------------------------------------------
+
+    // Se déplace vers le bureau cible et s'y cache à l'arrivée
+    private void HandleMovingToDesk()
+    {
+        if (_targetDesk == null || _targetDesk.GetState() == SearchableObject.SearchState.Searched)
         {
+            StartMoveToDesk();
             return;
         }
 
-        // Passe en révélation si le joueur est dans le rayon
-        if (Vector3.Distance(transform.position, _playerTransform.position) <= _triggerRadius)
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            _targetDesk.transform.position,
+            _moveSpeed * Time.deltaTime);
+
+        if (Vector2.Distance(transform.position, _targetDesk.transform.position) < 0.2f)
         {
-            // Démarre la séquence de révélation de l'ennemi caché
-            StartReveal();
+            _targetDesk.RegisterHiddenEnemy(this);
+            _currentDesk  = _targetDesk;
+            _targetDesk   = null;
+            _currentState = State.Hidden;
+            gameObject.SetActive(false);
         }
     }
 
-    // Lance le swap visuel et programme l'activation du chargeur
-    private void StartReveal()
-    {
-        // Passe dans l'état de révélation pour bloquer les checks
-        _currentState = State.Revealing;
+    // -------------------------------------------------------------------------
+    // Mort
+    // -------------------------------------------------------------------------
 
-        // Masque la cachette et affiche le sprite de l'ennemi
-        _hiddenVisual.SetActive(false);
-        _enemyVisual.SetActive(true);
-
-        // Active le chargeur après la durée de révélation configurée
-        Invoke(nameof(ActivateCharger), _revealDuration);
-    }
-
-    // Active le composant EnemyCharger et passe en état actif
-    private void ActivateCharger()
-    {
-        // Permet au chargeur d'exécuter sa logique de patrouille
-        _charger.enabled = true;
-
-        // Marque l'ennemi comme pleinement actif après révélation
-        _currentState = State.Active;
-    }
-
-    // Masque l'ennemi et déclenche le butin à la mort
     protected override void HandleDeath()
     {
-        // Annule les appels en attente pour éviter des états parasites
         CancelInvoke();
-
-        // Désactive le chargeur pour stopper tout mouvement résiduel
-        if (_charger != null) _charger.enabled = false;
-
-        // Cache le visuel de l'ennemi mort
-        if (_enemyVisual != null) _enemyVisual.SetActive(false);
-
-        // Demande au système de butin de générer le loot à la position
+        _currentDesk?.UnregisterHiddenEnemy();
         _lootSystem?.SpawnLoot(transform.position);
+        gameObject.SetActive(false);
+    }
+
+    // -------------------------------------------------------------------------
+    // Visuel
+    // -------------------------------------------------------------------------
+
+    // Applique le sprite orange directement sur ce GameObject
+    private void ApplyVisual()
+    {
+        SpriteRenderer sr = GetComponent<SpriteRenderer>()
+                         ?? gameObject.AddComponent<SpriteRenderer>();
+
+        Texture2D tex    = new Texture2D(1, 1);
+        tex.filterMode   = FilterMode.Point;
+        tex.SetPixel(0, 0, new Color(1f, 0.4f, 0f, 1f));
+        tex.Apply();
+
+        sr.sprite         = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+        sr.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default"));
+        sr.sortingOrder   = 2;
+        transform.localScale = new Vector3(0.6f, 0.6f, 1f);
     }
 }

@@ -16,25 +16,19 @@ public class MapVisualBuilder : MonoBehaviour
     // -----------------------------------------------------------------------
 
     // Couleur de sol de la salle principale (OpenSpace)
-    [SerializeField] private Color floorColorOpenSpace = new Color(0.16f, 0.16f, 0.16f, 1f);
+    [SerializeField] private Color floorColorOpenSpace = new Color(0f, 0f, 0f, 1f);
 
     // Couleur de sol de la salle Bureau (Office)
-    [SerializeField] private Color floorColorOffice = new Color(0.2f, 0.2f, 0.2f, 1f);
+    [SerializeField] private Color floorColorOffice = new Color(0f, 0f, 0f, 1f);
 
     // Couleur de sol de la salle Pause (Break)
-    [SerializeField] private Color floorColorBreak = new Color(0.19f, 0.19f, 0.19f, 1f);
+    [SerializeField] private Color floorColorBreak = new Color(0f, 0f, 0f, 1f);
 
     // Couleur blanche partagée par tous les murs
     [SerializeField] private Color wallColor = new Color(1f, 1f, 1f, 1f);
 
-    // Couleur grise partagée par tous les bureaux
-    [SerializeField] private Color deskColor = new Color(0.33f, 0.33f, 0.33f, 1f);
-
-    // Couleur gris-bleu pour le casier de la salle Pause
-    [SerializeField] private Color lockerColor = new Color(0.25f, 0.25f, 0.3f, 1f);
-
-    // Dimension uniforme des bureaux (largeur, hauteur)
-    [SerializeField] private Vector2 deskSize = new Vector2(1.5f, 0.8f);
+    // Bibliothèque de prefabs d'environnement — conservée pour rétrocompatibilité
+    [SerializeField] private PropLibrary _propLibrary;
 
     // -----------------------------------------------------------------------
     // Cycle de vie Unity
@@ -51,7 +45,7 @@ public class MapVisualBuilder : MonoBehaviour
     // Room A — Room_OpenSpace (centre-gauche, grande)
     // -----------------------------------------------------------------------
 
-    // Construit sol, murs segmentés et bureaux de la salle principale
+    // Construit sol et murs de l'Open Space — les props sont générés par ProceduralMapGenerator
     private void BuildRoomOpenSpace()
     {
         // Récupère le parent de la salle OpenSpace dans la hiérarchie
@@ -63,7 +57,7 @@ public class MapVisualBuilder : MonoBehaviour
         }
 
         // Sol 20×14, centré en (0, 0) — plan z=1 sous les murs
-        ApplyFloor(roomRoot, "Floor_OpenSpace", floorColorOpenSpace,
+        ApplyFloor(roomRoot, "Floor_OpenSpace", Color.black,
             new Vector3(20f, 14f, 1f), new Vector3(0f, 0f, 1f), -2);
 
         // Mur du haut — couvre toute la largeur du sol + demi-épaisseurs
@@ -90,31 +84,9 @@ public class MapVisualBuilder : MonoBehaviour
         DisableObsoleteChild(roomRoot, "Wall_Right_Mid");
         DisableObsoleteChild(roomRoot, "Wall_Right_Bottom");
 
-        // Échelle vectorielle des bureaux de la salle principale
-        Vector3 deskScale = new Vector3(deskSize.x, deskSize.y, 1f);
-
-        // Positions des six bureaux de la salle ouverte
-        Vector3[] deskPositions = new Vector3[]
-        {
-            new Vector3(-6f,  4f, 0f),
-            new Vector3(-6f, -4f, 0f),
-            new Vector3(-2f,  5f, 0f),
-            new Vector3(-2f, -5f, 0f),
-            new Vector3( 2f,  2f, 0f),
-            new Vector3( 2f, -3f, 0f),
-        };
-
-        // Noms des six bureaux enfants dans Room_OpenSpace
-        string[] deskNames = new string[]
-        {
-            "Desk_01", "Desk_02", "Desk_03", "Desk_04", "Desk_05", "Desk_06"
-        };
-
-        // Applique chaque bureau à sa position cible
-        for (int i = 0; i < deskNames.Length; i++)
-        {
-            ApplyDesk(roomRoot, deskNames[i], deskColor, deskScale, deskPositions[i]);
-        }
+        // Désactive les anciens bureaux statiques remplacés par la génération procédurale
+        for (int i = 1; i <= 6; i++)
+            DisableObsoleteChild(roomRoot, "Desk_0" + i);
     }
 
     // -----------------------------------------------------------------------
@@ -173,28 +145,6 @@ public class MapVisualBuilder : MonoBehaviour
         sr.sprite = CreateColorSprite(color);
         SetURPMaterial(sr);
         sr.sortingOrder = 0;
-
-        // Ajoute un BoxCollider2D solide si absent
-        if (t.GetComponent<BoxCollider2D>() == null)
-            t.gameObject.AddComponent<BoxCollider2D>();
-    }
-
-    // Applique le bureau ou casier : position, échelle, sprite et collider
-    private void ApplyDesk(Transform roomRoot, string goName, Color color,
-        Vector3 scale, Vector3 worldPos)
-    {
-        // Trouve ou crée l'enfant bureau dans la salle donnée
-        Transform t = GetOrCreateChild(roomRoot, goName);
-
-        // Positionne et redimensionne le bureau selon les paramètres
-        t.position = worldPos;
-        t.localScale = scale;
-
-        // Récupère ou crée le SpriteRenderer du bureau
-        SpriteRenderer sr = GetOrAddSpriteRenderer(t.gameObject);
-        sr.sprite = CreateColorSprite(color);
-        SetURPMaterial(sr);
-        sr.sortingOrder = 1;
 
         // Ajoute un BoxCollider2D solide si absent
         if (t.GetComponent<BoxCollider2D>() == null)

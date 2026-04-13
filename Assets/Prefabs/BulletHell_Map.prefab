@@ -3257,9 +3257,7 @@ MonoBehaviour:
   floorColorOffice: {r: 0.2, g: 0.2, b: 0.2, a: 1}
   floorColorBreak: {r: 0.19, g: 0.19, b: 0.19, a: 1}
   wallColor: {r: 1, g: 1, b: 1, a: 1}
-  deskColor: {r: 0.33, g: 0.33, b: 0.33, a: 1}
-  lockerColor: {r: 0.25, g: 0.25, b: 0.3, a: 1}
-  deskSize: {x: 1.5, y: 0.8}
+  _propLibrary: {fileID: 11400000, guid: 272f9c89e3aaef644b468fd576663e92, type: 2}
 --- !u!1 &7270638146618161685
 GameObject:
   m_ObjectHideFlags: 0

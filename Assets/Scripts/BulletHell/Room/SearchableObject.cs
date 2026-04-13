@@ -41,6 +41,19 @@ public class SearchableObject : MonoBehaviour
     [SerializeField] private float _proximityCheckInterval = 0.2f;
 
     // -------------------------------------------------------------------------
+    // Système infesté
+    // -------------------------------------------------------------------------
+
+    // Probabilité (0-1) que ce bureau contienne un ennemi caché
+    [SerializeField] [Range(0f, 1f)] private float _infestedChance = 0f;
+
+    // Prefab EnemyHidden à instancier si ce bureau est infesté
+    [SerializeField] private GameObject _enemyHiddenPrefab;
+
+    // Ennemi caché enregistré dans ce bureau (arrive après une attaque)
+    private EnemyHidden _hiddenEnemy;
+
+    // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
 
@@ -82,12 +95,8 @@ public class SearchableObject : MonoBehaviour
         // Cherche le joueur par tag pour éviter une dépendance directe.
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
 
-        // Journalise un avertissement si aucun joueur n'est trouvé.
         if (playerObject == null)
-        {
-            Debug.LogWarning($"[SearchableObject] Aucun GameObject taggé 'Player' trouvé.", this);
             return;
-        }
 
         // Stocke le Transform du joueur pour les calculs de distance.
         _playerTransform = playerObject.transform;
@@ -188,6 +197,31 @@ public class SearchableObject : MonoBehaviour
         _lootDropper = lootDropper;
     }
 
+    /// <summary>Configure la probabilité d'infestation et le prefab ennemi depuis ProceduralMapGenerator.</summary>
+    public void SetInfested(float chance, GameObject enemyHiddenPrefab)
+    {
+        _infestedChance    = chance;
+        _enemyHiddenPrefab = enemyHiddenPrefab;
+    }
+
+    /// <summary>Enregistre un EnemyHidden qui se cache dans ce bureau.</summary>
+    public void RegisterHiddenEnemy(EnemyHidden enemy)
+    {
+        _hiddenEnemy = enemy;
+    }
+
+    /// <summary>Libère le slot de bureau (appelé à la mort de l'ennemi).</summary>
+    public void UnregisterHiddenEnemy()
+    {
+        _hiddenEnemy = null;
+    }
+
+    /// <summary>Retourne vrai si ce bureau peut accueillir un ennemi caché.</summary>
+    public bool CanHideEnemy()
+    {
+        return _hiddenEnemy == null && _state != SearchState.Searched;
+    }
+
     // -------------------------------------------------------------------------
     // Vérification de proximité
     // -------------------------------------------------------------------------
@@ -275,20 +309,9 @@ public class SearchableObject : MonoBehaviour
         // Envoie la progression finale à 1 avant la complétion.
         OnSearchProgressUpdate.Invoke(1f);
 
-        // Confirme que la fouille est terminée dans la console.
-        Debug.Log($"[SEARCH] Fouille terminée sur {gameObject.name}");
-
         // Génère le butin à la position de cet objet si possible.
         if (_lootDropper != null)
-        {
-            // Appelle le LootDropper avec la position 2D de cet objet.
             _lootDropper.DropLoot(transform.position);
-        }
-        else
-        {
-            // Journalise un avertissement si le LootDropper est absent.
-            Debug.LogWarning($"[SearchableObject] '{_objectLabel}' : _lootDropper non assigné.", this);
-        }
 
         // Passe à l'état terminal après la fouille complète.
         _state = SearchState.Searched;
@@ -302,6 +325,22 @@ public class SearchableObject : MonoBehaviour
         // Déclenche l'ennemi réseau si assigné à ce bureau
         if (_networkEnemy != null && !_networkEnemy.gameObject.activeSelf)
             _networkEnemy.TriggerFromDesk(this);
+
+        // Si un ennemi caché s'est réfugié dans ce bureau, le révèle
+        if (_hiddenEnemy != null)
+        {
+            EnemyHidden toReveal = _hiddenEnemy;
+            _hiddenEnemy = null;
+            toReveal.RevealFromDesk();
+        }
+        // Sinon, tente un spawn infesté aléatoire
+        else if (_enemyHiddenPrefab != null && Random.value < _infestedChance)
+        {
+            GameObject go = Instantiate(_enemyHiddenPrefab, transform.position, Quaternion.identity);
+            EnemyHidden spawned = go.GetComponent<EnemyHidden>();
+            if (spawned != null)
+                spawned.SpawnAndAttack(transform.position);
+        }
 
         // Masque le bouton en notifiant la sortie de proximité.
         OnPlayerExitRange.Invoke(this);

@@ -54,10 +54,6 @@ public class EnemyVisualBuilder : MonoBehaviour
             srHidden.sortingOrder = 1;
             hiddenVisualTransform.localScale = new Vector3(1.5f, 0.8f, 1f);
         }
-        else
-        {
-            Debug.LogWarning("[EnemyVisualBuilder] HiddenVisual introuvable sous " + go.name);
-        }
 
         // --- Visuel ennemi révélé : sprite orange (désactivé au départ) ---
         Transform enemyVisualTransform = go.transform.Find("EnemyVisual");
@@ -69,10 +65,6 @@ public class EnemyVisualBuilder : MonoBehaviour
             srEnemy.sortingOrder = 2;
             enemyVisualTransform.localScale = new Vector3(0.5f, 0.5f, 1f);
             enemyVisualTransform.gameObject.SetActive(false);
-        }
-        else
-        {
-            Debug.LogWarning("[EnemyVisualBuilder] EnemyVisual introuvable sous " + go.name);
         }
     }
 

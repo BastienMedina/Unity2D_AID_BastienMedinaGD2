@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 906c7f31b2242754c9a33d8c9f44f056, type: 3}
+  m_Name: PropLibrary_Default
+  m_EditorClassIdentifier: Assembly-CSharp::PropLibrary
+  deskPrefab: {fileID: 6858209322279404521, guid: 35cb89a2bee05c441b63478fd1058627, type: 3}
+  cabinePrefab: {fileID: 837379741698265377, guid: 38ef3eb79be941541810a5c82bc6a289, type: 3}
+  wcPrefab: {fileID: 8775706710883075395, guid: e2803b7e6ff9df445b86c5ac594c0179, type: 3}
+  lavaboPrefab: {fileID: 2656559531828608916, guid: 12bcead1f52e59b47ae14b217334ebf1, type: 3}
+  tableReunionPrefab: {fileID: 2794820779656038179, guid: 7c7a99866544d854d8a8873740fdc95f, type: 3}
+  chaisePrefab: {fileID: 6053854231931238309, guid: 4adfb2588499b9c418a1d984e0e59f4c, type: 3}
+  casierPrefab: {fileID: 6100557756923699546, guid: 84e1a77ac73f77a4caedbcd6d01d6263, type: 3}
+  bancPrefab: {fileID: 1843362344614815760, guid: 3e8d5289df6721745a4e960647387cb1, type: 3}
+  canapePrefab: {fileID: 8954257372930627155, guid: 4b931ec99171d3e40a2432ce03e5312f, type: 3}
+  tableBassePrefab: {fileID: 6534193534153857582, guid: 8a91b7c529585e048bbad54c2bd329c5, type: 3}
+  machineCafePrefab: {fileID: 4600497496678209958, guid: 49a395801a2689a4497b5804c96fe8df, type: 3}
+  plantePrefab: {fileID: 3996485016804141971, guid: 883362842fb830a469d5a414cea29a1f, type: 3}
