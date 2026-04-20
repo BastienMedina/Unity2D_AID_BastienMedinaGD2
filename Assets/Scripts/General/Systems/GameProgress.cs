@@ -13,6 +13,12 @@ public class GameProgress : MonoBehaviour
     // Inventaire persistant entre les scènes — null = slot vide
     private List<InventoryItem> _persistedInventory = new List<InventoryItem>();
 
+    // Vies persistées entre les scènes — -1 = non initialisé
+    private int _persistedLives = -1;
+
+    /// <summary>Vrai si des vies ont été sauvegardées et attendent d'être restaurées.</summary>
+    public bool HasPersistedLives => _persistedLives >= 0;
+
     // Étage minimum possible dans le jeu
     private const int MinFloor = 1;
 
@@ -66,6 +72,7 @@ public class GameProgress : MonoBehaviour
     {
         CurrentFloor = MinFloor;
         _persistedInventory.Clear();
+        _persistedLives = -1;
     }
 
     // -----------------------------------------------------------------------
@@ -88,6 +95,24 @@ public class GameProgress : MonoBehaviour
 
     /// <summary>Retourne vrai si un inventaire a été sauvegardé et attend d'être restauré.</summary>
     public bool HasPersistedInventory() => _persistedInventory.Count > 0;
+
+    // -----------------------------------------------------------------------
+    // API vies persistantes
+    // -----------------------------------------------------------------------
+
+    /// <summary>Sauvegarde les vies courantes pour la prochaine scène.</summary>
+    public void SaveLives(int currentLives)
+    {
+        _persistedLives = currentLives;
+    }
+
+    /// <summary>Retourne les vies persistées et réinitialise le slot.</summary>
+    public int PopLives()
+    {
+        int lives = _persistedLives;
+        _persistedLives = -1;
+        return lives;
+    }
 
     /// <summary>Retourne le nom de scène correspondant à l'étage actuel.</summary>
     // Mappe l'étage courant à son nom de scène

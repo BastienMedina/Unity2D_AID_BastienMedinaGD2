@@ -1,39 +1,41 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-// Détecte l'entrée joueur et déclenche la transition d'étage
+// Ajouté dynamiquement par ProceduralMapGenerator sur la salle ascenseur.
+// Déclenche la transition animée dès que le joueur entre dans la zone.
 public class ElevatorTrigger : MonoBehaviour
 {
     // Étage maximum géré par la scène Bullet Hell
-    [SerializeField] private int _bulletHellMaxFloor = 3;
+    private const int BulletHellMaxFloor = 3;
 
     // Nom de la scène Bullet Hell rechargée pour un nouvel étage
-    [SerializeField] private string _bulletHellScene = "Scene_BulletHell";
+    private const string BulletHellScene = "Scene_BulletHell";
 
     // Nom de la scène Game & Watch pour l'étage 4
-    [SerializeField] private string _gameAndWatchScene = "Scene_GameAndWatch";
+    private const string GameAndWatchScene = "Scene_GameAndWatch";
 
-    // Détecte l'entrée du joueur dans l'ascenseur
+    // Empêche un double déclenchement si le joueur reste dans le trigger
+    private bool _triggered = false;
+
+    // Déclenche la transition quand le joueur entre dans la zone de l'ascenseur
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Ignore les collisions qui ne proviennent pas du joueur
         if (!other.CompareTag("Player")) return;
+        if (_triggered) return;
 
-        // Sauvegarde avant la transition d'étage
-        SaveSystem.SaveGame();
+        _triggered = true;
+
+        // Sauvegarde les vies courantes avant le changement de scène
+        if (LivesManager.Instance != null && GameProgress.Instance != null)
+            GameProgress.Instance.SaveLives(LivesManager.Instance.GetCurrentLives());
+
+        // Calcule le prochain étage pour l'affichage de la transition
+        int nextFloor = GameProgress.Instance.CurrentFloor + 1;
+        string targetScene = nextFloor <= BulletHellMaxFloor ? BulletHellScene : GameAndWatchScene;
+
+        // Sauvegarde et avance la progression avant le chargement
         GameProgress.Instance.AdvanceFloor();
+        SaveSystem.SaveGame();
 
-        int floor = GameProgress.Instance.CurrentFloor;
-
-        if (floor <= _bulletHellMaxFloor)
-        {
-            // Recharge la même scène : nouvel étage procédural
-            SceneManager.LoadScene(_bulletHellScene);
-        }
-        else
-        {
-            // Étage 4 : combat de boss Game & Watch
-            SceneManager.LoadScene(_gameAndWatchScene);
-        }
+        FloorTransitionAnimator.Instance.TransitionToScene(targetScene, nextFloor);
     }
 }

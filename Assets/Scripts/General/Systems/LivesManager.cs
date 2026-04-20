@@ -49,8 +49,19 @@ public class LivesManager : MonoBehaviour
         // Assigne cette instance comme référence singleton globale
         Instance = this;
 
-        // Copie la valeur maximale dans le compteur courant.
-        _currentLives = _maxLives;
+        // Persiste entre toutes les scènes pour conserver les vies
+        DontDestroyOnLoad(gameObject);
+
+        // Restaure les vies depuis GameProgress si elles ont été sauvegardées
+        if (GameProgress.Instance != null && GameProgress.Instance.HasPersistedLives)
+        {
+            _currentLives = GameProgress.Instance.PopLives();
+        }
+        else
+        {
+            // Première initialisation : vies au maximum
+            _currentLives = _maxLives;
+        }
 
         // Notifie immédiatement les abonnés avec la valeur initiale.
         OnLivesChanged.Invoke(_currentLives);

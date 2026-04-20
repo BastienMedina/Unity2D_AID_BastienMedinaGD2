@@ -1629,7 +1629,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -2186,6 +2187,7 @@ GameObject:
   m_Component:
   - component: {fileID: 692154762}
   - component: {fileID: 692154763}
+  - component: {fileID: 692154764}
   m_Layer: 0
   m_Name: GO_TurnManager
   m_TagString: Untagged
@@ -2243,6 +2245,22 @@ MonoBehaviour:
   OnGameOver:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &692154764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 692154761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55ae9e6a8ff4a8f4aac7899a2bc41a43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameOverHandler
+  _turnManager: {fileID: 692154763}
+  _victoryScene: Scene_MainMenu
+  _defeatScene: Scene_MainMenu
+  _victoryFloorLabel: 5
 --- !u!1 &731223960
 GameObject:
   m_ObjectHideFlags: 0
@@ -2949,7 +2967,8 @@ MonoBehaviour:
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
+  m_fontSharedMaterials:
+  - {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
@@ -3483,6 +3502,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1551166104}
   - component: {fileID: 1551166105}
+  - component: {fileID: 1551166106}
   m_Layer: 0
   m_Name: GO_LaserSystem
   m_TagString: Untagged
@@ -3525,6 +3545,22 @@ MonoBehaviour:
   OnPlayerHitByLaser:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1551166106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551166103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c646eca281034e40a2fb4e4ab042761, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LaserPatternGenerator
+  _patternCount: 4
+  _cellsPerPattern: 4
+  _gridColumns: 5
+  _gridRows: 5
 --- !u!1 &1586421242
 GameObject:
   m_ObjectHideFlags: 0

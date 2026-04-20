@@ -30,8 +30,8 @@ public class MainMenuController : MonoBehaviour
         _continueButton.interactable = SaveSystem.HasSave();
     }
 
-    /// <summary>Lance ou reprend une partie depuis le bouton PLAY.</summary>
-    // Charge la save si elle existe, sinon repart à zéro
+    /// <summary>Lance une nouvelle partie depuis le début au floor 1.</summary>
+    // Réinitialise la progression, efface la save existante et charge le BulletHell
     public void OnPlayClicked()
     {
         // Protège contre l'absence du singleton GameProgress dans la scène
@@ -41,16 +41,9 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        if (SaveSystem.HasSave())
-        {
-            // Restaure la progression existante avant de charger
-            SaveSystem.LoadGame();
-        }
-        else
-        {
-            // Remet le singleton à l'étage 1 pour une nouvelle partie
-            GameProgress.Instance.Reset();
-        }
+        // Repart toujours à l'étage 1 et efface la save précédente
+        GameProgress.Instance.Reset();
+        SaveSystem.DeleteSave();
 
         SceneManager.LoadScene(_bulletHellScene);
     }

@@ -16,4 +16,11 @@ public class LaserPattern : ScriptableObject
 
     // Expose les cellules actives en lecture seule.
     public IReadOnlyList<Vector2Int> ActiveCells => _activeCells;
+
+    /// <summary>Initialise les données d'un pattern généré par code.</summary>
+    public void Init(int patternIndex, List<Vector2Int> cells)
+    {
+        _patternIndex = patternIndex;
+        _activeCells = new List<Vector2Int>(cells);
+    }
 }

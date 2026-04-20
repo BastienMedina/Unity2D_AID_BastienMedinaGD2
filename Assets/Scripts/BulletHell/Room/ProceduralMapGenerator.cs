@@ -418,10 +418,11 @@ public class ProceduralMapGenerator : MonoBehaviour
     // -------------------------------------------------------------------------
 
     // Calcule le nombre d'ennemis selon l'étage actuel
+    // Floor 1 → _baseEnemyCount (3), puis +1 par étage supplémentaire
     private int GetEnemyCount()
     {
         int floor = GameProgress.Instance != null ? GameProgress.Instance.CurrentFloor : 1;
-        return _baseEnemyCount + (floor - 1) * 2;
+        return _baseEnemyCount + (floor - 1);
     }
 
     // Instancie les ennemis aléatoirement dans les bornes de l'Open Space

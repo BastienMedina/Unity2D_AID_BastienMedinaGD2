@@ -37,6 +37,9 @@ public class LaserSystem : MonoBehaviour
     // Index du pattern laser actuellement actif.
     private int _currentPatternIndex;
 
+    // Index du pattern utilisé au tour précédent (exclus de la prochaine sélection).
+    private int _previousPatternIndex = -1;
+
     // Liste mutable des cellules laser actives ce tour.
     private List<Vector2Int> _activeLaserCells = new List<Vector2Int>();
 
@@ -74,6 +77,7 @@ public class LaserSystem : MonoBehaviour
 
         // Initialise l'index au premier pattern de la séquence.
         _currentPatternIndex = 0;
+        _previousPatternIndex = -1;
 
         // Charge les cellules actives du pattern initial en mémoire.
         RebuildActiveCells();
@@ -96,6 +100,15 @@ public class LaserSystem : MonoBehaviour
     // -------------------------------------------------------------------------
     // API publique
     // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Injecte un pool de patterns générés par code avant le démarrage du jeu.
+    /// Appelé par LaserPatternGenerator dans son propre Awake, avant celui-ci.
+    /// </summary>
+    public void InjectPatterns(List<LaserPattern> patterns)
+    {
+        _patterns = patterns;
+    }
 
     /// <summary>
     /// Vérifie si playerPos est dans les cellules actives du pattern courant.
@@ -137,27 +150,12 @@ public class LaserSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Retourne une copie des cellules du pattern suivant dans la séquence.
-    /// Destiné exclusivement aux systèmes de rendu d'indicateur laser.
+    /// Non utilisé — le prochain pattern étant aléatoire, il ne peut pas être prédit.
+    /// Retourne toujours une liste vide pour ne pas afficher un indicateur trompeur.
     /// </summary>
     public List<Vector2Int> GetNextLaserCells()
     {
-        // Retourne une liste vide si aucun pattern n'est disponible.
-        if (!HasValidPatterns)
-            return new List<Vector2Int>();
-
-        // Calcule l'index du prochain pattern en bouclant sur la séquence.
-        int nextIndex = (_currentPatternIndex + 1) % _patterns.Count;
-
-        // Récupère le pattern correspondant à l'index suivant calculé.
-        LaserPattern next = _patterns[nextIndex];
-
-        // Retourne une liste vide si le pattern suivant est invalide.
-        if (next == null || next.ActiveCells == null)
-            return new List<Vector2Int>();
-
-        // Retourne une copie pour protéger les données source ScriptableObject.
-        return new List<Vector2Int>(next.ActiveCells);
+        return new List<Vector2Int>();
     }
 
     // -------------------------------------------------------------------------
@@ -178,26 +176,46 @@ public class LaserSystem : MonoBehaviour
         EvaluatePosition(playerPosition);
     }
 
-    // Avance l'index au prochain pattern en bouclant sur la séquence.
+    // Avance vers un pattern aléatoire en excluant le courant et le précédent.
     private void HandleAdvanceLaser()
     {
         // Ignore l'avancement si aucun pattern n'est disponible.
         if (!HasValidPatterns)
             return;
 
-        // Reste sur l'index zéro si un seul pattern existe.
+        // Avec un seul pattern, impossible d'alterner — on reste en place.
         if (_patterns.Count == 1)
         {
-            // Bloque l'index à zéro pour éviter toute dérive.
             _currentPatternIndex = 0;
-
-            // Recharge les cellules actives même avec un seul pattern.
             RebuildActiveCells();
             return;
         }
 
-        // Passe au pattern suivant et reboucle en fin de séquence.
-        _currentPatternIndex = (_currentPatternIndex + 1) % _patterns.Count;
+        // Construit la liste des candidats en excluant le courant et le précédent
+        List<int> candidates = new List<int>(_patterns.Count);
+        for (int i = 0; i < _patterns.Count; i++)
+        {
+            if (i == _currentPatternIndex) continue;
+            if (i == _previousPatternIndex) continue;
+            candidates.Add(i);
+        }
+
+        // Si tous les patterns sont exclus (2 patterns), autorise au moins le précédent
+        if (candidates.Count == 0)
+        {
+            for (int i = 0; i < _patterns.Count; i++)
+            {
+                if (i != _currentPatternIndex)
+                    candidates.Add(i);
+            }
+        }
+
+        // Pioche un index aléatoire parmi les candidats valides
+        int pickedIndex = candidates[Random.Range(0, candidates.Count)];
+
+        // Mémorise le courant comme précédent avant de changer
+        _previousPatternIndex = _currentPatternIndex;
+        _currentPatternIndex = pickedIndex;
 
         // Charge les cellules du nouveau pattern dans la liste mutable.
         RebuildActiveCells();

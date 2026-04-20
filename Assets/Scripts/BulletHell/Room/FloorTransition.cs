@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 // Gère la transition d'étage depuis l'ascenseur
 public class FloorTransition : MonoBehaviour
@@ -14,7 +13,7 @@ public class FloorTransition : MonoBehaviour
     [SerializeField] private string _gameAndWatchScene = "Scene_GameAndWatch";
 
     /// <summary>Appelé par ElevatorController._onFloorTransitionRequested.</summary>
-    // Sauvegarde et charge la scène du prochain étage
+    // Sauvegarde la progression et déclenche la transition animée vers l'étage suivant
     public void OnPlayerEnterElevator()
     {
         // Sauvegarde la progression avant de changer d'étage
@@ -22,16 +21,9 @@ public class FloorTransition : MonoBehaviour
         GameProgress.Instance.AdvanceFloor();
 
         int nextFloor = GameProgress.Instance.CurrentFloor;
+        string targetScene = nextFloor <= _bulletHellMaxFloor ? _bulletHellScene : _gameAndWatchScene;
 
-        if (nextFloor <= _bulletHellMaxFloor)
-        {
-            // Recharge la même scène pour générer un nouvel étage
-            SceneManager.LoadScene(_bulletHellScene);
-        }
-        else
-        {
-            // Charge le mini-jeu Game & Watch à l'étage 4
-            SceneManager.LoadScene(_gameAndWatchScene);
-        }
+        // Délègue le chargement au singleton animé
+        FloorTransitionAnimator.Instance.TransitionToScene(targetScene, nextFloor);
     }
 }
