@@ -150,12 +150,42 @@ public class LaserSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Non utilisé — le prochain pattern étant aléatoire, il ne peut pas être prédit.
-    /// Retourne toujours une liste vide pour ne pas afficher un indicateur trompeur.
+    /// Retourne les cellules du pattern qui sera actif au prochain tour.
+    /// Utilisé par LaserIndicatorRenderer pour prévenir le joueur.
+    /// Le prochain pattern est le suivant dans la séquence après le courant,
+    /// en excluant le précédent selon la même logique que HandleAdvanceLaser.
     /// </summary>
     public List<Vector2Int> GetNextLaserCells()
     {
-        return new List<Vector2Int>();
+        if (!HasValidPatterns || _patterns.Count < 2)
+            return new List<Vector2Int>();
+
+        // Duplique la logique de sélection d'HandleAdvanceLaser pour prédire le prochain index.
+        List<int> candidates = new List<int>(_patterns.Count);
+        for (int i = 0; i < _patterns.Count; i++)
+        {
+            if (i == _currentPatternIndex)  continue;
+            if (i == _previousPatternIndex) continue;
+            candidates.Add(i);
+        }
+
+        // Si tous exclus (cas 2 patterns), autorise au moins le précédent.
+        if (candidates.Count == 0)
+        {
+            for (int i = 0; i < _patterns.Count; i++)
+            {
+                if (i != _currentPatternIndex)
+                    candidates.Add(i);
+            }
+        }
+
+        // Retourne les cellules du premier candidat valide comme prédiction.
+        // C'est une estimation : l'index réel sera choisi aléatoirement parmi les candidats.
+        LaserPattern next = _patterns[candidates[0]];
+        if (next == null || next.ActiveCells == null)
+            return new List<Vector2Int>();
+
+        return new List<Vector2Int>(next.ActiveCells);
     }
 
     // -------------------------------------------------------------------------

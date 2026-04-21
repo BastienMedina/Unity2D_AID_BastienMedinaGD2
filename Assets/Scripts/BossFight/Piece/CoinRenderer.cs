@@ -19,6 +19,9 @@ public class CoinRenderer : MonoBehaviour
     // SpriteRenderer de la pièce pour gérer sa visibilité.
     [SerializeField] private SpriteRenderer _coinSpriteRenderer;
 
+    // Sprite personnalisé pour la pièce — si non assigné, utilise un sprite généré.
+    [SerializeField] private Sprite _coinSprite;
+
     // -------------------------------------------------------------------------
     // Paramètres de mise en page de la grille
     // -------------------------------------------------------------------------
@@ -32,10 +35,13 @@ public class CoinRenderer : MonoBehaviour
     // Nombre de colonnes pour le centrage de la grille.
     [SerializeField] private int _gridColumns = 5;
 
+    // Décalage vertical de la grille par rapport à l'origine monde, doit correspondre au GO parent.
+    [SerializeField] private float _gridOffsetY = -1.5f;
+
     // Taille du sprite pièce relative à la cellule.
     [SerializeField] private float _coinSize = 0.6f;
 
-    // Couleur jaune vif appliquée au sprite de la pièce.
+    // Couleur appliquée au sprite de la pièce (ignorée si _coinSprite est assigné).
     [SerializeField] private Color _coinColor = new Color(1f, 0.843f, 0f, 1f);
 
     // -------------------------------------------------------------------------
@@ -77,9 +83,19 @@ public class CoinRenderer : MonoBehaviour
         if (_coinSpriteRenderer == null)
             _coinSpriteRenderer = _coinVisual.gameObject.AddComponent<SpriteRenderer>();
 
-        // Génère et assigne un sprite jaune plein à la pièce.
-        _coinSpriteRenderer.sprite       = CreateFlatSprite();
-        _coinSpriteRenderer.color        = _coinColor;
+        // Génère ou assigne le sprite de la pièce.
+        if (_coinSprite != null)
+        {
+            // Utilise le sprite assigné en Inspector.
+            _coinSpriteRenderer.sprite = _coinSprite;
+            _coinSpriteRenderer.color  = Color.white;
+        }
+        else
+        {
+            // Fallback : sprite procédural coloré.
+            _coinSpriteRenderer.sprite = CreateFlatSprite();
+            _coinSpriteRenderer.color  = _coinColor;
+        }
         _coinSpriteRenderer.sortingOrder = 2;
 
         // Bascule sur le matériau non-éclairé URP pour la visibilité.
@@ -188,8 +204,8 @@ public class CoinRenderer : MonoBehaviour
         // Calcule la coordonnée X à partir de la colonne de grille.
         float x = gridOrigin + gridPos.x * step;
 
-        // Calcule la coordonnée Y à partir de la ligne de grille.
-        float y = gridOrigin + gridPos.y * step;
+        // Calcule la coordonnée Y à partir de la ligne de grille + offset de descente.
+        float y = gridOrigin + gridPos.y * step + _gridOffsetY;
 
         return new Vector3(x, y, 0f);
     }

@@ -42,8 +42,8 @@ public class LaserIndicatorRenderer : MonoBehaviour
     // Décalage depuis le bord de la grille pour placer l'indicateur.
     [SerializeField] private float _indicatorOffset = 0.8f;
 
-    // Couleur rouge appliquée aux indicateurs du prochain laser.
-    [SerializeField] private Color _indicatorColor = new Color(1f, 0.133f, 0f, 1f);
+    // Sprite utilisé pour les cercles indicateurs — doit être assigné dans l'Inspector.
+    [SerializeField] private Sprite _indicatorSprite;
 
     // -------------------------------------------------------------------------
     // État interne
@@ -82,38 +82,18 @@ public class LaserIndicatorRenderer : MonoBehaviour
         BuildIndicators();
     }
 
-    // Applique un premier rendu au démarrage avant le premier tour.
+    // Applique un premier rendu et abonne la mise à jour après Awake.
     private void Start()
     {
-        // Rafraîchit les indicateurs avec le prochain pattern initial.
+        _turnManager.OnTurnProcessed.AddListener(RefreshDisplay);
         RefreshDisplay();
-    }
-
-    // Abonne la mise à jour des indicateurs quand le composant s'active.
-    private void OnEnable()
-    {
-        // Vérifie la référence avant d'abonner la mise à jour indicateurs.
-        if (_turnManager != null)
-            _turnManager.OnTurnProcessed.AddListener(HandleTurnProcessed);
     }
 
     // Désabonne proprement quand le composant se désactive.
     private void OnDisable()
     {
-        // Retire l'abonnement pour éviter les mises à jour fantômes.
         if (_turnManager != null)
-            _turnManager.OnTurnProcessed.RemoveListener(HandleTurnProcessed);
-    }
-
-    // -------------------------------------------------------------------------
-    // Gestionnaire d'événement
-    // -------------------------------------------------------------------------
-
-    // Reçoit le signal de fin de tour et rafraîchit les indicateurs.
-    private void HandleTurnProcessed()
-    {
-        // Met à jour les indicateurs selon le prochain pattern laser.
-        RefreshDisplay();
+            _turnManager.OnTurnProcessed.RemoveListener(RefreshDisplay);
     }
 
     // -------------------------------------------------------------------------
@@ -134,10 +114,11 @@ public class LaserIndicatorRenderer : MonoBehaviour
         float leftEdge = _gridOrigin.x - _indicatorOffset;
 
         // Crée un indicateur circulaire pour chaque ligne de la grille.
+        // Rotation +90° : la pointe (bas du sprite) pointe vers la droite, l'arrondi (haut) vers la gauche.
         for (int row = 0; row < _gridRows; row++)
         {
-            // Instancie le cercle et le place sous le conteneur parent.
-            GameObject indicator = CreateCircleSprite($"Indicator_Row_{row}", _container);
+            // Instancie le sprite orienté pour tirer vers la droite depuis le bord gauche.
+            GameObject indicator = CreateCircleSprite($"Indicator_Row_{row}", _container, 90f);
 
             // Calcule la coordonnée Y centrée sur la ligne courante.
             float y = _gridOrigin.y + row * step;
@@ -157,10 +138,11 @@ public class LaserIndicatorRenderer : MonoBehaviour
         float topEdge = _gridOrigin.y + (_gridRows - 1) * step + _indicatorOffset;
 
         // Crée un indicateur circulaire pour chaque colonne de la grille.
+        // Rotation 180° : la pointe (bas du sprite) pointe vers le bas, l'arrondi (haut) reste en haut.
         for (int col = 0; col < _gridColumns; col++)
         {
-            // Instancie le cercle et le place sous le conteneur parent.
-            GameObject indicator = CreateCircleSprite($"Indicator_Col_{col}", _container);
+            // Instancie le sprite orienté pour tirer vers le bas depuis le bord supérieur.
+            GameObject indicator = CreateCircleSprite($"Indicator_Col_{col}", _container, 180f);
 
             // Calcule la coordonnée X centrée sur la colonne courante.
             float x = _gridOrigin.x + col * step;
@@ -282,31 +264,18 @@ public class LaserIndicatorRenderer : MonoBehaviour
     // Méthode utilitaire
     // -------------------------------------------------------------------------
 
-    // Crée un GameObject avec un SpriteRenderer carré coloré.
-    private GameObject CreateCircleSprite(string objectName, Transform parent)
+    // Crée un GameObject avec le sprite indicateur assigné et la rotation donnée.
+    private GameObject CreateCircleSprite(string objectName, Transform parent, float rotationZ = 0f)
     {
-        // Instancie un GameObject vide et le parent sous le conteneur.
         GameObject go = new GameObject(objectName);
         go.transform.SetParent(parent, false);
 
-        // Crée une texture unie d'un pixel à la couleur indicateur configurée.
-        Texture2D tex = new Texture2D(1, 1);
-        tex.SetPixel(0, 0, _indicatorColor);
-        tex.Apply();
+        // Applique la rotation autour de Z pour orienter la pointe correctement.
+        go.transform.localRotation = Quaternion.Euler(0f, 0f, rotationZ);
 
-        // Crée un sprite depuis la texture générée d'un pixel.
-        Sprite sprite = Sprite.Create(
-            tex,
-            new Rect(0, 0, 1, 1),
-            new Vector2(0.5f, 0.5f),
-            1f
-        );
-
-        // Ajoute un SpriteRenderer et assigne le sprite généré.
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite         = sprite;
-        sr.color          = Color.white;
-        sr.sortingOrder   = 3;
+        sr.sprite       = _indicatorSprite;
+        sr.sortingOrder = 3;
 
         return go;
     }

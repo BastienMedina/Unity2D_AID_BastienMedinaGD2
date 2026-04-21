@@ -39,6 +39,10 @@ public class HeartsDisplay : MonoBehaviour
     // Résout les dépendances et construit la barre de coeurs initiale.
     private void Awake()
     {
+        // Priorité au singleton DontDestroyOnLoad pour les scènes non-initiales.
+        if (_livesManager == null)
+            _livesManager = LivesManager.Instance;
+
         if (_livesManager == null)
             _livesManager = FindFirstObjectByType<LivesManager>();
 

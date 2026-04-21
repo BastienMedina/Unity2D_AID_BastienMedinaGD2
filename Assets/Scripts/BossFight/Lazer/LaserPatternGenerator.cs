@@ -1,25 +1,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Génère un pool de patterns laser aléatoires et l'injecte dans LaserSystem.
-// S'exécute avant LaserSystem grâce à l'ordre d'exécution négatif.
-[DefaultExecutionOrder(-20)]
+// Génère un pool de patterns laser composés de lignes et colonnes entières.
+// Chaque pattern active entre 1 et _maxStripsPerPattern rangées complètes,
+// choisies aléatoirement parmi toutes les lignes et colonnes disponibles.
+// S'exécute avant LaserSystem grâce à l'ordre d'exécution plus négatif.
+[DefaultExecutionOrder(-30)]
 [RequireComponent(typeof(LaserSystem))]
 public class LaserPatternGenerator : MonoBehaviour
 {
-    // Nombre de patterns à générer au lancement
+    // Nombre de patterns distincts à générer au lancement.
     [SerializeField] private int _patternCount = 4;
 
-    // Nombre de cellules actives par pattern
-    [SerializeField] private int _cellsPerPattern = 4;
+    // Nombre maximum de bandes (lignes ou colonnes) actives par pattern.
+    [SerializeField] private int _maxStripsPerPattern = 2;
 
-    // Colonnes de la grille de jeu
+    // Colonnes de la grille de jeu.
     [SerializeField] private int _gridColumns = 5;
 
-    // Lignes de la grille de jeu
+    // Lignes de la grille de jeu.
     [SerializeField] private int _gridRows = 5;
 
-    // Génère les patterns aléatoires et les injecte dans LaserSystem avant son Awake
+    // Génère les patterns et les injecte dans LaserSystem.
     private void Awake()
     {
         LaserSystem laserSystem = GetComponent<LaserSystem>();
@@ -31,7 +33,7 @@ public class LaserPatternGenerator : MonoBehaviour
     // Génération
     // -------------------------------------------------------------------------
 
-    // Crée _patternCount patterns uniques avec des cellules distribuées aléatoirement
+    // Crée _patternCount patterns composés de lignes/colonnes entières.
     private List<LaserPattern> GeneratePatterns()
     {
         List<LaserPattern> patterns = new List<LaserPattern>(_patternCount);
@@ -41,7 +43,7 @@ public class LaserPatternGenerator : MonoBehaviour
             LaserPattern pattern = ScriptableObject.CreateInstance<LaserPattern>();
             pattern.name = $"GeneratedPattern_{i}";
 
-            List<Vector2Int> cells = PickRandomCells(_cellsPerPattern);
+            List<Vector2Int> cells = GenerateStripCells();
             pattern.Init(i, cells);
 
             patterns.Add(pattern);
@@ -50,29 +52,62 @@ public class LaserPatternGenerator : MonoBehaviour
         return patterns;
     }
 
-    // Pioche _count cellules uniques aléatoirement dans la grille
-    private List<Vector2Int> PickRandomCells(int count)
+    // Génère les cellules d'un pattern en sélectionnant des lignes ou colonnes entières.
+    // Chaque bande occupe l'intégralité de ses cellules pour garantir le rendu en capsule.
+    private List<Vector2Int> GenerateStripCells()
     {
-        // Construit la liste de toutes les cellules disponibles
-        List<Vector2Int> allCells = new List<Vector2Int>(_gridColumns * _gridRows);
+        // Compte le nombre de bandes actives dans ce pattern (au moins 1).
+        int stripCount = Random.Range(1, _maxStripsPerPattern + 1);
+
+        // Construit la liste des bandes candidates : lignes (isRow=true) et colonnes (isRow=false).
+        List<(bool isRow, int index)> candidates = new List<(bool, int)>();
+
+        for (int row = 0; row < _gridRows; row++)
+            candidates.Add((true, row));
 
         for (int col = 0; col < _gridColumns; col++)
+            candidates.Add((false, col));
+
+        // Mélange Fisher-Yates pour une sélection uniforme parmi les bandes.
+        for (int i = candidates.Count - 1; i > 0; i--)
         {
-            for (int row = 0; row < _gridRows; row++)
+            int j = Random.Range(0, i + 1);
+            (candidates[i], candidates[j]) = (candidates[j], candidates[i]);
+        }
+
+        // Sélectionne les N premières bandes après mélange.
+        int take = Mathf.Min(stripCount, candidates.Count);
+
+        // Accumule les cellules de chaque bande sélectionnée.
+        List<Vector2Int> cells = new List<Vector2Int>();
+        HashSet<Vector2Int> seen = new HashSet<Vector2Int>();
+
+        for (int s = 0; s < take; s++)
+        {
+            (bool isRow, int index) = candidates[s];
+
+            if (isRow)
             {
-                allCells.Add(new Vector2Int(col, row));
+                // Ajoute toutes les cellules de cette ligne (row = index).
+                for (int col = 0; col < _gridColumns; col++)
+                {
+                    Vector2Int cell = new Vector2Int(col, index);
+                    if (seen.Add(cell))
+                        cells.Add(cell);
+                }
+            }
+            else
+            {
+                // Ajoute toutes les cellules de cette colonne (col = index).
+                for (int row = 0; row < _gridRows; row++)
+                {
+                    Vector2Int cell = new Vector2Int(index, row);
+                    if (seen.Add(cell))
+                        cells.Add(cell);
+                }
             }
         }
 
-        // Mélange Fisher-Yates pour une sélection uniforme
-        for (int i = allCells.Count - 1; i > 0; i--)
-        {
-            int j = Random.Range(0, i + 1);
-            (allCells[i], allCells[j]) = (allCells[j], allCells[i]);
-        }
-
-        // Prend les N premières cellules après mélange
-        int take = Mathf.Min(count, allCells.Count);
-        return allCells.GetRange(0, take);
+        return cells;
     }
 }

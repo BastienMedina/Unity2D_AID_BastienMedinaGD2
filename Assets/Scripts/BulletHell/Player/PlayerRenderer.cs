@@ -32,6 +32,9 @@ public class PlayerRenderer : MonoBehaviour
     // Taille du sprite joueur relative à la cellule.
     [SerializeField] private float _playerSize = 0.7f;
 
+    // Décalage vertical de la grille par rapport à l'origine monde.
+    [SerializeField] private float _gridOffsetY = -1.5f;
+
     // Durée du flash jaune après chaque déplacement en secondes.
     [SerializeField] private float _flashDuration = 0.1f;
 
@@ -47,10 +50,6 @@ public class PlayerRenderer : MonoBehaviour
 
     // SpriteRenderer du visuel joueur pour les changements de couleur.
     private SpriteRenderer _spriteRenderer;
-
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
 
     // Valide les références, crée le sprite et initialise la position.
     private void Awake()
@@ -171,8 +170,8 @@ public class PlayerRenderer : MonoBehaviour
         // Calcule la coordonnée X à partir de la colonne de grille.
         float x = gridOrigin + gridPos.x * step;
 
-        // Calcule la coordonnée Y à partir de la ligne de grille.
-        float y = gridOrigin + gridPos.y * step;
+        // Calcule la coordonnée Y à partir de la ligne de grille + offset de descente.
+        float y = gridOrigin + gridPos.y * step + _gridOffsetY;
 
         return new Vector3(x, y, 0f);
     }

@@ -21,8 +21,8 @@ public class GridCollisionResolver : MonoBehaviour
     // Référence au système de pièces pour la collecte.
     [SerializeField] private CoinSystem _coinSystem;
 
-    // Référence au gestionnaire de vies pour déclencher les dégâts.
-    [SerializeField] private LivesManager _livesManager;
+    // Référence au gestionnaire de vies — résolue via le singleton, ne pas assigner dans l'Inspector.
+    private LivesManager _livesManager;
 
     // -------------------------------------------------------------------------
     // Événements publics
@@ -70,12 +70,14 @@ public class GridCollisionResolver : MonoBehaviour
             );
         }
 
-        // Lève une exception si LivesManager n'est pas assigné.
+        // Résout le LivesManager via le singleton — compatible DontDestroyOnLoad cross-scènes.
+        _livesManager = LivesManager.Instance;
+        if (_livesManager == null)
+            _livesManager = FindFirstObjectByType<LivesManager>();
+
         if (_livesManager == null)
         {
-            throw new MissingReferenceException(
-                $"[GridCollisionResolver] La référence {nameof(_livesManager)} n'est pas assignée."
-            );
+            Debug.LogError("[GridCollisionResolver] LivesManager introuvable — les dégâts laser seront ignorés.", this);
         }
 
         // Abonne la résolution au signal d'évaluation laser du tour.

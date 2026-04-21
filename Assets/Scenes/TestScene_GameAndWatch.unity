@@ -2571,10 +2571,10 @@ MonoBehaviour:
   _container: {fileID: 893712883}
   _cellSize: 1
   _cellGap: 0.1
-  _gridOrigin: {x: -2.2, y: -2.2}
+  _gridOrigin: {x: -2, y: -2}
   _gridColumns: 5
   _gridRows: 5
-  _laserColor: {r: 1, g: 0.549, b: 0, a: 1}
+  _laserSprite: {fileID: 21300000, guid: d4e37c810fea5dd4db633c52288c60f0, type: 3}
 --- !u!1 &939712497
 GameObject:
   m_ObjectHideFlags: 0
@@ -3117,7 +3117,7 @@ MonoBehaviour:
   _gridRows: 5
   _cellSize: 0.9
   _cellGap: 0.1
-  _cellColor: {r: 1, g: 1, b: 1, a: 0.15}
+  _cellSprite: {fileID: 21300000, guid: 28b6ab7c5c421214fa97308de353cf60, type: 3}
 --- !u!1 &1338646686
 GameObject:
   m_ObjectHideFlags: 0
@@ -3539,9 +3539,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LaserSystem
   _turnManager: {fileID: 692154763}
   _gridManager: {fileID: 655753573}
-  _patterns:
-  - {fileID: 11400000, guid: 90b535dbcf868114484c9b31a0b4d1d6, type: 2}
-  - {fileID: 11400000, guid: 8a6864d6518a74e49abdd04607e6b2df, type: 2}
+  _patterns: []
   OnPlayerHitByLaser:
     m_PersistentCalls:
       m_Calls: []
@@ -3558,7 +3556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LaserPatternGenerator
   _patternCount: 4
-  _cellsPerPattern: 4
+  _maxStripsPerPattern: 2
   _gridColumns: 5
   _gridRows: 5
 --- !u!1 &1586421242
@@ -4088,12 +4086,12 @@ MonoBehaviour:
   _container: {fileID: 1903261857}
   _cellSize: 1
   _cellGap: 0.1
-  _gridOrigin: {x: -2.2, y: -2.2}
+  _gridOrigin: {x: -2, y: -2}
   _gridColumns: 5
   _gridRows: 5
   _indicatorSize: 0.4
   _indicatorOffset: 0.8
-  _indicatorColor: {r: 1, g: 0.133, b: 0, a: 1}
+  _indicatorSprite: {fileID: 21300000, guid: 316ce6bcdc37a3a4fb8b1ddb3e26ed1c, type: 3}
 --- !u!1 &1948160770
 GameObject:
   m_ObjectHideFlags: 0
@@ -4577,7 +4575,6 @@ MonoBehaviour:
   _gridManager: {fileID: 655753573}
   _laserSystem: {fileID: 1551166105}
   _coinSystem: {fileID: 1416679034}
-  _livesManager: {fileID: 363125324}
   OnCollisionsResolved:
     m_PersistentCalls:
       m_Calls: []

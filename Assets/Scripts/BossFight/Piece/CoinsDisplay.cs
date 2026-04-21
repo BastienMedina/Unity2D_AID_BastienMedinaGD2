@@ -25,8 +25,8 @@ public class CoinsDisplay : MonoBehaviour
     // Constantes
     // -------------------------------------------------------------------------
 
-    // Préfixe affiché devant le compteur de pièces courant.
-    private const string CoinsPrefix = "◉ ";
+    // Préfixe affiché devant le compteur de pièces courant (vide, l'icône est une Image séparée).
+    private const string CoinsPrefix = "";
 
     // Séparateur entre le total collecté et la cible de victoire.
     private const string CoinsSeparator = " / ";
