@@ -16,11 +16,17 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
     // Points de vie courants décrémentés à chaque dégât reçu
     private int _currentHealth;
 
+    // Référence optionnelle au composant de feedback visuel
+    private EnemyFeedback _feedback;
+
     // Initialise la santé courante au maximum au démarrage
     protected virtual void Awake()
     {
         // Copie la valeur maximale comme santé de départ
         _currentHealth = _maxHealth;
+
+        // Récupère le feedback visuel s'il est présent sur le GameObject
+        _feedback = GetComponent<EnemyFeedback>();
     }
 
     // Retourne la santé actuelle de l'ennemi
@@ -46,6 +52,9 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
 
         // Réduit la santé courante du montant de dégâts reçus
         _currentHealth -= amount;
+
+        // Joue le feedback visuel de dégât si disponible
+        _feedback?.PlayHitFeedback();
 
         // Notifie les abonnés que l'ennemi vient de subir des dégâts
         _onDamageTaken?.Invoke();

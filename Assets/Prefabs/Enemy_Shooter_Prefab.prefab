@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2642392113385366663}
   - component: {fileID: 2392862787580032295}
   - component: {fileID: 8712840271456533846}
+  - component: {fileID: 4772344833898078724}
   m_Layer: 0
   m_Name: Enemy_Shooter_Prefab
   m_TagString: Enemy
@@ -32,7 +33,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3, y: -3, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.27, y: 0.27, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -86,15 +87,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 3f5e0dabb6d3f84418443a16af42d29a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 4.82, y: 5.13}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!50 &7935361284500489679
 Rigidbody2D:
@@ -158,7 +159,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.3
+  m_Radius: 0.5
 --- !u!114 &2642392113385366663
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,3 +225,22 @@ MonoBehaviour:
   - {fileID: 6533189635189762394, guid: be32e006f65258e4eba55123385b112b, type: 3}
   - {fileID: 3663403317245369552, guid: 8267c68292fd36e41a42d823ec9ca349, type: 3}
   _dropChance: 0.75
+--- !u!114 &4772344833898078724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3969365350574921017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22168260194e6464b97d8a0a1a5f4a0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyFeedback
+  _hitScaleDuration: 0.15
+  _hitScalePunch: 1.4
+  _hitFlashColor: {r: 1, g: 0.2, b: 0.2, a: 1}
+  _shootSquishDuration: 0.12
+  _shootSquishX: 0.7
+  _rockAmplitude: 12
+  _rockSpeed: 8

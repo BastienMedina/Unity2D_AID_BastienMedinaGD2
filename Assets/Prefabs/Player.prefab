@@ -17,6 +17,8 @@ GameObject:
   - component: {fileID: 3064978683616916981}
   - component: {fileID: 8563556950080678921}
   - component: {fileID: 5398016327306559818}
+  - component: {fileID: 9158958854513939183}
+  - component: {fileID: 1245106206818335003}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -33,10 +35,9 @@ RectTransform:
   m_GameObject: {fileID: 2820338830230650032}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2.5, y: 2.5, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1057144865904848041}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -129,7 +130,7 @@ Rigidbody2D:
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 1
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!58 &5892719501121393827
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -165,7 +166,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.3
+  m_Radius: 0.25
 --- !u!114 &1981975847905038164
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,8 +182,6 @@ MonoBehaviour:
   _moveSpeed: 3
   _virtualJoystick: {fileID: 0}
   _deadZoneThreshold: 0.1
-  _rotationSpeed: 720
-  _smoothRotation: 0
   _onPlayerMoved:
     m_PersistentCalls:
       m_Calls: []
@@ -247,108 +246,45 @@ MonoBehaviour:
   _playerColor: {r: 1, g: 1, b: 1, a: 1}
   _sortingOrder: 3
   _spriteScale: 0.6
---- !u!1 &4048551624222570984
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1057144865904848041}
-  - component: {fileID: 5966508359509654197}
-  - component: {fileID: 7376149822595528424}
-  m_Layer: 0
-  m_Name: FacingIndicator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1057144865904848041
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4048551624222570984}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.4, y: 0, z: 0}
-  m_LocalScale: {x: 0.15, y: 0.15, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3116229196835214168}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &5966508359509654197
-SpriteRenderer:
-  serializedVersion: 2
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4048551624222570984}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9833a14203f9e574aa5589e4258a4f50, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 6
-  m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
-  m_SpriteSortPoint: 0
---- !u!114 &7376149822595528424
+--- !u!114 &9158958854513939183
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4048551624222570984}
+  m_GameObject: {fileID: 2820338830230650032}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1bb9b8fa6b9fa3418c04c06c94c9562, type: 3}
+  m_Script: {fileID: 11500000, guid: e39fb9dfdad65944da9bf45fee7682b9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerFacingIndicator
-  _playerMovement: {fileID: 1981975847905038164}
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerDirectionalSprite
+  _spriteNorth: {fileID: 21300000, guid: efea4bd99c56f2748ad1a06d2fa0d32a, type: 3}
+  _spriteNorthEast: {fileID: 21300000, guid: 0624753497f1e854ba3e124dab872c89, type: 3}
+  _spriteEast: {fileID: 21300000, guid: 5c7ef2d94d523fd45ac43e6111d29564, type: 3}
+  _spriteSouthEast: {fileID: 21300000, guid: 1fbec187f50f2ac47b5ae4b0dcd751d0, type: 3}
+  _spriteSouth: {fileID: 21300000, guid: 188b328b824472041ab282f836b128fd, type: 3}
+  _spriteSouthWest: {fileID: 21300000, guid: 2d30fc5a276330049a98ed351e57aa70, type: 3}
+  _spriteWest: {fileID: 21300000, guid: e7460283bee8960448b5c836a54c8fd5, type: 3}
+  _spriteNorthWest: {fileID: 21300000, guid: 395f94516ab273b45af7847bb6275893, type: 3}
+--- !u!114 &1245106206818335003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2820338830230650032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f96aaa031eb3bd841b7d02c1a9271bad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFeedback
+  _breathAmplitude: 0.04
+  _breathSpeed: 1.2
+  _walkBobAmplitude: 0.06
+  _walkBobSpeed: 12
+  _hitScalePunch: 1.35
+  _hitDuration: 0.2
+  _hitFlashColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  _hitFlashCount: 4
+  _hitInvincibilityDuration: 0.8
+  _deathFadeDuration: 0.5

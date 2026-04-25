@@ -42,6 +42,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     // Timer décroissant pendant la phase de cooldown post-charge
     private float _cooldownTimer = 0f;
 
+    // Référence au composant de feedback visuel
+    private EnemyFeedback _feedback;
+
     /// <summary>Injecte playerTransform et livesManager après un Instantiate runtime.</summary>
     public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
     {
@@ -54,6 +57,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     {
         // Appelle l'initialisation de la santé définie dans EnemyBase
         base.Awake();
+
+        // Récupère le feedback visuel sur le même GameObject
+        _feedback = GetComponent<EnemyFeedback>();
     }
 
     // Exécute la logique d'état à chaque frame
@@ -76,21 +82,25 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         {
             // Exécute le comportement de patrouille entre les points
             case State.Patrol:
+                _feedback?.SetMovementRock(false);
                 HandlePatrol();
                 break;
 
             // Exécute le comportement de traque vers le joueur
             case State.Chase:
+                _feedback?.SetMovementRock(true);
                 HandleChase();
                 break;
 
             // Exécute le comportement de charge rapide vers le joueur
             case State.Charge:
+                _feedback?.SetMovementRock(true);
                 HandleCharge();
                 break;
 
             // Attend la fin du cooldown avant de reprendre la patrouille
             case State.Cooldown:
+                _feedback?.SetMovementRock(false);
                 HandleCooldown();
                 break;
         }

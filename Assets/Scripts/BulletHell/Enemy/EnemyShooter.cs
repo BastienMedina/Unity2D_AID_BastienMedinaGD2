@@ -48,6 +48,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
     // Timer décroissant entre deux tirs successifs
     private float _shootCooldownTimer = 0f;
 
+    // Référence au composant de feedback visuel
+    private EnemyFeedback _feedback;
+
     /// <summary>Injecte playerTransform, livesManager et lootSystem après un Instantiate runtime.</summary>
     public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
     {
@@ -61,6 +64,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
     {
         // Appelle l'initialisation de la santé définie dans EnemyBase
         base.Awake();
+
+        // Récupère le feedback visuel sur le même GameObject
+        _feedback = GetComponent<EnemyFeedback>();
 
         // Lance la vérification de proximité à intervalle régulier
         InvokeRepeating(nameof(CheckDetection), 0f, _detectionCheckInterval);
@@ -160,8 +166,8 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         // Calcule le vecteur direction non normalisé vers le joueur
         Vector2 directionToPlayer = _playerTransform.position - transform.position;
 
-        // Calcule l'angle en degrés pour orienter le tireur vers le joueur
-        float angle = Mathf.Atan2(directionToPlayer.y, directionToPlayer.x) * Mathf.Rad2Deg;
+        // Soustrait 90° pour que le haut du sprite (axe Y local) pointe vers le joueur
+        float angle = Mathf.Atan2(directionToPlayer.y, directionToPlayer.x) * Mathf.Rad2Deg - 90f;
 
         // Applique la rotation calculée à l'axe Z du Transform
         transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
@@ -191,6 +197,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         // Initialise le projectile avec direction, vitesse, portée et dégâts
         projectile.Initialize(direction, _projectileSpeed, _projectileMaxRange, _livesManager, _projectileDamage);
 
+        // Joue le feedback visuel de tir
+        _feedback?.PlayShootFeedback();
+
         // Réarme le cooldown de tir après un tir réussi
         _shootCooldownTimer = _shootCooldown;
 
@@ -209,6 +218,11 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
 
         // Calcule la direction opposée au joueur pour reculer
         Vector2 retreatDirection = (transform.position - _playerTransform.position).normalized;
+
+        // Continue d'orienter le tireur vers le joueur pendant la retraite
+        Vector2 directionToPlayer = _playerTransform.position - transform.position;
+        float angle = Mathf.Atan2(directionToPlayer.y, directionToPlayer.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
         // Déplace le tireur en sens opposé du joueur cette frame
         transform.Translate(retreatDirection * (_retreatSpeed * Time.deltaTime), Space.World);

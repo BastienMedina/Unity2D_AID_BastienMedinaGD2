@@ -20,11 +20,10 @@ public class EnemyVisualBuilder : MonoBehaviour
     {
         if (go == null) return;
 
+        // Le sprite est assigné directement sur le prefab — on préserve le visuel existant
         SpriteRenderer sr = GetOrAddSpriteRenderer(go);
-        sr.sprite = CreateColorSprite(new Color(1f, 0.2f, 0.2f, 1f));
         SetURPMaterial(sr);
-        sr.sortingOrder = 2;
-        go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+        sr.sortingOrder = 5;
     }
 
     /// <summary>Applique les visuels de tireur sur le GameObject fourni.</summary>
@@ -32,11 +31,10 @@ public class EnemyVisualBuilder : MonoBehaviour
     {
         if (go == null) return;
 
+        // Le sprite est assigné directement sur le prefab — on préserve le visuel existant
         SpriteRenderer sr = GetOrAddSpriteRenderer(go);
-        sr.sprite = CreateColorSprite(new Color(0.6f, 0.2f, 1f, 1f));
         SetURPMaterial(sr);
-        sr.sortingOrder = 2;
-        go.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+        sr.sortingOrder = 5;
     }
 
     /// <summary>Applique les visuels de l'ennemi caché sur le GameObject fourni.</summary>
