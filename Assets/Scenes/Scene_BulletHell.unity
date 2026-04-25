@@ -349,6 +349,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8cd022b66f5a69942823a6657a393194, type: 3}
+--- !u!114 &297536056 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7380474143585324226, guid: 8cd022b66f5a69942823a6657a393194, type: 3}
+  m_PrefabInstance: {fileID: 297536055}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a4d31b622d0c44d80fb202205e809c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SearchUIManager
 --- !u!1001 &504918868
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -577,6 +588,10 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: -8132923703055857805, guid: 4daec6860c0dfcd4eb8c350734bb7c7d, type: 3}
+    - target: {fileID: 8516870381325418382, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -1029,7 +1044,7 @@ MonoBehaviour:
   - {fileID: 8943892524882794548, guid: a0be885e27b80f840a1bae2d4f757773, type: 3}
   _baseEnemyCount: 3
   _searchableObjectPrefab: {fileID: 8117251261067611453, guid: 3f86c697b6020ce429b9ba1cf52bdf4c, type: 3}
-  _searchUIManager: {fileID: 0}
+  _searchUIManager: {fileID: 297536056}
   _defaultLootTable: {fileID: 11400000, guid: 01041dec3376e1a4f9f6700f0ea19ab0, type: 2}
   _propLibrary: {fileID: 11400000, guid: 272f9c89e3aaef644b468fd576663e92, type: 2}
   _enemyHiddenPrefab: {fileID: 0}

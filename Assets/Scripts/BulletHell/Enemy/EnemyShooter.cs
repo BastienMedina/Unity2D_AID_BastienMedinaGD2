@@ -42,6 +42,12 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
     // Gestionnaire de butin déclenché à la mort du tireur
     [SerializeField] private LootSystem _lootSystem;
 
+    // Durée en secondes d'immunité après le spawn — bloque toute action offensive
+    [SerializeField] private float _spawnImmunityDuration = 1.25f;
+
+    // Timer décroissant de l'immunité de spawn
+    private float _spawnImmunityTimer = 0f;
+
     // État courant dans le cycle de la machine à états
     private State _currentState = State.Idle;
 
@@ -68,6 +74,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         // Récupère le feedback visuel sur le même GameObject
         _feedback = GetComponent<EnemyFeedback>();
 
+        // Initialise le timer d'immunité de spawn
+        _spawnImmunityTimer = _spawnImmunityDuration;
+
         // Lance la vérification de proximité à intervalle régulier
         InvokeRepeating(nameof(CheckDetection), 0f, _detectionCheckInterval);
     }
@@ -85,6 +94,13 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         if (_shootCooldownTimer > 0f)
         {
             _shootCooldownTimer -= Time.deltaTime;
+        }
+
+        // Décrémente l'immunité de spawn et bloque toute action tant qu'elle est active
+        if (_spawnImmunityTimer > 0f)
+        {
+            _spawnImmunityTimer -= Time.deltaTime;
+            return;
         }
 
         // Redirige vers la méthode correspondant à l'état courant

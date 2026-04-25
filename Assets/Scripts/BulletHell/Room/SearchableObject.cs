@@ -22,8 +22,9 @@ public class SearchableObject : MonoBehaviour
     // Paramètres configurables
     // -------------------------------------------------------------------------
 
-    // Distance maximale pour détecter la présence du joueur.
-    [SerializeField] private float _searchRadius = 1.5f;
+    // Marge uniforme en unités monde ajoutée de chaque côté du BoxCollider2D pour la détection.
+    // Remplace l'ancienne détection circulaire par une zone rectangulaire cohérente avec la forme du prop.
+    [SerializeField] private float _searchMargin = 0.8f;
 
     // Durée en secondes nécessaire pour fouiller cet objet.
     [SerializeField] private float _searchDuration = 1.5f;
@@ -226,7 +227,7 @@ public class SearchableObject : MonoBehaviour
     // Vérification de proximité
     // -------------------------------------------------------------------------
 
-    // Évalue la distance joueur et met à jour l'état si nécessaire.
+    // Évalue la proximité joueur via une zone rectangulaire et met à jour l'état si nécessaire.
     private void CheckPlayerProximity()
     {
         // Ignore la vérification si la fouille est terminée.
@@ -237,13 +238,10 @@ public class SearchableObject : MonoBehaviour
         if (_state == SearchState.Searching)
             return;
 
-        // Calcule la distance entre cet objet et le joueur.
-        float distance = Vector2.Distance(transform.position, _playerTransform.position);
+        // Détermine si le joueur est dans la zone rectangulaire étendue autour du prop.
+        bool isInRange = IsPlayerInSearchZone();
 
-        // Détermine si le joueur est dans le rayon de fouille.
-        bool isInRange = distance <= _searchRadius;
-
-        // Traite l'entrée dans le rayon depuis l'état Idle.
+        // Traite l'entrée dans la zone depuis l'état Idle.
         if (isInRange && _state == SearchState.Idle)
         {
             // Passe à l'état PlayerNearby et notifie les abonnés.
@@ -253,7 +251,7 @@ public class SearchableObject : MonoBehaviour
             OnPlayerEnterRange.Invoke(this);
         }
 
-        // Traite la sortie du rayon depuis l'état PlayerNearby.
+        // Traite la sortie de la zone depuis l'état PlayerNearby.
         else if (!isInRange && _state == SearchState.PlayerNearby)
         {
             // Retourne à l'état Idle et notifie les abonnés.
@@ -262,6 +260,31 @@ public class SearchableObject : MonoBehaviour
             // Notifie les abonnés avec une référence à cet objet.
             OnPlayerExitRange.Invoke(this);
         }
+    }
+
+    // Teste si le joueur se trouve dans la zone rectangulaire du prop étendue par _searchMargin.
+    // Utilise les bounds monde du BoxCollider2D pour rester cohérent avec n'importe quel scale.
+    private bool IsPlayerInSearchZone()
+    {
+        BoxCollider2D col = GetComponent<BoxCollider2D>();
+
+        Vector2 halfExtents;
+
+        if (col != null)
+        {
+            // Extents en espace monde (tient compte du localScale) + marge uniforme.
+            halfExtents = col.bounds.extents + new Vector3(_searchMargin, _searchMargin, 0f);
+        }
+        else
+        {
+            // Fallback si aucun BoxCollider2D : zone carrée de _searchMargin de chaque côté.
+            halfExtents = new Vector2(_searchMargin, _searchMargin);
+        }
+
+        Vector2 delta = (Vector2)_playerTransform.position - (Vector2)transform.position;
+
+        return Mathf.Abs(delta.x) <= halfExtents.x
+            && Mathf.Abs(delta.y) <= halfExtents.y;
     }
 
     // -------------------------------------------------------------------------

@@ -224,17 +224,20 @@ public class ProceduralMapGenerator : MonoBehaviour
 
         // Construit les visuels et objets fouillables de la salle 1
         BuildRoomVisual(pos1, new Vector2(_smallRoomWidth, _smallRoomHeight),
-            GetRoomColor(room1Type), room1Type.ToString(), GetSearchableCount(room1Type), room1Wall);
+            GetRoomColor(room1Type), room1Type.ToString(), room1Wall);
         PierceOpenSpaceWall(room1Wall, pos1);
 
         // Construit les visuels et objets fouillables de la salle 2
         BuildRoomVisual(pos2, new Vector2(_smallRoomWidth, _smallRoomHeight),
-            GetRoomColor(room2Type), room2Type.ToString(), GetSearchableCount(room2Type), room2Wall);
+            GetRoomColor(room2Type), room2Type.ToString(), room2Wall);
         PierceOpenSpaceWall(room2Wall, pos2);
 
         // Construit la salle ascenseur avec son trigger
         BuildElevator(posElev, elevWall);
         PierceOpenSpaceWall(elevWall, posElev);
+
+        // Repositionne le joueur devant l'entrée de l'ascenseur
+        PositionPlayerAtElevatorEntrance(posElev, elevWall);
 
         // Instancie les ennemis dans l'Open Space selon l'étage
         SpawnEnemies();
@@ -321,26 +324,13 @@ public class ProceduralMapGenerator : MonoBehaviour
         return Color.black;
     }
 
-    // Retourne le nombre d'objets fouillables selon le type de salle
-    private int GetSearchableCount(RoomType type)
-    {
-        return type switch
-        {
-            RoomType.Toilettes    => 1,
-            RoomType.SalleReunion => 3,
-            RoomType.Vestiaire    => 2,
-            RoomType.SalleRepos   => 2,
-            _                     => 0
-        };
-    }
-
     // -------------------------------------------------------------------------
     // Construction visuelle des salles secondaires
     // -------------------------------------------------------------------------
 
     // Construit le visuel, le label et les objets fouillables d'une salle
     private void BuildRoomVisual(Vector2 pos, Vector2 size, Color color,
-                                  string label, int searchableCount, WallSide attachedWall)
+                                  string label, WallSide attachedWall)
     {
         // Détermine le parent : Map si disponible, sinon ce transform
         Transform parent = _mapRoot != null ? _mapRoot : transform;
@@ -356,17 +346,6 @@ public class ProceduralMapGenerator : MonoBehaviour
 
         room.transform.position   = new Vector3(pos.x, pos.y, 0f);
         room.transform.localScale = new Vector3(size.x, size.y, 1f);
-
-        // Instancie les objets fouillables en grille dans la salle
-        for (int i = 0; i < searchableCount; i++)
-        {
-            if (_searchableObjectPrefab == null) break;
-
-            // Répartit les objets horizontalement au centre de la salle
-            float xOff    = (i - searchableCount / 2f + 0.5f) * 1.5f;
-            Vector3 objPos = new Vector3(pos.x + xOff, pos.y - 0.5f, 0f);
-            Instantiate(_searchableObjectPrefab, objPos, Quaternion.identity);
-        }
 
         // Génère les props thématiques de la salle selon son type
         RoomType parsedType = GetRoomTypeFromLabel(label);
@@ -483,7 +462,47 @@ public class ProceduralMapGenerator : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
-    // Ouverture du mur de l'Open Space face à une salle procédurale
+    // Spawn du joueur devant l'entrée de l'ascenseur
+    // -------------------------------------------------------------------------
+
+    // Distance en unités entre le bord de l'Open Space et le point de spawn du joueur
+    private const float PlayerSpawnOffset = 1.5f;
+
+    // Repositionne le joueur juste devant l'ouverture de l'ascenseur côté Open Space.
+    // La position est calculée à partir du mur de l'ascenseur pour rester cohérente
+    // quelle que soit la disposition procédurale de l'étage.
+    private void PositionPlayerAtElevatorEntrance(Vector2 elevCenter, WallSide elevWall)
+    {
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+            return;
+
+        float halfW = _openSpaceWidth  * 0.5f;
+        float halfH = _openSpaceHeight * 0.5f;
+
+        // Calcule la position à l'intérieur de l'Open Space, face à l'ouverture de l'ascenseur
+        Vector2 spawnPos = elevWall switch
+        {
+            WallSide.Top    => new Vector2(elevCenter.x,  halfH - PlayerSpawnOffset),
+            WallSide.Bottom => new Vector2(elevCenter.x, -halfH + PlayerSpawnOffset),
+            WallSide.Right  => new Vector2( halfW - PlayerSpawnOffset, elevCenter.y),
+            WallSide.Left   => new Vector2(-halfW + PlayerSpawnOffset, elevCenter.y),
+            _               => Vector2.zero
+        };
+
+        // Repositionne le Rigidbody2D si présent pour éviter les artefacts physiques
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.position = spawnPos;
+            rb.linearVelocity = Vector2.zero;
+        }
+        else
+        {
+            player.transform.position = new Vector3(spawnPos.x, spawnPos.y, 0f);
+        }
+    }
+
     // -------------------------------------------------------------------------
 
     // Perce une ouverture dans le mur de l'Open Space sur le côté d'une salle
@@ -855,16 +874,23 @@ public class ProceduralMapGenerator : MonoBehaviour
             SpriteRenderer sr = prop.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sortingOrder = sortingOrder;
 
-            // Calcule la taille native du sprite en unités monde via les métadonnées de l'asset
-            // (sprite.rect / pixelsPerUnit) — indépendant de tout state de transform ou de rendu.
             if (sr != null && sr.sprite != null)
             {
+                // Adapte le scale pour que le sprite occupe exactement la taille monde demandée
                 float nativeW = sr.sprite.rect.width  / sr.sprite.pixelsPerUnit;
                 float nativeH = sr.sprite.rect.height / sr.sprite.pixelsPerUnit;
                 prop.transform.localScale = new Vector3(size.x / nativeW, size.y / nativeH, 1f);
             }
             else
             {
+                // Le prefab existe mais son sprite est null : applique le fallback couleur
+                // pour éviter qu'un SpriteRenderer vide rende un rectangle gris visible.
+                if (sr == null)
+                    sr = prop.AddComponent<SpriteRenderer>();
+
+                sr.sprite        = CreateColorSprite(fallbackColor);
+                sr.sharedMaterial = new Material(Shader.Find(URPShaderName));
+                sr.sortingOrder  = sortingOrder;
                 prop.transform.localScale = new Vector3(size.x, size.y, 1f);
             }
         }

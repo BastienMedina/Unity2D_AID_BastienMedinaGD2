@@ -63,8 +63,8 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
         _livesManager    = FindFirstObjectByType<LivesManager>();
         _lootSystem      = FindFirstObjectByType<LootSystem>();
 
-        // Applique le visuel orange caractéristique de cet ennemi
-        ApplyVisual();
+        // S'assure que HiddenVisual est désactivé au spawn
+        ShowHiddenVisual(false);
 
         // Inactif jusqu'à être déclenché par un bureau fouillé
         gameObject.SetActive(false);
@@ -82,6 +82,7 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
         _attackTimer       = _attackDuration;
         _damageTimer       = 0f;
         _currentState      = State.Attacking;
+        ShowHiddenVisual(false);
         gameObject.SetActive(true);
     }
 
@@ -92,6 +93,7 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
         _attackTimer  = _attackDuration;
         _damageTimer  = 0f;
         _currentState = State.Attacking;
+        ShowHiddenVisual(false);
         gameObject.SetActive(true);
     }
 
@@ -200,6 +202,7 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
             _currentDesk  = _targetDesk;
             _targetDesk   = null;
             _currentState = State.Hidden;
+            ShowHiddenVisual(true);
             gameObject.SetActive(false);
         }
     }
@@ -217,23 +220,14 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
     }
 
     // -------------------------------------------------------------------------
-    // Visuel
+    // Visuel caché / révélé
     // -------------------------------------------------------------------------
 
-    // Applique le sprite orange directement sur ce GameObject
-    private void ApplyVisual()
+    // Cache le visuel "bureau" sur l'enfant HiddenVisual (activé quand caché dans un bureau)
+    private void ShowHiddenVisual(bool show)
     {
-        SpriteRenderer sr = GetComponent<SpriteRenderer>()
-                         ?? gameObject.AddComponent<SpriteRenderer>();
-
-        Texture2D tex    = new Texture2D(1, 1);
-        tex.filterMode   = FilterMode.Point;
-        tex.SetPixel(0, 0, new Color(1f, 0.4f, 0f, 1f));
-        tex.Apply();
-
-        sr.sprite         = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
-        sr.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default"));
-        sr.sortingOrder   = 2;
-        transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+        Transform t = transform.Find("HiddenVisual");
+        if (t != null)
+            t.gameObject.SetActive(show);
     }
 }

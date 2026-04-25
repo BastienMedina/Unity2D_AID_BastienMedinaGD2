@@ -41,16 +41,12 @@ public class LivesManager : MonoBehaviour
         // Enregistre l'instance unique ou détruit le doublon
         if (Instance != null && Instance != this)
         {
-            // Supprime le doublon si un LivesManager existe déjà
             Destroy(gameObject);
             return;
         }
 
         // Assigne cette instance comme référence singleton globale
         Instance = this;
-
-        // Persiste entre toutes les scènes pour conserver les vies
-        DontDestroyOnLoad(gameObject);
 
         // Restaure les vies depuis GameProgress si elles ont été sauvegardées
         if (GameProgress.Instance != null && GameProgress.Instance.HasPersistedLives)
@@ -59,12 +55,19 @@ public class LivesManager : MonoBehaviour
         }
         else
         {
-            // Première initialisation : vies au maximum
+            // Première initialisation ou nouvelle partie : vies au maximum
             _currentLives = _maxLives;
         }
 
         // Notifie immédiatement les abonnés avec la valeur initiale.
         OnLivesChanged.Invoke(_currentLives);
+    }
+
+    // Libère le slot singleton à la destruction pour permettre la réinitialisation à la prochaine scène.
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 
     // -------------------------------------------------------------------------

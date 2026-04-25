@@ -21,11 +21,16 @@ public class GameOver : MonoBehaviour
         LivesManager.Instance?.OnDeath.RemoveListener(HandleDeath);
     }
 
-    // Sauvegarde l'étage atteint et retourne au menu principal
+    // Supprime la save (partie terminée), reset la progression et retourne au menu principal
     private void HandleDeath()
     {
-        // Sauvegarde l'étage atteint avant de mourir
-        SaveSystem.SaveGame();
+        // Réinitialise la progression — la partie est perdue, pas sauvegardable
+        if (GameProgress.Instance != null)
+            GameProgress.Instance.Reset();
+
+        // Supprime toute save existante pour désactiver le bouton Continuer au menu
+        SaveSystem.DeleteSave();
+
         SceneManager.LoadScene(_mainMenuScene);
     }
 }

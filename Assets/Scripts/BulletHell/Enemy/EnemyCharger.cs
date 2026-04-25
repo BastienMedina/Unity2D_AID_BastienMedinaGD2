@@ -42,6 +42,12 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     // Timer décroissant pendant la phase de cooldown post-charge
     private float _cooldownTimer = 0f;
 
+    // Durée en secondes d'immunité après le spawn — bloque la détection et les charges
+    [SerializeField] private float _spawnImmunityDuration = 1.25f;
+
+    // Timer décroissant de l'immunité de spawn
+    private float _spawnImmunityTimer = 0f;
+
     // Référence au composant de feedback visuel
     private EnemyFeedback _feedback;
 
@@ -60,6 +66,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
 
         // Récupère le feedback visuel sur le même GameObject
         _feedback = GetComponent<EnemyFeedback>();
+
+        // Initialise le timer d'immunité de spawn
+        _spawnImmunityTimer = _spawnImmunityDuration;
     }
 
     // Exécute la logique d'état à chaque frame
@@ -74,6 +83,13 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         // Stoppe toute logique si l'ennemi est mort
         if (IsDead())
         {
+            return;
+        }
+
+        // Décrémente l'immunité de spawn et bloque toute action tant qu'elle est active
+        if (_spawnImmunityTimer > 0f)
+        {
+            _spawnImmunityTimer -= Time.deltaTime;
             return;
         }
 
