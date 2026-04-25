@@ -52,6 +52,17 @@ public class SI_PlayerMovement : MonoBehaviour
             Debug.LogError("[PM] SI_PlayerMovement — SpriteRenderer manquant sur le joueur");
         }
 
+        // Tente de trouver le VirtualJoystick automatiquement si non assigné dans l'inspecteur
+        if (_virtualJoystick == null)
+        {
+            _virtualJoystick = FindObjectOfType<VirtualJoystick>();
+
+            if (_virtualJoystick == null)
+            {
+                Debug.LogError("[PM] SI_PlayerMovement — Aucun VirtualJoystick trouvé dans la scène");
+            }
+        }
+
         // Place le joueur au centre bas de l'écran au démarrage
         transform.position = new Vector2(0f, -3.5f);
 
@@ -62,10 +73,9 @@ public class SI_PlayerMovement : MonoBehaviour
     // Lit la direction horizontale du joystick chaque frame
     private void Update()
     {
-        // Vérifie que la référence joystick est assignée dans l'inspecteur
+        // Abandonne silencieusement si le joystick est introuvable
         if (_virtualJoystick == null)
         {
-            Debug.LogError("[PM] SI_PlayerMovement — _virtualJoystick non assigné dans l'inspecteur");
             return;
         }
 

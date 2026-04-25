@@ -101,10 +101,6 @@ public class VirtualJoystick : MonoBehaviour,
     // Expose la direction sans permettre de la modifier
     public Vector2 GetDirection()
     {
-        // Affiche la valeur retournée par GetDirection
-        Debug.Log($"[JOY] GetDirection() called — returning {_currentDirection}");
-
-        // Renvoie la direction courante calculée lors du dernier glissement
         return _currentDirection;
     }
 }
