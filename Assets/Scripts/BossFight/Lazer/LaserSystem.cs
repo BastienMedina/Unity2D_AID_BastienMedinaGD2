@@ -40,6 +40,9 @@ public class LaserSystem : MonoBehaviour
     // Index du pattern utilisé au tour précédent (exclus de la prochaine sélection).
     private int _previousPatternIndex = -1;
 
+    // Index du pattern qui sera actif au prochain tour (pré-calculé à chaque avancement).
+    private int _nextPatternIndex = -1;
+
     // Liste mutable des cellules laser actives ce tour.
     private List<Vector2Int> _activeLaserCells = new List<Vector2Int>();
 
@@ -76,8 +79,11 @@ public class LaserSystem : MonoBehaviour
         _turnManager.OnAdvanceLaser.AddListener(HandleAdvanceLaser);
 
         // Initialise l'index au premier pattern de la séquence.
-        _currentPatternIndex = 0;
+        _currentPatternIndex  = 0;
         _previousPatternIndex = -1;
+
+        // Pré-calcule l'index du prochain pattern pour que GetNextLaserCells() soit exact dès le départ.
+        _nextPatternIndex = PickNextIndex(_currentPatternIndex, _previousPatternIndex);
 
         // Charge les cellules actives du pattern initial en mémoire.
         RebuildActiveCells();
@@ -152,36 +158,18 @@ public class LaserSystem : MonoBehaviour
     /// <summary>
     /// Retourne les cellules du pattern qui sera actif au prochain tour.
     /// Utilisé par LaserIndicatorRenderer pour prévenir le joueur.
-    /// Le prochain pattern est le suivant dans la séquence après le courant,
-    /// en excluant le précédent selon la même logique que HandleAdvanceLaser.
+    /// L'index est pré-calculé par HandleAdvanceLaser avec le même tirage aléatoire,
+    /// garantissant que la prédiction correspond toujours au vrai prochain pattern.
     /// </summary>
     public List<Vector2Int> GetNextLaserCells()
     {
         if (!HasValidPatterns || _patterns.Count < 2)
             return new List<Vector2Int>();
 
-        // Duplique la logique de sélection d'HandleAdvanceLaser pour prédire le prochain index.
-        List<int> candidates = new List<int>(_patterns.Count);
-        for (int i = 0; i < _patterns.Count; i++)
-        {
-            if (i == _currentPatternIndex)  continue;
-            if (i == _previousPatternIndex) continue;
-            candidates.Add(i);
-        }
+        if (_nextPatternIndex < 0 || _nextPatternIndex >= _patterns.Count)
+            return new List<Vector2Int>();
 
-        // Si tous exclus (cas 2 patterns), autorise au moins le précédent.
-        if (candidates.Count == 0)
-        {
-            for (int i = 0; i < _patterns.Count; i++)
-            {
-                if (i != _currentPatternIndex)
-                    candidates.Add(i);
-            }
-        }
-
-        // Retourne les cellules du premier candidat valide comme prédiction.
-        // C'est une estimation : l'index réel sera choisi aléatoirement parmi les candidats.
-        LaserPattern next = _patterns[candidates[0]];
+        LaserPattern next = _patterns[_nextPatternIndex];
         if (next == null || next.ActiveCells == null)
             return new List<Vector2Int>();
 
@@ -221,31 +209,12 @@ public class LaserSystem : MonoBehaviour
             return;
         }
 
-        // Construit la liste des candidats en excluant le courant et le précédent
-        List<int> candidates = new List<int>(_patterns.Count);
-        for (int i = 0; i < _patterns.Count; i++)
-        {
-            if (i == _currentPatternIndex) continue;
-            if (i == _previousPatternIndex) continue;
-            candidates.Add(i);
-        }
-
-        // Si tous les patterns sont exclus (2 patterns), autorise au moins le précédent
-        if (candidates.Count == 0)
-        {
-            for (int i = 0; i < _patterns.Count; i++)
-            {
-                if (i != _currentPatternIndex)
-                    candidates.Add(i);
-            }
-        }
-
-        // Pioche un index aléatoire parmi les candidats valides
-        int pickedIndex = candidates[Random.Range(0, candidates.Count)];
-
-        // Mémorise le courant comme précédent avant de changer
+        // Applique l'index pré-calculé comme nouveau pattern courant.
         _previousPatternIndex = _currentPatternIndex;
-        _currentPatternIndex = pickedIndex;
+        _currentPatternIndex  = _nextPatternIndex;
+
+        // Pré-calcule immédiatement l'index du tour suivant pour que GetNextLaserCells() soit exact.
+        _nextPatternIndex = PickNextIndex(_currentPatternIndex, _previousPatternIndex);
 
         // Charge les cellules du nouveau pattern dans la liste mutable.
         RebuildActiveCells();
@@ -263,6 +232,34 @@ public class LaserSystem : MonoBehaviour
             return null;
 
         return _patterns[_currentPatternIndex];
+    }
+
+    // Sélectionne aléatoirement un index valide en excluant le courant et le précédent.
+    private int PickNextIndex(int excludeCurrent, int excludePrevious)
+    {
+        if (_patterns.Count == 1)
+            return 0;
+
+        // Construit la liste des candidats en excluant le courant et le précédent.
+        List<int> candidates = new List<int>(_patterns.Count);
+        for (int i = 0; i < _patterns.Count; i++)
+        {
+            if (i == excludeCurrent)  continue;
+            if (i == excludePrevious) continue;
+            candidates.Add(i);
+        }
+
+        // Si tous les patterns sont exclus (cas 2 patterns), autorise au moins le précédent.
+        if (candidates.Count == 0)
+        {
+            for (int i = 0; i < _patterns.Count; i++)
+            {
+                if (i != excludeCurrent)
+                    candidates.Add(i);
+            }
+        }
+
+        return candidates[Random.Range(0, candidates.Count)];
     }
 
     // Remplace la liste mutable par les cellules du pattern courant.
@@ -286,18 +283,4 @@ public class LaserSystem : MonoBehaviour
         }
     }
 
-    // -------------------------------------------------------------------------
-    // API publique — synchronisation avec la grille
-    // -------------------------------------------------------------------------
-
-    /// <summary>Retire de la liste active la cellule occupée par le joueur.</summary>
-    public void SyncWithGrid(GridManager gridManager)
-    {
-        // Récupère la position actuelle du joueur depuis la grille.
-        Vector2Int playerPos = gridManager.GetPlayerPosition();
-
-        // Retire les cellules laser qui coïncident avec la position joueur.
-        _activeLaserCells.RemoveAll(cell =>
-            cell.x == playerPos.x && cell.y == playerPos.y);
-    }
 }

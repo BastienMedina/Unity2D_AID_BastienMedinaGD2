@@ -77,15 +77,21 @@ public class PlayerRenderer : MonoBehaviour
         if (_spriteRenderer == null)
             _spriteRenderer = _playerVisual.gameObject.AddComponent<SpriteRenderer>();
 
-        // Génère et assigne un sprite blanc plein au joueur.
-        _spriteRenderer.sprite        = CreateFlatSprite();
-        _spriteRenderer.color         = _playerColor;
-        _spriteRenderer.sortingOrder  = 2;
+        // Assigne un sprite blanc de fallback uniquement si aucun sprite
+        // n'est déjà configuré dans l'Inspector — évite d'écraser un asset assigné.
+        if (_spriteRenderer.sprite == null)
+            _spriteRenderer.sprite = CreateFlatSprite();
 
-        // Crée un matériau non-éclairé URP pour garantir la visibilité.
-        _spriteRenderer.sharedMaterial = new Material(
-            Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
-        );
+        _spriteRenderer.color        = _playerColor;
+        _spriteRenderer.sortingOrder = 2;
+
+        // Assigne le matériau URP seulement si aucun matériau custom n'est déjà présent.
+        if (_spriteRenderer.sharedMaterial == null)
+        {
+            _spriteRenderer.sharedMaterial = new Material(
+                Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+            );
+        }
 
         // Applique la taille du joueur via le Transform du visuel.
         _playerVisual.localScale = new Vector3(_playerSize, _playerSize, 1f);

@@ -13,9 +13,6 @@ public class TurnManager : MonoBehaviour
     // Référence au gestionnaire de grille pour s'abonner.
     [SerializeField] private GridManager _gridManager;
 
-    // Référence au système laser pour la synchronisation de grille.
-    [SerializeField] private LaserSystem _laserSystem;
-
     // -------------------------------------------------------------------------
     // Événements de séquence — abonnés par les systèmes externes
     // -------------------------------------------------------------------------
@@ -71,15 +68,6 @@ public class TurnManager : MonoBehaviour
             // Lève une exception claire pour signaler le problème.
             throw new MissingReferenceException(
                 $"[TurnManager] La référence {nameof(_gridManager)} n'est pas assignée."
-            );
-        }
-
-        // Interrompt si la référence LaserSystem est absente.
-        if (_laserSystem == null)
-        {
-            // Lève une exception claire pour signaler le problème.
-            throw new MissingReferenceException(
-                $"[TurnManager] La référence {nameof(_laserSystem)} n'est pas assignée."
             );
         }
     }
@@ -158,22 +146,19 @@ public class TurnManager : MonoBehaviour
         // Réinitialise le drapeau de fin en attente du tour.
         _gameOverPending = false;
 
-        // Étape 0 : retire les lasers chevauchant la cellule joueur.
-        _laserSystem.SyncWithGrid(_gridManager);
-
-        // Étape 1 : verrouille la grille pendant le traitement du tour.
+        // Étape 0 : verrouille la grille pendant le traitement du tour.
         _gridManager.SetTurnProcessing(true);
 
-        // Étape 2 : avance le laser au prochain pattern défini.
+        // Étape 1 : avance le laser au prochain pattern pré-calculé.
         OnAdvanceLaser.Invoke();
 
-        // Étape 3 : évalue la collision joueur-laser du nouveau pattern.
+        // Étape 2 : évalue la collision joueur-laser du nouveau pattern.
         OnEvaluateLaser.Invoke();
 
-        // Étape 4 : demande l'évaluation de la collecte de pièces.
+        // Étape 3 : demande l'évaluation de la collecte de pièces.
         OnEvaluateCoins.Invoke();
 
-        // Étape 5 : demande la vérification des conditions de fin.
+        // Étape 4 : demande la vérification des conditions de fin.
         OnCheckConditions.Invoke();
 
         // Interrompt le tour si une fin de partie est signalée.
@@ -190,15 +175,15 @@ public class TurnManager : MonoBehaviour
             return;
         }
 
-        // Étape 6 : déverrouille la grille après le traitement du tour.
+        // Étape 5 : déverrouille la grille après le traitement du tour.
         _gridManager.SetTurnProcessing(false);
 
-        // Étape 7 : incrémente le minuteur de spawn de pièces.
+        // Étape 6 : incrémente le minuteur de spawn de pièces.
         OnTickCoinSpawn.Invoke();
 
         // Confirme que OnTurnProcessed va être déclenché
         Debug.Log("[DIAG] TurnManager.ProcessTurn() — OnTurnProcessed.Invoke()");
-        // Étape 8 : notifie la fin du traitement complet de ce tour.
+        // Étape 7 : notifie la fin du traitement complet de ce tour.
         OnTurnProcessed.Invoke();
     }
 }

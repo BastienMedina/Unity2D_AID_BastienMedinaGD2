@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -22,6 +23,16 @@ public class CoinsDisplay : MonoBehaviour
     [SerializeField] private int _victoryTarget = 3;
 
     // -------------------------------------------------------------------------
+    // Paramètres de feedback — scale punch
+    // -------------------------------------------------------------------------
+
+    // Durée totale du punch de scale à la collecte (secondes).
+    [SerializeField] private float _punchDuration = 0.3f;
+
+    // Amplitude du punch (valeur multipliée au scale de base du texte).
+    [SerializeField] private float _punchScale = 1.4f;
+
+    // -------------------------------------------------------------------------
     // Constantes
     // -------------------------------------------------------------------------
 
@@ -32,12 +43,24 @@ public class CoinsDisplay : MonoBehaviour
     private const string CoinsSeparator = " / ";
 
     // -------------------------------------------------------------------------
+    // État interne
+    // -------------------------------------------------------------------------
+
+    // Scale de référence du Transform texte au démarrage.
+    private Vector3 _textBaseScale;
+
+    // Coroutine de punch en cours.
+    private Coroutine _punchCoroutine;
+
+    // -------------------------------------------------------------------------
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
     // Affiche immédiatement le compte de pièces au réveil.
     private void Awake()
     {
+        _textBaseScale = _text != null ? _text.transform.localScale : Vector3.one;
+
         // Journalise un avertissement si la référence est absente.
         if (_coinSystem == null)
         {
@@ -57,7 +80,7 @@ public class CoinsDisplay : MonoBehaviour
             return;
 
         // Abonne la méthode de mise à jour à l'événement pièces.
-        _coinSystem.OnCoinCollected.AddListener(UpdateText);
+        _coinSystem.OnCoinCollected.AddListener(OnCoinCollected);
     }
 
     // Désabonne le rappel pour éviter les fuites mémoire.
@@ -68,14 +91,28 @@ public class CoinsDisplay : MonoBehaviour
             return;
 
         // Retire la méthode de l'événement lors de la désactivation.
-        _coinSystem.OnCoinCollected.RemoveListener(UpdateText);
+        _coinSystem.OnCoinCollected.RemoveListener(OnCoinCollected);
     }
 
     // -------------------------------------------------------------------------
     // Méthodes privées
     // -------------------------------------------------------------------------
 
-    // Met à jour le texte avec le total collecté reçu.
+    // Met à jour le texte et déclenche le punch de scale.
+    private void OnCoinCollected(int totalCollected)
+    {
+        UpdateText(totalCollected);
+
+        if (_text == null)
+            return;
+
+        if (_punchCoroutine != null)
+            StopCoroutine(_punchCoroutine);
+
+        _punchCoroutine = StartCoroutine(ScalePunchCoroutine());
+    }
+
+    // Compose et applique la chaîne affichée à l'écran.
     private void UpdateText(int totalCollected)
     {
         // Ignore la mise à jour si le composant texte est absent.
@@ -84,5 +121,38 @@ public class CoinsDisplay : MonoBehaviour
 
         // Compose et applique la chaîne affichée à l'écran.
         _text.text = CoinsPrefix + totalCollected + CoinsSeparator + _victoryTarget;
+    }
+
+    // -------------------------------------------------------------------------
+    // Feedback — scale punch
+    // -------------------------------------------------------------------------
+
+    // Gonfle le Transform du texte puis revient au scale de base.
+    private IEnumerator ScalePunchCoroutine()
+    {
+        float elapsed  = 0f;
+        float half     = _punchDuration * 0.5f;
+        Vector3 peak   = _textBaseScale * _punchScale;
+        Transform t    = _text.transform;
+
+        // Phase montante
+        while (elapsed < half)
+        {
+            elapsed += Time.deltaTime;
+            t.localScale = Vector3.Lerp(_textBaseScale, peak, Mathf.Clamp01(elapsed / half));
+            yield return null;
+        }
+
+        // Phase descendante
+        elapsed = 0f;
+        while (elapsed < half)
+        {
+            elapsed += Time.deltaTime;
+            t.localScale = Vector3.Lerp(peak, _textBaseScale, Mathf.Clamp01(elapsed / half));
+            yield return null;
+        }
+
+        t.localScale    = _textBaseScale;
+        _punchCoroutine = null;
     }
 }

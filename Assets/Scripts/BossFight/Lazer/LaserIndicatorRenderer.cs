@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -44,6 +45,16 @@ public class LaserIndicatorRenderer : MonoBehaviour
 
     // Sprite utilisé pour les cercles indicateurs — doit être assigné dans l'Inspector.
     [SerializeField] private Sprite _indicatorSprite;
+
+    // -------------------------------------------------------------------------
+    // Paramètres de feedback — scale punch
+    // -------------------------------------------------------------------------
+
+    // Durée du punch de scale à l'apparition d'un indicateur (secondes).
+    [SerializeField] private float _punchDuration = 0.25f;
+
+    // Amplitude du punch (valeur multipliée à _indicatorSize).
+    [SerializeField] private float _punchScale = 1.5f;
 
     // -------------------------------------------------------------------------
     // État interne
@@ -114,11 +125,11 @@ public class LaserIndicatorRenderer : MonoBehaviour
         float leftEdge = _gridOrigin.x - _indicatorOffset;
 
         // Crée un indicateur circulaire pour chaque ligne de la grille.
-        // Rotation +90° : la pointe (bas du sprite) pointe vers la droite, l'arrondi (haut) vers la gauche.
+        // Rotation 270° : la pointe (bas du sprite) pointe vers la gauche, l'arrondi (haut) vers la droite.
         for (int row = 0; row < _gridRows; row++)
         {
-            // Instancie le sprite orienté pour tirer vers la droite depuis le bord gauche.
-            GameObject indicator = CreateCircleSprite($"Indicator_Row_{row}", _container, 90f);
+            // Instancie le sprite orienté pour tirer vers la gauche depuis le bord gauche.
+            GameObject indicator = CreateCircleSprite($"Indicator_Row_{row}", _container, 270f);
 
             // Calcule la coordonnée Y centrée sur la ligne courante.
             float y = _gridOrigin.y + row * step;
@@ -205,9 +216,11 @@ public class LaserIndicatorRenderer : MonoBehaviour
             // Active l'indicateur si toute la ligne sera laser au prochain tour.
             if (nextRows.Contains(row) && IsFullRow(nextCells, row))
             {
-                // Rend l'indicateur de ligne visible pour prévenir le joueur.
                 if (_rowIndicators[row] != null)
+                {
                     _rowIndicators[row].SetActive(true);
+                    StartCoroutine(ScalePunchCoroutine(_rowIndicators[row].transform));
+                }
             }
         }
 
@@ -217,11 +230,49 @@ public class LaserIndicatorRenderer : MonoBehaviour
             // Active l'indicateur si toute la colonne sera laser au prochain tour.
             if (nextCols.Contains(col) && IsFullColumn(nextCells, col))
             {
-                // Rend l'indicateur de colonne visible pour prévenir le joueur.
                 if (_columnIndicators[col] != null)
+                {
                     _columnIndicators[col].SetActive(true);
+                    StartCoroutine(ScalePunchCoroutine(_columnIndicators[col].transform));
+                }
             }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Feedback — scale punch
+    // -------------------------------------------------------------------------
+
+    // Gonfle l'indicateur jusqu'à _punchScale * _indicatorSize puis revient à la normale.
+    private IEnumerator ScalePunchCoroutine(Transform indicator)
+    {
+        float elapsed   = 0f;
+        float half      = _punchDuration * 0.5f;
+        float baseSize  = _indicatorSize;
+        float peakSize  = _indicatorSize * _punchScale;
+
+        // Phase montante
+        while (elapsed < half)
+        {
+            elapsed += Time.deltaTime;
+            float t  = Mathf.Clamp01(elapsed / half);
+            float s  = Mathf.Lerp(baseSize, peakSize, t);
+            indicator.localScale = Vector3.one * s;
+            yield return null;
+        }
+
+        // Phase descendante
+        elapsed = 0f;
+        while (elapsed < half)
+        {
+            elapsed += Time.deltaTime;
+            float t  = Mathf.Clamp01(elapsed / half);
+            float s  = Mathf.Lerp(peakSize, baseSize, t);
+            indicator.localScale = Vector3.one * s;
+            yield return null;
+        }
+
+        indicator.localScale = Vector3.one * baseSize;
     }
 
     // Vérifie si toutes les cellules d'une ligne sont dans le prochain pattern.
