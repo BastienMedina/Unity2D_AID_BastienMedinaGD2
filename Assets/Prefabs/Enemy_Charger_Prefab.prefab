@@ -222,7 +222,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Radius: 1.1
 --- !u!114 &4761809280041296409
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -252,6 +252,7 @@ MonoBehaviour:
   - {fileID: 666209481233185865}
   _livesManager: {fileID: 0}
   _playerTransform: {fileID: 0}
+  _spawnImmunityDuration: 1.25
 --- !u!114 &6698854949503349740
 MonoBehaviour:
   m_ObjectHideFlags: 0

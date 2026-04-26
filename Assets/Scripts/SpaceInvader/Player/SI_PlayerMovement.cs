@@ -63,8 +63,8 @@ public class SI_PlayerMovement : MonoBehaviour
             }
         }
 
-        // Place le joueur au centre bas de l'écran au démarrage
-        transform.position = new Vector2(0f, -3.5f);
+        // Place le joueur juste au-dessus du serveur en bas de l'écran
+        transform.position = new Vector2(0f, -3.0f);
 
         // Mémorise la position Y fixe pour ne jamais la modifier
         _fixedY = transform.position.y;
