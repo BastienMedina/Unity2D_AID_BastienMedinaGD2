@@ -19,6 +19,9 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
     // Événement déclenché à la mort du virus
     [SerializeField] private UnityEvent _onDeath;
 
+    // Son joué à la mort du virus
+    [SerializeField] private AudioClip _deathClip;
+
     // Événement C# déclenché à la mort pour les abonnés externes
     public event System.Action OnDeathEvent;
 
@@ -93,6 +96,8 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
         // Déclenche la séquence de mort si la santé est épuisée
         if (IsDead())
         {
+            AudioManager.Instance?.PlaySFX(_deathClip);
+
             // Notifie les abonnés que ce virus vient de mourir
             _onDeath?.Invoke();
 

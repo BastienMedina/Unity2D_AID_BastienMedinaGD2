@@ -189,12 +189,14 @@ MonoBehaviour:
   _onDeath:
     m_PersistentCalls:
       m_Calls: []
+  _deathClip: {fileID: 8300000, guid: f39f52a6e8ceea04e803ccbedc7c0b40, type: 3}
   _heavyMaxHealth: 3
   _miniVirusPrefab: {fileID: 646547758925007145, guid: a022f9f357458714bafeae5ec7aacba2, type: 3}
   _splitCount: 2
   _splitSpreadX: 0.4
   _spawnBoundaryLeft: -4.5
   _spawnBoundaryRight: 4.5
+  _splitClip: {fileID: 8300000, guid: b25f67ea22f1dee49841d92f261166c3, type: 3}
 --- !u!114 &4276773949793506513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -208,4 +210,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VirusHeavyVisual
   _sortingOrder: 2
-  _colliderRadius: 0.7

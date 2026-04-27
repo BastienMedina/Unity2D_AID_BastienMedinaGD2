@@ -17,6 +17,9 @@ public class MainMenuController : MonoBehaviour
     // Nom de la scène du mode principal
     [SerializeField] private string _bulletHellScene = "Scene_BulletHell";
 
+    // Son joué lors des interactions avec les boutons du menu
+    [SerializeField] private AudioClip _buttonClip;
+
     // Initialise l'état des panneaux et boutons au démarrage
     private void Start()
     {
@@ -34,6 +37,8 @@ public class MainMenuController : MonoBehaviour
     // Réinitialise la progression, efface la save existante et charge le BulletHell
     public void OnPlayClicked()
     {
+        AudioManager.Instance?.PlaySFX(_buttonClip);
+
         // Protège contre l'absence du singleton GameProgress dans la scène
         if (GameProgress.Instance == null)
         {
@@ -52,6 +57,8 @@ public class MainMenuController : MonoBehaviour
     // Charge la save et navigue vers la scène correspondante
     public void OnContinueClicked()
     {
+        AudioManager.Instance?.PlaySFX(_buttonClip);
+
         // Ignore si aucune sauvegarde n'est disponible
         if (!SaveSystem.HasSave()) return;
 
@@ -72,6 +79,7 @@ public class MainMenuController : MonoBehaviour
     // Bascule l'affichage vers le panneau des options
     public void OnOptionsClicked()
     {
+        AudioManager.Instance?.PlaySFX(_buttonClip);
         _menuPanel.SetActive(false);
         _optionsPanel.SetActive(true);
     }

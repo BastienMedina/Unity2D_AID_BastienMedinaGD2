@@ -19,6 +19,9 @@ public class SI_PlayerShooter : MonoBehaviour
     // Référence au gestionnaire de vies pour vérifier si le joueur est mort
     [SerializeField] private LivesManager _livesManager;
 
+    // Son joué lors d'un tir
+    [SerializeField] private AudioClip _shootClip;
+
     // Temps restant avant que le prochain tir soit autorisé
     private float _cooldownTimer;
 
@@ -83,6 +86,8 @@ public class SI_PlayerShooter : MonoBehaviour
 
         // Réarme le timer au cooldown configuré après un tir réussi
         _cooldownTimer = _fireCooldown;
+
+        AudioManager.Instance?.PlaySFX(_shootClip);
 
         // Notifie les abonnés qu'un tir vient d'être effectué
         _onShotFired?.Invoke();

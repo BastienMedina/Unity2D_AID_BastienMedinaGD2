@@ -179,9 +179,11 @@ MonoBehaviour:
   _onDeath:
     m_PersistentCalls:
       m_Calls: []
+  _deathClip: {fileID: 8300000, guid: f39f52a6e8ceea04e803ccbedc7c0b40, type: 3}
   _fireInterval: 2
   _bulletPrefab: {fileID: 7993153691794956504, guid: 1301f4c13075e1f4e9f2c1f8767458a9, type: 3}
   _bulletSpeed: 5
+  _shootClip: {fileID: 8300000, guid: 3628787a0cce4214aafce22157b77346, type: 3}
 --- !u!114 &7421843407424841209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,4 +197,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VirusShooterVisual
   _sortingOrder: 2
-  _colliderRadius: 0.8

@@ -171,6 +171,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SI_VirusBullet
   _maxRange: 10
+  _impactClip: {fileID: 8300000, guid: 13783416dcb7e014f9294890c9fc0620, type: 3}
 --- !u!114 &6175162201569324050
 MonoBehaviour:
   m_ObjectHideFlags: 0

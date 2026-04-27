@@ -21,6 +21,9 @@ public class EnemyProjectile : MonoBehaviour
     // Position enregistrée à l'instanciation pour le calcul de portée
     private Vector3 _spawnPosition;
 
+    // Son joué à l'impact du projectile sur le joueur
+    [SerializeField] private AudioClip _impactClip;
+
     // Initialise le projectile avec tous ses paramètres de tir
     public void Initialize(Vector2 direction, float speed, float maxRange, LivesManager livesManager, int damage)
     {
@@ -65,6 +68,8 @@ public class EnemyProjectile : MonoBehaviour
         {
             // Inflige les dégâts au joueur via le gestionnaire de vies
             _livesManager.TakeDamage();
+
+            AudioManager.Instance?.PlaySFX(_impactClip);
 
             // Détruit le projectile immédiatement après le contact
             Destroy(gameObject);

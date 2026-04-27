@@ -65,12 +65,21 @@ public class SI_WaveManager : MonoBehaviour
     // Expose l'événement de spawn de virus en lecture seule
     public UnityEvent<GameObject> OnVirusSpawned => _onVirusSpawned;
 
+    // Son joué lors du spawn d'un virus
+    [SerializeField] private AudioClip _spawnClip;
+
+    // Son joué lors d'un changement de phase de difficulté
+    [SerializeField] private AudioClip _phaseChangeClip;
+
     // -------------------------------------------------------------------------
     // État interne du spawn
     // -------------------------------------------------------------------------
 
     // Temps total écoulé depuis le début de la boucle de spawn
     private float _elapsed;
+
+    // Phase courante de difficulté, utilisée pour détecter les changements
+    private int _currentPhase = 1;
 
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
@@ -128,8 +137,18 @@ public class SI_WaveManager : MonoBehaviour
             // Instancie l'ennemi à la position calculée sans rotation
             GameObject virusObject = Instantiate(prefab, spawnPos, Quaternion.identity);
 
+            AudioManager.Instance?.PlaySFX(_spawnClip);
+
             // Notifie l'injecteur du nouveau virus pour câbler ses références
             _onVirusSpawned?.Invoke(virusObject);
+
+            // Détecte un changement de phase et joue le son associé
+            int newPhase = GetCurrentWave();
+            if (newPhase != _currentPhase)
+            {
+                _currentPhase = newPhase;
+                AudioManager.Instance?.PlaySFX(_phaseChangeClip);
+            }
 
             // Ajoute l'intervalle écoulé au compteur de temps total
             _elapsed += interval;

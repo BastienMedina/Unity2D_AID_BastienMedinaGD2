@@ -204,6 +204,7 @@ MonoBehaviour:
   _onAttackFired:
     m_PersistentCalls:
       m_Calls: []
+  _attackClip: {fileID: 8300000, guid: 6daaaf7350f4a3141a925f563afccf5c, type: 3}
 --- !u!114 &3064978683616916981
 MonoBehaviour:
   m_ObjectHideFlags: 0

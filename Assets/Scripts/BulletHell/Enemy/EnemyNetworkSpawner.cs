@@ -30,6 +30,9 @@ public class EnemyNetworkSpawner : MonoBehaviour
     // Rayon au-delà duquel une unité est considérée hors de la salle
     [SerializeField] private float _despawnRadius = 10f;
 
+    // Son joué lors du spawn d'une unité réseau
+    [SerializeField] private AudioClip _spawnClip;
+
     // Nombre d'unités actuellement actives dans la salle
     private int _activeUnitCount = 0;
 
@@ -98,6 +101,8 @@ public class EnemyNetworkSpawner : MonoBehaviour
 
         // Initialise l'unité avec toutes les données nécessaires
         unit.Initialize(_playerTransform, _livesManager, this, _unitSpeed, _unitDamage, _despawnRadius);
+
+        AudioManager.Instance?.PlaySFX(_spawnClip);
 
         // Incrémente le compteur d'unités actives après le spawn
         _activeUnitCount++;

@@ -12,6 +12,9 @@ public class SI_PlayerBullet : MonoBehaviour
     // Distance maximale avant auto-destruction de la balle
     [SerializeField] private float _maxRange = 12f;
 
+    // Son joué à l'impact de la balle sur un virus
+    [SerializeField] private AudioClip _impactClip;
+
     // Référence au Rigidbody2D pour le déplacement physique
     private Rigidbody2D _rigidbody;
 
@@ -75,6 +78,8 @@ public class SI_PlayerBullet : MonoBehaviour
         {
             // Inflige les dégâts configurés au virus touché
             target.TakeDamage(_damage);
+
+            AudioManager.Instance?.PlaySFX(_impactClip);
 
             // Supprime la balle immédiatement après l'impact sur le virus
             Destroy(gameObject);

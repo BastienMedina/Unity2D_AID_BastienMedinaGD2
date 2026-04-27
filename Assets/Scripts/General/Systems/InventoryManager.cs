@@ -54,6 +54,15 @@ public class InventoryManager : MonoBehaviour
     // Référence au gestionnaire de stats pour les effets d'items.
     [SerializeField] private PlayerStatsManager _playerStats;
 
+    // Son joué quand un item est ajouté à l'inventaire
+    [SerializeField] private AudioClip _itemAddedClip;
+
+    // Son joué quand un item est consommé
+    [SerializeField] private AudioClip _itemConsumedClip;
+
+    // Son joué quand l'inventaire est plein
+    [SerializeField] private AudioClip _inventoryFullClip;
+
     // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
@@ -166,11 +175,13 @@ public class InventoryManager : MonoBehaviour
 
             // Notifie les abonnés de l'ajout avec l'index du slot.
             OnItemAdded.Invoke(i);
+            AudioManager.Instance?.PlaySFX(_itemAddedClip);
             return true;
         }
 
         // Notifie les abonnés que l'inventaire est complètement plein.
         OnInventoryFull.Invoke();
+        AudioManager.Instance?.PlaySFX(_inventoryFullClip);
         return false;
     }
 
@@ -206,6 +217,7 @@ public class InventoryManager : MonoBehaviour
 
         // Notifie les abonnés de la consommation avec l'index du slot.
         OnItemConsumed.Invoke(slotIndex);
+        AudioManager.Instance?.PlaySFX(_itemConsumedClip);
         return true;
     }
 

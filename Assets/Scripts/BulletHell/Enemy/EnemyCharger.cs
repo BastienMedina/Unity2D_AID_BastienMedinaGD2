@@ -30,6 +30,12 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     // Référence au Transform du joueur pour le suivi de position
     [SerializeField] private Transform _playerTransform;
 
+    // Son joué au déclenchement d'une charge
+    [SerializeField] private AudioClip _chargeClip;
+
+    // Son joué quand le charger percute le joueur
+    [SerializeField] private AudioClip _impactClip;
+
     // État courant de la machine à états de l'ennemi
     private State _currentState = State.Patrol;
 
@@ -47,9 +53,6 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
 
     // Timer décroissant de l'immunité de spawn
     private float _spawnImmunityTimer = 0f;
-
-    // Référence au composant de feedback visuel
-    private EnemyFeedback _feedback;
 
     /// <summary>Injecte playerTransform et livesManager après un Instantiate runtime.</summary>
     public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
@@ -96,25 +99,21 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         // Redirige vers la méthode correspondant à l'état courant
         switch (_currentState)
         {
-            // Exécute le comportement de patrouille entre les points
             case State.Patrol:
                 _feedback?.SetMovementRock(false);
                 HandlePatrol();
                 break;
 
-            // Exécute le comportement de traque vers le joueur
             case State.Chase:
                 _feedback?.SetMovementRock(true);
                 HandleChase();
                 break;
 
-            // Exécute le comportement de charge rapide vers le joueur
             case State.Charge:
                 _feedback?.SetMovementRock(true);
                 HandleCharge();
                 break;
 
-            // Attend la fin du cooldown avant de reprendre la patrouille
             case State.Cooldown:
                 _feedback?.SetMovementRock(false);
                 HandleCooldown();
@@ -176,6 +175,8 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
             // Verrouille la direction vers le joueur pour la charge
             _chargeDirection = (_playerTransform.position - transform.position).normalized;
 
+            AudioManager.Instance?.PlaySFX(_chargeClip);
+
             // Passe immédiatement dans l'état de charge rapide
             _currentState = State.Charge;
         }
@@ -232,6 +233,8 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
             {
                 _livesManager.TakeDamage();
             }
+
+            AudioManager.Instance?.PlaySFX(_impactClip);
 
             // Réarme le timer de cooldown après une charge réussie
             _cooldownTimer = _chargeCooldown;

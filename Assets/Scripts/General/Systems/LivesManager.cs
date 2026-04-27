@@ -14,6 +14,15 @@ public class LivesManager : MonoBehaviour
     // Nombre maximum de vies au démarrage de la partie.
     [SerializeField] private int _maxLives = 3;
 
+    // Son joué quand le joueur perd une vie
+    [SerializeField] private AudioClip _losLifeClip;
+
+    // Son joué quand le joueur est soigné
+    [SerializeField] private AudioClip _healClip;
+
+    // Son joué quand le joueur meurt (game over)
+    [SerializeField] private AudioClip _deathClip;
+
     // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
@@ -90,6 +99,7 @@ public class LivesManager : MonoBehaviour
 
         // Décrémente les vies et notifie tous les abonnés.
         _currentLives--;
+        AudioManager.Instance?.PlaySFX(_losLifeClip);
         OnLivesChanged.Invoke(_currentLives);
     }
 
@@ -111,6 +121,8 @@ public class LivesManager : MonoBehaviour
         // Ajoute le montant de soin sans dépasser le maximum de vies.
         _currentLives = Mathf.Min(_currentLives + amount, _maxLives);
 
+        AudioManager.Instance?.PlaySFX(_healClip);
+
         // Notifie les abonnés du nouveau total de vies après soin.
         OnLivesChanged.Invoke(_currentLives);
     }
@@ -130,7 +142,14 @@ public class LivesManager : MonoBehaviour
 
         // Déclenche la mort si toutes les vies sont perdues.
         if (_currentLives <= 0)
+        {
+            AudioManager.Instance?.PlaySFX(_deathClip);
             OnDeath.Invoke();
+        }
+        else
+        {
+            AudioManager.Instance?.PlaySFX(_losLifeClip);
+        }
     }
 
     // Met à jour le maximum de vies du joueur

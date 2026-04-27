@@ -22,6 +22,9 @@ public class FloorTransitionAnimator : MonoBehaviour
     // Préfixe affiché avant le numéro d'étage dans le label
     [SerializeField] private string _labelPrefix = "ÉTAGE ";
 
+    // Son joué au début de la transition entre étages
+    [SerializeField] private AudioClip _transitionClip;
+
     // Canvas overlay placé au-dessus de tout le rendu
     private Canvas _canvas;
 
@@ -78,6 +81,8 @@ public class FloorTransitionAnimator : MonoBehaviour
     private IEnumerator TransitionCoroutine(string sceneName, int nextFloor)
     {
         _isTransitioning = true;
+
+        AudioManager.Instance?.PlaySFX(_transitionClip);
 
         // Active le Canvas uniquement pendant la transition
         _canvas.enabled = true;

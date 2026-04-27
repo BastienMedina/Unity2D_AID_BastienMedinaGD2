@@ -68,6 +68,12 @@ public class GridManager : MonoBehaviour
     // Déclenché quand le joueur atteint un bord.
     public UnityEvent OnMoveFailed = new UnityEvent();
 
+    // Son joué lors d'un déplacement valide du joueur
+    [SerializeField] private AudioClip _moveClip;
+
+    // Son joué quand le déplacement est refusé (bord de grille)
+    [SerializeField] private AudioClip _moveFailClip;
+
     // -------------------------------------------------------------------------
     // État interne
     // -------------------------------------------------------------------------
@@ -231,6 +237,7 @@ public class GridManager : MonoBehaviour
         {
             // Signale que le déplacement est bloqué par le bord de grille
             Debug.Log($"[DIAG] TryMove() — BLOQUÉ bord grille target={target}");
+            AudioManager.Instance?.PlaySFX(_moveFailClip);
             // Notifie les abonnés de l'échec du déplacement.
             OnMoveFailed.Invoke();
             return;
@@ -247,6 +254,7 @@ public class GridManager : MonoBehaviour
 
         // Confirme que l'événement OnPlayerMoved va être déclenché
         Debug.Log($"[DIAG] TryMove() — OnPlayerMoved.Invoke() → newPos={_playerPosition} listeners={OnPlayerMoved.GetPersistentEventCount()}");
+        AudioManager.Instance?.PlaySFX(_moveClip);
         // Notifie les abonnés avec la nouvelle position du joueur.
         OnPlayerMoved.Invoke(_playerPosition);
     }

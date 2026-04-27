@@ -30,6 +30,9 @@ public class LaserSystem : MonoBehaviour
     // Déclenché quand le joueur est touché par le laser.
     public UnityEvent OnPlayerHitByLaser = new UnityEvent();
 
+    // Son joué lors de l'activation / avancement du laser
+    [SerializeField] private AudioClip _advanceLaserClip;
+
     // -------------------------------------------------------------------------
     // État interne
     // -------------------------------------------------------------------------
@@ -200,6 +203,8 @@ public class LaserSystem : MonoBehaviour
         // Ignore l'avancement si aucun pattern n'est disponible.
         if (!HasValidPatterns)
             return;
+
+        AudioManager.Instance?.PlaySFX(_advanceLaserClip);
 
         // Avec un seul pattern, impossible d'alterner — on reste en place.
         if (_patterns.Count == 1)

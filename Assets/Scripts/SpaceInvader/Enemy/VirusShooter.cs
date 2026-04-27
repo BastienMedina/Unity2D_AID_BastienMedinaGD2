@@ -16,6 +16,9 @@ public class VirusShooter : VirusBase
     // Transform du joueur ciblé lors du tir, trouvé automatiquement
     private Transform _playerTransform;
 
+    // Son joué lors d'un tir du VirusShooter
+    [SerializeField] private AudioClip _shootClip;
+
     // Indique si le virus est mort pour bloquer toute action résiduelle
     private bool _isDead;
 
@@ -89,6 +92,8 @@ public class VirusShooter : VirusBase
 
         // Instancie la balle à la position courante du virus
         GameObject bulletGo = Instantiate(_bulletPrefab, origin, Quaternion.identity);
+
+        AudioManager.Instance?.PlaySFX(_shootClip);
 
         // Initialise la balle avec la direction et la vitesse calculées
         SI_VirusBullet bullet = bulletGo.GetComponent<SI_VirusBullet>();

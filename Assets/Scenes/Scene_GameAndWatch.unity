@@ -423,6 +423,8 @@ MonoBehaviour:
   OnMoveFailed:
     m_PersistentCalls:
       m_Calls: []
+  _moveClip: {fileID: 8300000, guid: 3f57c1276632f6648b97501f828880d4, type: 3}
+  _moveFailClip: {fileID: 8300000, guid: c3d14f23b636a284da507d49b1e49705, type: 3}
 --- !u!4 &328041077
 Transform:
   m_ObjectHideFlags: 0
@@ -732,6 +734,7 @@ MonoBehaviour:
   _gridManager: {fileID: 328041076}
   _laserSystem: {fileID: 941681319}
   _coinSystem: {fileID: 828870838}
+  _laserHitClip: {fileID: 8300000, guid: 41b977d9b4edd744abba061a168be22b, type: 3}
   OnCollisionsResolved:
     m_PersistentCalls:
       m_Calls: []
@@ -1169,6 +1172,9 @@ MonoBehaviour:
   OnVictoryConditionMet:
     m_PersistentCalls:
       m_Calls: []
+  _collectCoinClip: {fileID: 8300000, guid: db49eb1675a4a1145ace392f7bd3a092, type: 3}
+  _spawnCoinClip: {fileID: 8300000, guid: 8b8e3b98f1f60bc419e2e74c08a55b78, type: 3}
+  _victoryClip: {fileID: 8300000, guid: 51b3c3392a0e4cd428f6d40cdd94c76f, type: 3}
 --- !u!4 &828870839
 Transform:
   m_ObjectHideFlags: 0
@@ -1220,6 +1226,7 @@ MonoBehaviour:
   OnPlayerHitByLaser:
     m_PersistentCalls:
       m_Calls: []
+  _advanceLaserClip: {fileID: 8300000, guid: 40a9902208455704fb49ba6a5d7a7cc5, type: 3}
 --- !u!4 &941681320
 Transform:
   m_ObjectHideFlags: 0
@@ -1427,6 +1434,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LivesManager
   _maxLives: 3
+  _losLifeClip: {fileID: 8300000, guid: c412d862584759f449e7949dd3e42613, type: 3}
+  _healClip: {fileID: 8300000, guid: 8c45ec69519ae5a40b110b9792fa12fa, type: 3}
+  _deathClip: {fileID: 8300000, guid: e7fa122698f214741ad7d199e0b771de, type: 3}
   OnLivesChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1803,6 +1813,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1861717466
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1861717468}
+  - component: {fileID: 1861717467}
+  m_Layer: 0
+  m_Name: GO_AudioMusicPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1861717467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861717466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ddecceb9a6a32d44a7efc358ecef8ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioMusicPlayer
+  _musicClip: {fileID: 8300000, guid: 8a5e598676ae28645a96012b66ddf4a5, type: 3}
+--- !u!4 &1861717468
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861717466}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1911538287
 GameObject:
   m_ObjectHideFlags: 0
@@ -2153,3 +2208,4 @@ SceneRoots:
   - {fileID: 1843471157}
   - {fileID: 1359192192}
   - {fileID: 1503256015}
+  - {fileID: 1861717468}

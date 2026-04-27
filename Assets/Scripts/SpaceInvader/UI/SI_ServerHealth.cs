@@ -13,6 +13,12 @@ public class SI_ServerHealth : MonoBehaviour
     // Événement déclenché une fois quand l'intégrité atteint zéro
     [SerializeField] private UnityEvent _onServerDestroyed;
 
+    // Son joué à chaque fois que le serveur subit des dégâts
+    [SerializeField] private AudioClip _damagedClip;
+
+    // Son joué quand le serveur est complètement détruit
+    [SerializeField] private AudioClip _destroyedClip;
+
     // Valeur courante de l'intégrité décrémentée à chaque impact
     private int _currentIntegrity;
 
@@ -55,8 +61,13 @@ public class SI_ServerHealth : MonoBehaviour
         // Déclenche le game over si l'intégrité est épuisée
         if (_currentIntegrity <= 0)
         {
+            AudioManager.Instance?.PlaySFX(_destroyedClip);
             // Notifie les abonnés que le serveur vient d'être détruit
             _onServerDestroyed?.Invoke();
+        }
+        else
+        {
+            AudioManager.Instance?.PlaySFX(_damagedClip);
         }
     }
 

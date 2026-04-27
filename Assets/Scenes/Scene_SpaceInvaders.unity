@@ -315,6 +315,8 @@ MonoBehaviour:
   _onVirusSpawned:
     m_PersistentCalls:
       m_Calls: []
+  _spawnClip: {fileID: 8300000, guid: fc033aba73c6f6446b5c2da93cadea21, type: 3}
+  _phaseChangeClip: {fileID: 8300000, guid: f7a7e694325f1ce46b556bd2d097b40f, type: 3}
 --- !u!4 &507523901
 Transform:
   m_ObjectHideFlags: 0
@@ -619,6 +621,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _victoryClip: {fileID: 8300000, guid: ffce66a19fc533b4a8ac8c9a730b1329, type: 3}
   _minVictoryDuration: 10
 --- !u!4 &730673927
 Transform:
@@ -679,6 +682,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LivesManager
   _maxLives: 3
+  _losLifeClip: {fileID: 8300000, guid: c412d862584759f449e7949dd3e42613, type: 3}
+  _healClip: {fileID: 8300000, guid: 8c45ec69519ae5a40b110b9792fa12fa, type: 3}
+  _deathClip: {fileID: 8300000, guid: e7fa122698f214741ad7d199e0b771de, type: 3}
   OnLivesChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1367,6 +1373,8 @@ MonoBehaviour:
   _onResumed:
     m_PersistentCalls:
       m_Calls: []
+  _pauseClip: {fileID: 8300000, guid: 372e0a96152ec124cbd220b30edba607, type: 3}
+  _resumeClip: {fileID: 8300000, guid: ba29e329e8f98d74baa2ef05956df598, type: 3}
 --- !u!4 &1839599169
 Transform:
   m_ObjectHideFlags: 0
@@ -1374,6 +1382,51 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839599167}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1861717466
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1861717468}
+  - component: {fileID: 1861717467}
+  m_Layer: 0
+  m_Name: GO_AudioMusicPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1861717467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861717466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ddecceb9a6a32d44a7efc358ecef8ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioMusicPlayer
+  _musicClip: {fileID: 8300000, guid: 78899d929e6e54e438061881770fe37d, type: 3}
+--- !u!4 &1861717468
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1861717466}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1684,3 +1737,4 @@ SceneRoots:
   - {fileID: 94382521}
   - {fileID: 1795399528}
   - {fileID: 2111908575}
+  - {fileID: 1861717468}

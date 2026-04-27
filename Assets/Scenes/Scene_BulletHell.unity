@@ -150,6 +150,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LivesManager
   _maxLives: 3
+  _losLifeClip: {fileID: 8300000, guid: c412d862584759f449e7949dd3e42613, type: 3}
+  _healClip: {fileID: 8300000, guid: 8c45ec69519ae5a40b110b9792fa12fa, type: 3}
+  _deathClip: {fileID: 8300000, guid: e7fa122698f214741ad7d199e0b771de, type: 3}
   OnLivesChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -372,6 +375,26 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 430776544051722891, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 140433255743585067, guid: 0e039e25b92a3ca4e834cd8e43524dc9, type: 3}
+    - target: {fileID: 430776544051722891, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 430776544051722891, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 430776544051722891, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 430776544051722891, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 614624687198153516, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_text
       value: USE
@@ -407,6 +430,14 @@ PrefabInstance:
     - target: {fileID: 660233751558335009, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 62
+      objectReference: {fileID: 0}
+    - target: {fileID: 880779267555722267, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 1428892310142603471, guid: 9bc7a6ebf04ea40449ab6eacdd50821b, type: 3}
+    - target: {fileID: 880779267555722267, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.a
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1589270420229212292, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_SizeDelta.x
@@ -448,6 +479,26 @@ PrefabInstance:
       propertyPath: m_hasFontAssetChanged
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3473139938931706372, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 4942803658038726614, guid: 55520852417c0554fba4d3b0918f7232, type: 3}
+    - target: {fileID: 3473139938931706372, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3473139938931706372, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3473139938931706372, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3473139938931706372, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4229370408102823974, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -464,6 +515,10 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4387182468725256689, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4574416874992575217, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_Sprite
       value: 
@@ -479,6 +534,10 @@ PrefabInstance:
     - target: {fileID: 5705569215120925086, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_Color.r
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6100883642317655538, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+      propertyPath: m_text
+      value: SAC
       objectReference: {fileID: 0}
     - target: {fileID: 6503132908774797968, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       propertyPath: m_Sprite
@@ -593,7 +652,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 2068689092092996245, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+    - {fileID: 3847899023769513858, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
+    - {fileID: 5852116405717917138, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7758345603252992268, guid: 4580d9a5cbe9be44396eb61f71659aa1, type: 3}
       insertIndex: -1
@@ -766,6 +828,9 @@ MonoBehaviour:
   _capacity: 9
   _livesManager: {fileID: 67138594}
   _playerStats: {fileID: 1280815028}
+  _itemAddedClip: {fileID: 8300000, guid: c97937bdd83898945aebff774ea06647, type: 3}
+  _itemConsumedClip: {fileID: 8300000, guid: c9e2a2dbe3c73db4faef0cdeca3d6b24, type: 3}
+  _inventoryFullClip: {fileID: 8300000, guid: 619adc6319c0c4b409f7331feaa7c5ff, type: 3}
   OnItemAdded:
     m_PersistentCalls:
       m_Calls: []
@@ -785,6 +850,51 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 925688161}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &962502751
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 962502753}
+  - component: {fileID: 962502752}
+  m_Layer: 0
+  m_Name: GO_AudioMusicPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &962502752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 962502751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ddecceb9a6a32d44a7efc358ecef8ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioMusicPlayer
+  _musicClip: {fileID: 8300000, guid: 3bcb09b91ac36874aa4b518df7db6a4b, type: 3}
+--- !u!4 &962502753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 962502751}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -970,6 +1080,10 @@ MonoBehaviour:
   _livesManager: {fileID: 0}
   _heartPrefab: {fileID: 7792529945098836659, guid: 2e1fe0e7662902f41a30055647ddac5b, type: 3}
   _heartsContainer: {fileID: 1463042610}
+  _damagePunchDuration: 0.35
+  _damagePunchScale: 0.25
+  _damageBlinkCount: 3
+  _damageBlinkHalfPeriod: 0.07
 --- !u!114 &1463042612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1106,6 +1220,8 @@ MonoBehaviour:
   _onResumed:
     m_PersistentCalls:
       m_Calls: []
+  _pauseClip: {fileID: 8300000, guid: 372e0a96152ec124cbd220b30edba607, type: 3}
+  _resumeClip: {fileID: 8300000, guid: ba29e329e8f98d74baa2ef05956df598, type: 3}
 --- !u!4 &1628725184
 Transform:
   m_ObjectHideFlags: 0
@@ -1312,3 +1428,4 @@ SceneRoots:
   - {fileID: 297536055}
   - {fileID: 1064357091}
   - {fileID: 1280815029}
+  - {fileID: 962502753}

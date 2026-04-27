@@ -13,11 +13,14 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
     // Événement déclenché une seule fois quand l'ennemi meurt
     [SerializeField] public UnityEvent OnDeath;
 
+    // Son joué à la mort de l'ennemi
+    [SerializeField] private AudioClip _deathClip;
+
     // Points de vie courants décrémentés à chaque dégât reçu
     private int _currentHealth;
 
-    // Référence optionnelle au composant de feedback visuel
-    private EnemyFeedback _feedback;
+    // Référence optionnelle au composant de feedback visuel, accessible aux sous-classes
+    protected EnemyFeedback _feedback;
 
     // Initialise la santé courante au maximum au démarrage
     protected virtual void Awake()
@@ -62,6 +65,8 @@ public abstract class EnemyBase : MonoBehaviour, IEnemyDamageable
         // Déclenche la mort si la santé est épuisée
         if (IsDead())
         {
+            AudioManager.Instance?.PlaySFX(_deathClip);
+
             // Notifie les abonnés que l'ennemi vient de mourir
             OnDeath?.Invoke();
 

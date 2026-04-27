@@ -10,6 +10,12 @@ public class PauseManager : MonoBehaviour
     // Événement déclenché quand le jeu reprend après une pause
     [SerializeField] private UnityEvent _onResumed;
 
+    // Son joué lors de la mise en pause
+    [SerializeField] private AudioClip _pauseClip;
+
+    // Son joué lors de la reprise du jeu
+    [SerializeField] private AudioClip _resumeClip;
+
     // Indique si le jeu est actuellement en pause
     private bool _isPaused = false;
 
@@ -45,6 +51,10 @@ public class PauseManager : MonoBehaviour
         // Marque l'état interne comme en pause
         _isPaused = true;
 
+        // Joue le son de pause en temps non scalé
+        if (_pauseClip != null)
+            AudioManager.Instance?.PlaySFX(_pauseClip);
+
         // Notifie les abonnés de la mise en pause
         _onPaused?.Invoke();
     }
@@ -63,6 +73,10 @@ public class PauseManager : MonoBehaviour
 
         // Marque l'état interne comme actif
         _isPaused = false;
+
+        // Joue le son de reprise
+        if (_resumeClip != null)
+            AudioManager.Instance?.PlaySFX(_resumeClip);
 
         // Notifie les abonnés de la reprise du jeu
         _onResumed?.Invoke();

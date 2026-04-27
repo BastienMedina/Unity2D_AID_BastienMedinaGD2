@@ -21,6 +21,9 @@ public class VirusHeavy : VirusBase
     // Limite horizontale droite pour le clamp des positions de spawn
     [SerializeField] private float _spawnBoundaryRight = 4.5f;
 
+    // Son joué lors de la division du VirusHeavy en minis
+    [SerializeField] private AudioClip _splitClip;
+
     // Indique si le virus est mort pour bloquer toute action résiduelle
     private bool _isDead;
 
@@ -47,6 +50,8 @@ public class VirusHeavy : VirusBase
             Destroy(gameObject);
             return;
         }
+
+        AudioManager.Instance?.PlaySFX(_splitClip);
 
         // Boucle sur le nombre de mini-virus à instancier à la mort
         for (int i = 0; i < _splitCount; i++)

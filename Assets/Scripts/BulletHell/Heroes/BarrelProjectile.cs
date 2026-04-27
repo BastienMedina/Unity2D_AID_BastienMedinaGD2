@@ -12,6 +12,9 @@ public class BarrelProjectile : MonoBehaviour
     // Distance maximale avant auto-destruction du baril
     [SerializeField] private float _maxRange = 10f;
 
+    // Son joué à l'impact du baril sur un ennemi
+    [SerializeField] private AudioClip _impactClip;
+
     // Direction normalisée transmise par HeroDonkeyKong
     private Vector2 _direction;
 
@@ -112,6 +115,8 @@ public class BarrelProjectile : MonoBehaviour
         {
             // Inflige les dégâts configurés à la cible
             target.TakeDamage(_damage);
+
+            AudioManager.Instance?.PlaySFX(_impactClip);
 
             // Détruit le projectile après impact
             Destroy(gameObject);

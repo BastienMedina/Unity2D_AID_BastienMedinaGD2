@@ -179,6 +179,7 @@ MonoBehaviour:
   _onDeath:
     m_PersistentCalls:
       m_Calls: []
+  _deathClip: {fileID: 8300000, guid: f39f52a6e8ceea04e803ccbedc7c0b40, type: 3}
   _scatterSpeed: 2
   _diveSpeed: 4
   _scatterDuration: 0.6

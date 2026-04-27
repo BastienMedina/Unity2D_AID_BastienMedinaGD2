@@ -50,6 +50,15 @@ public class CoinSystem : MonoBehaviour
     // Déclenché quand la condition de victoire est atteinte.
     public UnityEvent OnVictoryConditionMet = new UnityEvent();
 
+    // Son joué lors de la collecte d'une pièce
+    [SerializeField] private AudioClip _collectCoinClip;
+
+    // Son joué lors du spawn d'une pièce
+    [SerializeField] private AudioClip _spawnCoinClip;
+
+    // Son joué lors de la victoire (toutes pièces collectées)
+    [SerializeField] private AudioClip _victoryClip;
+
     // -------------------------------------------------------------------------
     // État interne
     // -------------------------------------------------------------------------
@@ -221,12 +230,15 @@ public class CoinSystem : MonoBehaviour
         // Incrémente le nombre total de pièces collectées.
         _totalCollected++;
 
+        AudioManager.Instance?.PlaySFX(_collectCoinClip);
+
         // Notifie les abonnés avec le nouveau total accumulé.
         OnCoinCollected.Invoke(_totalCollected);
 
         // Vérifie si la condition de victoire est maintenant atteinte.
         if (_totalCollected >= _victoryCollectCount)
         {
+            AudioManager.Instance?.PlaySFX(_victoryClip);
             // Notifie les abonnés que la victoire est déclenchée.
             OnVictoryConditionMet.Invoke();
             return;
@@ -288,6 +300,7 @@ public class CoinSystem : MonoBehaviour
                 // Place la pièce sur la cellule validée et initialise sa durée.
                 _currentCoinPos        = candidate;
                 _coinLifetimeRemaining = _coinLifetimeTurns;
+                AudioManager.Instance?.PlaySFX(_spawnCoinClip);
                 return;
             }
         }

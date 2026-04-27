@@ -160,6 +160,8 @@ MonoBehaviour:
   _onServerDestroyed:
     m_PersistentCalls:
       m_Calls: []
+  _damagedClip: {fileID: 8300000, guid: 5a81d2346573dc14abc4291cba50c0e0, type: 3}
+  _destroyedClip: {fileID: 8300000, guid: ecb646b7d79f89f4bb7d55c39720c35c, type: 3}
 --- !u!114 &3479537639493725409
 MonoBehaviour:
   m_ObjectHideFlags: 0

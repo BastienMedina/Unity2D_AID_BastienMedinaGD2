@@ -45,6 +45,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
     // Durée en secondes d'immunité après le spawn — bloque toute action offensive
     [SerializeField] private float _spawnImmunityDuration = 1.25f;
 
+    // Son joué lors d'un tir
+    [SerializeField] private AudioClip _shootClip;
+
     // Timer décroissant de l'immunité de spawn
     private float _spawnImmunityTimer = 0f;
 
@@ -53,9 +56,6 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
 
     // Timer décroissant entre deux tirs successifs
     private float _shootCooldownTimer = 0f;
-
-    // Référence au composant de feedback visuel
-    private EnemyFeedback _feedback;
 
     /// <summary>Injecte playerTransform, livesManager et lootSystem après un Instantiate runtime.</summary>
     public void InjectDependencies(UnityEngine.Transform playerTransform, LivesManager livesManager, LootSystem lootSystem)
@@ -212,6 +212,8 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
 
         // Initialise le projectile avec direction, vitesse, portée et dégâts
         projectile.Initialize(direction, _projectileSpeed, _projectileMaxRange, _livesManager, _projectileDamage);
+
+        AudioManager.Instance?.PlaySFX(_shootClip);
 
         // Joue le feedback visuel de tir
         _feedback?.PlayShootFeedback();

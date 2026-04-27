@@ -242,6 +242,7 @@ MonoBehaviour:
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
+  _deathClip: {fileID: 8300000, guid: 365775eae5dc77b499f31bc03d331a9e, type: 3}
   _patrolSpeed: 1.5
   _chargeSpeed: 5
   _detectionRadius: 4
@@ -252,6 +253,8 @@ MonoBehaviour:
   - {fileID: 666209481233185865}
   _livesManager: {fileID: 0}
   _playerTransform: {fileID: 0}
+  _chargeClip: {fileID: 8300000, guid: ce71c75effa57f74bb2be388144dcd38, type: 3}
+  _impactClip: {fileID: 8300000, guid: f367b3560ad8a244aaabafb32771644e, type: 3}
   _spawnImmunityDuration: 1.25
 --- !u!114 &6698854949503349740
 MonoBehaviour:
@@ -268,6 +271,7 @@ MonoBehaviour:
   _inventoryManager: {fileID: 0}
   _lootTable: {fileID: 11400000, guid: 01041dec3376e1a4f9f6700f0ea19ab0, type: 2}
   _dropChance: 0.85
+  _dropLootClip: {fileID: 8300000, guid: 81bcfa904124d6f4a95f15cfba599c6d, type: 3}
   OnLootDropped:
     m_PersistentCalls:
       m_Calls: []

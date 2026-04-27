@@ -173,6 +173,7 @@ MonoBehaviour:
   _speed: 15
   _damage: 1
   _maxRange: 10
+  _impactClip: {fileID: 8300000, guid: c2d445a52505ac747b560b1b598cd92d, type: 3}
 --- !u!114 &7043688648634118481
 MonoBehaviour:
   m_ObjectHideFlags: 0

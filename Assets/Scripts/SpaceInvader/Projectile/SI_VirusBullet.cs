@@ -21,6 +21,9 @@ public class SI_VirusBullet : MonoBehaviour
     // Indique si la balle a été initialisée avant de se déplacer
     private bool _isInitialized;
 
+    // Son joué à l'impact de la balle virus sur le joueur
+    [SerializeField] private AudioClip _impactClip;
+
     // Récupère le Rigidbody2D et mémorise la position de spawn
     private void Awake()
     {
@@ -82,6 +85,8 @@ public class SI_VirusBullet : MonoBehaviour
         {
             // Inflige un dégât via le singleton LivesManager
             LivesManager.Instance?.TakeDamage();
+
+            AudioManager.Instance?.PlaySFX(_impactClip);
 
             // Détruit la balle immédiatement après le contact avec le joueur
             Destroy(gameObject);

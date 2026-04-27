@@ -240,6 +240,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _livesManager: {fileID: 0}
+  _shootClip: {fileID: 8300000, guid: d228ede099d5d9846bd2a985d51ceafe, type: 3}
 --- !u!114 &3534948345932798712
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -179,6 +179,7 @@ MonoBehaviour:
   _onDeath:
     m_PersistentCalls:
       m_Calls: []
+  _deathClip: {fileID: 8300000, guid: f39f52a6e8ceea04e803ccbedc7c0b40, type: 3}
 --- !u!114 &3766798126375764694
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,4 +193,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VirusFastVisual
   _sortingOrder: 2
-  _colliderRadius: 0.833

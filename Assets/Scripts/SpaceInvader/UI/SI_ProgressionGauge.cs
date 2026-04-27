@@ -28,6 +28,9 @@ public class SI_ProgressionGauge : MonoBehaviour
     // Événement déclenché une seule fois à l'atteinte de la victoire
     public UnityEvent OnVictory;
 
+    // Son joué lors de la victoire (timer de survie atteint)
+    [SerializeField] private AudioClip _victoryClip;
+
     // -------------------------------------------------------------------------
     // Validation de la durée minimale
     // -------------------------------------------------------------------------
@@ -167,6 +170,8 @@ public class SI_ProgressionGauge : MonoBehaviour
 
         // Notifie les abonnés avec une progression finale à 1
         _onProgressUpdated?.Invoke(1f);
+
+        AudioManager.Instance?.PlaySFX(_victoryClip);
 
         // Déclenche l'événement de victoire pour les systèmes abonnés
         OnVictory?.Invoke();

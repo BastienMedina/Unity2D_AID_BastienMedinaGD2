@@ -25,6 +25,12 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
     // Distance de contact pour infliger des dégâts au joueur
     [SerializeField] private float _contactRadius = 0.4f;
 
+    // Son joué quand l'ennemi émerge d'un bureau
+    [SerializeField] private AudioClip _revealClip;
+
+    // Son joué pendant la phase d'attaque de l'ennemi
+    [SerializeField] private AudioClip _attackClip;
+
     // -------------------------------------------------------------------------
     // Références résolues à l'exécution
     // -------------------------------------------------------------------------
@@ -94,6 +100,7 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
         _damageTimer  = 0f;
         _currentState = State.Attacking;
         ShowHiddenVisual(false);
+        AudioManager.Instance?.PlaySFX(_revealClip);
         gameObject.SetActive(true);
     }
 
@@ -133,6 +140,7 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
                 Vector2.Distance(transform.position, _playerTransform.position) <= _contactRadius)
             {
                 _livesManager?.TakeDamage();
+                AudioManager.Instance?.PlaySFX(_attackClip);
                 _damageTimer = _damageCooldown;
             }
         }

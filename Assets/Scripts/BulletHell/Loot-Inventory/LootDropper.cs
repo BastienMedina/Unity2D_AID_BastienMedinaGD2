@@ -13,6 +13,9 @@ public class LootDropper : MonoBehaviour
     // Chance entre 0 et 1 qu'un objet soit effectivement trouvé.
     [SerializeField] private float _dropChance = 0.85f;
 
+    // Son joué lors d'un drop de loot
+    [SerializeField] private AudioClip _dropLootClip;
+
     // Déclenché après chaque drop traité par ce composant.
     public UnityEvent OnLootDropped = new UnityEvent();
 
@@ -87,6 +90,8 @@ public class LootDropper : MonoBehaviour
             Debug.Log("[LootDropper] Inventaire plein — objet non ajouté.");
         else
             Debug.Log($"[LootDropper] Objet ajouté : {item.ItemName} ({item.Rarity})");
+
+        AudioManager.Instance?.PlaySFX(_dropLootClip);
 
         // Notifie les abonnés que le drop a été traité.
         OnLootDropped.Invoke();

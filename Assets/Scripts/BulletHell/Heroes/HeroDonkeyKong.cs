@@ -19,6 +19,9 @@ public class HeroDonkeyKong : MonoBehaviour
     // Événement déclenché à chaque attaque réussie
     [SerializeField] private UnityEvent _onAttackFired;
 
+    // Son joué lors d'un lancer de baril
+    [SerializeField] private AudioClip _attackClip;
+
     // Temps restant avant que la prochaine attaque soit permise
     private float _cooldownTimer = 0f;
 
@@ -68,6 +71,8 @@ public class HeroDonkeyKong : MonoBehaviour
 
         // Réarme le cooldown après un lancer réussi
         _cooldownTimer = _attackCooldown;
+
+        AudioManager.Instance?.PlaySFX(_attackClip);
 
         // Notifie les abonnés qu'une attaque vient d'être lancée
         _onAttackFired?.Invoke();

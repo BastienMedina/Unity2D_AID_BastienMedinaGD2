@@ -24,6 +24,9 @@ public class GridCollisionResolver : MonoBehaviour
     // Référence au gestionnaire de vies — résolue via le singleton, ne pas assigner dans l'Inspector.
     private LivesManager _livesManager;
 
+    // Son joué quand le joueur est touché par un laser
+    [SerializeField] private AudioClip _laserHitClip;
+
     // -------------------------------------------------------------------------
     // Événements publics
     // -------------------------------------------------------------------------
@@ -139,6 +142,8 @@ public class GridCollisionResolver : MonoBehaviour
 
         // Applique les dégâts au gestionnaire de vies.
         _livesManager.TakeDamage();
+
+        AudioManager.Instance?.PlaySFX(_laserHitClip);
 
         // Notifie les abonnés du hit laser confirmé.
         _laserSystem.OnPlayerHitByLaser.Invoke();

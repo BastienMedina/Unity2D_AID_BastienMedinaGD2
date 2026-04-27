@@ -1111,6 +1111,7 @@ GameObject:
   m_Component:
   - component: {fileID: 537669150}
   - component: {fileID: 537669149}
+  - component: {fileID: 537669151}
   m_Layer: 0
   m_Name: GO_FloorTransitionAnimator
   m_TagString: Untagged
@@ -1134,6 +1135,7 @@ MonoBehaviour:
   _fadeOutDuration: 0.6
   _labelHoldDuration: 1.2
   _labelPrefix: "\xC9TAGE "
+  _transitionClip: {fileID: 8300000, guid: ae444543b7bcc504ab95c1565243ad3c, type: 3}
 --- !u!4 &537669150
 Transform:
   m_ObjectHideFlags: 0
@@ -1149,6 +1151,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &537669151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537669148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2363793f43988bd41a5863ab089fc9e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
+  _menuPanel: {fileID: 0}
+  _optionsPanel: {fileID: 0}
+  _continueButton: {fileID: 0}
+  _bulletHellScene: Scene_BulletHell
+  _buttonClip: {fileID: 8300000, guid: b8544eb0570dc614f9d3b2ecf8396d80, type: 3}
 --- !u!1 &552796780
 GameObject:
   m_ObjectHideFlags: 0
@@ -1785,6 +1804,7 @@ MonoBehaviour:
   _optionsPanel: {fileID: 663178641}
   _continueButton: {fileID: 1044623220}
   _bulletHellScene: Scene_BulletHell
+  _buttonClip: {fileID: 8300000, guid: b8544eb0570dc614f9d3b2ecf8396d80, type: 3}
 --- !u!1 &672636557
 GameObject:
   m_ObjectHideFlags: 0
@@ -4806,6 +4826,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2003375622}
   m_CullTransparentMesh: 1
+--- !u!1 &2029807653
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2029807655}
+  - component: {fileID: 2029807654}
+  m_Layer: 0
+  m_Name: GO_AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2029807654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029807653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca33dae96b0aec34cac16d4cc683c89a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  _audioMixer: {fileID: 0}
+  _sfxGroupName: SFX
+  _musicGroupName: Music
+--- !u!4 &2029807655
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029807653}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2064244844
 GameObject:
   m_ObjectHideFlags: 0
@@ -5293,3 +5360,4 @@ SceneRoots:
   - {fileID: 1545796991}
   - {fileID: 1369652163}
   - {fileID: 537669150}
+  - {fileID: 2029807655}
