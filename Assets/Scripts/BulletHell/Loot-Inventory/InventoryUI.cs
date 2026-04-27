@@ -172,14 +172,15 @@ public class InventoryUI : MonoBehaviour
     // API publique
     // -------------------------------------------------------------------------
 
-    /// <summary>Affiche ou masque le panneau d'inventaire.</summary>
+    /// <summary>Affiche ou masque le panneau d'inventaire.
+    /// Met le jeu en légère pause (timeScale réduit) pendant la consultation.</summary>
     public void ToggleInventory()
     {
         // Ignore si le panneau racine n'est pas assigné.
         if (_inventoryPanel == null)
             return;
 
-        // Masque le panneau et désélectionne si actuellement visible.
+        // Masque le panneau et restaure le timeScale si actuellement visible.
         if (_inventoryPanel.activeSelf)
         {
             // Désélectionne le slot courant avant de masquer.
@@ -187,6 +188,9 @@ public class InventoryUI : MonoBehaviour
 
             // Masque le panneau d'inventaire.
             _inventoryPanel.SetActive(false);
+
+            // Restaure la vitesse normale du jeu à la fermeture.
+            Time.timeScale = 1f;
             return;
         }
 
@@ -195,6 +199,9 @@ public class InventoryUI : MonoBehaviour
 
         // Rafraîchit l'affichage de chaque slot au moment de l'ouverture.
         RefreshAllSlots();
+
+        // Applique une pause légère pour permettre la consultation sans stopper les animations.
+        Time.timeScale = 0.05f;
     }
 
     // -------------------------------------------------------------------------

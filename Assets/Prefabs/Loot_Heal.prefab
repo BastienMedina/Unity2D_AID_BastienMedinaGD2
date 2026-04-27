@@ -141,6 +141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 829690bb37f51cd4f91453fb90c154ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LootPickup
+  _itemData: {fileID: 11400000, guid: a8a032539d4845e4f8924ef502ab1a76, type: 2}
   _rarity: 0
   _effect: 0
   _healAmount: 1

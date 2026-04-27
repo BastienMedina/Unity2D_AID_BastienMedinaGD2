@@ -4,6 +4,9 @@ using UnityEngine.Events;
 // Détecte la collecte du joueur et applique l'effet du butin
 public class LootPickup : MonoBehaviour
 {
+    // Données de l'item affichées dans l'inventaire (nom, description, icône)
+    [SerializeField] private ItemData _itemData;
+
     // Niveau de rareté de cet objet de butin ramassable
     [SerializeField] private LootRarity _rarity;
 
@@ -89,12 +92,13 @@ public class LootPickup : MonoBehaviour
         // Crée un InventoryItem à partir des données de ce pickup.
         InventoryItem item = new InventoryItem
         {
-            // Utilise le nom du GameObject comme nom d'item par défaut.
-            Name = gameObject.name,
-            Description = string.Empty,
-            Effect = _effect,
-            HealAmount = _healAmount,
-            Icon = null
+            // Utilise l'ItemData si assigné, sinon le nom du GameObject en fallback.
+            Name        = _itemData != null ? _itemData.ItemName : gameObject.name,
+            Description = _itemData != null ? _itemData.Description : string.Empty,
+            Icon        = _itemData != null ? _itemData.Icon : null,
+            Effect      = _effect,
+            HealAmount  = _healAmount,
+            SourceData  = _itemData,
         };
 
         // Transmet l'InventoryItem au gestionnaire d'inventaire joueur.

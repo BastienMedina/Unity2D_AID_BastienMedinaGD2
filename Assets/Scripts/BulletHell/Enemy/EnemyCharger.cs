@@ -74,6 +74,19 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         _spawnImmunityTimer = _spawnImmunityDuration;
     }
 
+    // Fallback : cherche le player si l'injection n'a pas eu lieu avant Start
+    private void Start()
+    {
+        if (_playerTransform == null)
+        {
+            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+            if (playerGO != null)
+                _playerTransform = playerGO.transform;
+            else
+                Debug.LogWarning("[EnemyCharger] Player introuvable après injection — l'ennemi sera inerte.", this);
+        }
+    }
+
     // Exécute la logique d'état à chaque frame
     private void Update()
     {

@@ -90,19 +90,28 @@ public class InventoryManager : MonoBehaviour
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
-    // Alloue le tableau de slots selon la capacité configurée, puis restaure l'inventaire persisté.
+    // Alloue le tableau de slots selon la capacité configurée.
+    // La restauration depuis GameProgress est déplacée dans Start()
+    // pour garantir que GameProgress.Instance est déjà initialisé.
     private void Awake()
     {
         // Initialise le tableau avec la capacité définie en Inspector.
         _slots = new InventoryItem[_capacity];
 
-        // Journalise un avertissement si LivesManager n'est pas assigné.
+        // Résout LivesManager par FindFirstObjectByType si non assigné en Inspector.
+        // Cela permet à InventoryManager de fonctionner dans toutes les scènes
+        // (BulletHell, GameAndWatch, SpaceInvaders) sans assignation manuelle.
         if (_livesManager == null)
-        {
-            Debug.LogWarning("[InventoryManager] _livesManager non assigné.", this);
-        }
+            _livesManager = FindFirstObjectByType<LivesManager>();
 
-        // Restaure l'inventaire sauvegardé par GameProgress si disponible.
+        if (_livesManager == null)
+            Debug.LogWarning("[InventoryManager] LivesManager introuvable dans la scène — les soins seront inactifs.", this);
+    }
+
+    // Restaure l'inventaire persisté ici — après tous les Awake(),
+    // donc GameProgress.Instance est garanti non null à ce stade.
+    private void Start()
+    {
         RestoreFromGameProgress();
     }
 
@@ -118,11 +127,21 @@ public class InventoryManager : MonoBehaviour
         SceneManager.sceneUnloaded -= OnSceneUnloaded;
     }
 
-    // Sauvegarde l'inventaire courant dans GameProgress juste avant que la scène soit déchargée.
+    // Sauvegarde l'inventaire dans GameProgress avant la transition de scène,
+    // ou vide la progression si on retourne au menu principal (fin de run).
     private void OnSceneUnloaded(Scene scene)
     {
         if (GameProgress.Instance == null)
             return;
+
+        // Retour au menu principal = fin du run : on réinitialise GameProgress
+        // pour éviter que l'inventaire du run précédent réapparaisse.
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Scene_MainMenu")
+        {
+            GameProgress.Instance.Reset();
+            Debug.Log("[InventoryManager] Retour au menu — progression réinitialisée.");
+            return;
+        }
 
         GameProgress.Instance.SaveInventory(_slots);
         Debug.Log("[InventoryManager] Inventaire sauvegardé dans GameProgress avant déchargement de scène.");
@@ -206,11 +225,11 @@ public class InventoryManager : MonoBehaviour
         // Récupère l'item du slot avant de le supprimer.
         InventoryItem item = _slots[slotIndex];
 
-        // Délègue l'effet à PlayerStatsManager si disponible.
+        // Délègue l'effet à PlayerStatsManager si disponible, sinon applique l'effet legacy.
         if (_playerStats != null)
             _playerStats.ApplyItemEffect(item);
         else
-            Debug.LogWarning("[INV] _playerStats non assigné");
+            ApplyEffect(item);
 
         // Supprime l'item du slot en le remplaçant par null.
         _slots[slotIndex] = null;

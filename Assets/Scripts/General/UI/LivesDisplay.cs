@@ -25,7 +25,8 @@ public class LivesDisplay : MonoBehaviour
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
-    // Affiche immédiatement les vies courantes au réveil.
+    // Résout la référence LivesManager dans Awake — sans lire les vies
+    // pour éviter la race condition avec LivesManager.Awake().
     private void Awake()
     {
         // Cherche le LivesManager dans la scène si non assigné en Inspector.
@@ -34,12 +35,17 @@ public class LivesDisplay : MonoBehaviour
 
         // Journalise un avertissement si la référence reste absente.
         if (_livesManager == null)
-        {
             Debug.LogWarning("[LivesDisplay] LivesManager introuvable dans la scène.", this);
-            return;
-        }
+    }
 
-        // Affiche les vies actuelles dès l'initialisation du composant.
+    // Lit les vies initiales dans Start() — garanti après tous les Awake(),
+    // donc LivesManager est déjà initialisé avec la bonne valeur.
+    private void Start()
+    {
+        if (_livesManager == null)
+            return;
+
+        // Affiche les vies actuelles une fois que LivesManager est prêt.
         UpdateText(_livesManager.GetCurrentLives());
     }
 

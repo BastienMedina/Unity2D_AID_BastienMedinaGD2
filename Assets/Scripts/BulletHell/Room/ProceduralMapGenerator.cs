@@ -417,6 +417,10 @@ public class ProceduralMapGenerator : MonoBehaviour
         // Cherche le joueur pour l'injection de dépendances et pour éviter de spawner sur sa position
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         Transform playerTransform = player != null ? player.transform : null;
+
+        if (playerTransform == null)
+            Debug.LogWarning("[ProceduralMapGenerator] Aucun GameObject taggé 'Player' trouvé au moment du spawn. Les ennemis seront inertes.");
+
         Vector2 playerPos = playerTransform != null
             ? (Vector2)playerTransform.position
             : new Vector2(float.MaxValue, float.MaxValue);

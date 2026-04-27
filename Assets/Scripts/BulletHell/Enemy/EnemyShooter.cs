@@ -81,6 +81,19 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         InvokeRepeating(nameof(CheckDetection), 0f, _detectionCheckInterval);
     }
 
+    // Fallback : cherche le player si l'injection n'a pas eu lieu avant Start
+    private void Start()
+    {
+        if (_playerTransform == null)
+        {
+            GameObject playerGO = GameObject.FindGameObjectWithTag("Player");
+            if (playerGO != null)
+                _playerTransform = playerGO.transform;
+            else
+                Debug.LogWarning("[EnemyShooter] Player introuvable après injection — l'ennemi sera inerte.", this);
+        }
+    }
+
     // Gère la logique de tir et de retraite à chaque frame
     private void Update()
     {

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aae161da11c4c5849abe6e137f03ffb2, type: 3}
+  m_Name: ItemData_PowerUp
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  ItemName: Power-Up
+  Description: "Augmente temporairement les d\xE9g\xE2ts inflig\xE9s par le joueur."
+  Icon: {fileID: 0}
+  Rarity: 1
+  EffectType: 2
+  EffectValue: 1.5
+  HasDuration: 1
+  EffectDuration: 10
+  HasConsumptionTime: 0
+  ConsumptionTime: 0

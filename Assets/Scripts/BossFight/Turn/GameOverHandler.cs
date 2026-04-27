@@ -1,19 +1,16 @@
 using UnityEngine;
 
-// Écoute TurnManager.OnGameOver et déclenche la transition de scène appropriée.
+// Écoute TurnManager.OnGameOver et déclenche le menu victoire ou défaite approprié.
 public class GameOverHandler : MonoBehaviour
 {
     // Référence au gestionnaire de tour pour s'abonner à OnGameOver.
     [SerializeField] private TurnManager _turnManager;
 
-    // Nom de la scène chargée en cas de victoire
-    [SerializeField] private string _victoryScene = "Scene_MainMenu";
+    // Contrôleur du menu victoire dans la scène
+    [SerializeField] private VictoryMenuController _victoryMenu;
 
-    // Nom de la scène chargée en cas de défaite
-    [SerializeField] private string _defeatScene = "Scene_MainMenu";
-
-    // Numéro affiché dans la transition animée en cas de victoire
-    [SerializeField] private int _victoryFloorLabel = 5;
+    // Contrôleur du menu game over dans la scène
+    [SerializeField] private GameOverMenuController _gameOverMenu;
 
     // S'abonne à OnGameOver au démarrage
     private void Awake()
@@ -38,24 +35,12 @@ public class GameOverHandler : MonoBehaviour
     // Gestionnaire
     // -------------------------------------------------------------------------
 
-    // Déclenche la transition animée selon le résultat de la partie
+    /// <summary>Affiche le menu victoire ou défaite selon le résultat.</summary>
     private void HandleGameOver(bool isVictory)
     {
-        if (FloorTransitionAnimator.Instance == null)
-        {
-            Debug.LogError("[GameOverHandler] FloorTransitionAnimator.Instance est null.");
-            return;
-        }
-
         if (isVictory)
-        {
-            // Victoire : on avance vers la scène suivante avec le label d'étage
-            FloorTransitionAnimator.Instance.TransitionToScene(_victoryScene, _victoryFloorLabel);
-        }
+            _victoryMenu?.HandleVictory();
         else
-        {
-            // Défaite : retour au menu principal, label neutre
-            FloorTransitionAnimator.Instance.TransitionToScene(_defeatScene, 0);
-        }
+            _gameOverMenu?.HandleDeath();
     }
 }

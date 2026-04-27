@@ -114,8 +114,9 @@ public class SI_WaveManager : MonoBehaviour
                 _spawnIntervalStart - _elapsed * _spawnIntervalDecay
             );
 
-            // Attend l'intervalle calculé avant de spawner le prochain ennemi
-            yield return new WaitForSeconds(interval);
+            // WaitForSecondsRealtime ignore Time.timeScale — le spawn continue
+            // même si le jeu est mis en pause via Time.timeScale = 0.
+            yield return new WaitForSecondsRealtime(interval);
 
             // Choisit le prefab correspondant à la phase de difficulté
             GameObject prefab = PickPrefab(_elapsed);
@@ -136,6 +137,14 @@ public class SI_WaveManager : MonoBehaviour
 
             // Instancie l'ennemi à la position calculée sans rotation
             GameObject virusObject = Instantiate(prefab, spawnPos, Quaternion.identity);
+
+            // Vérifie que l'instanciation a réussi avant de notifier
+            if (virusObject == null)
+            {
+                Debug.LogError("[SI_WaveManager] Échec de l'instanciation du virus — spawn ignoré.", this);
+                _elapsed += interval;
+                continue;
+            }
 
             AudioManager.Instance?.PlaySFX(_spawnClip);
 

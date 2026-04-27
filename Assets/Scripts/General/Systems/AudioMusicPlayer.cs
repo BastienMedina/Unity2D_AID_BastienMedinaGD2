@@ -7,18 +7,23 @@ public class AudioMusicPlayer : MonoBehaviour
     // Clip audio joué en boucle dès le chargement de la scène
     [SerializeField] private AudioClip _musicClip;
 
-    // Lance la musique de fond via l'AudioManager au démarrage de la scène
+    // Lance la musique de fond via l'AudioManager au démarrage de la scène.
+    // Arrête toujours la piste précédente pour éviter les persistances inter-scènes.
     private void Start()
     {
-        if (_musicClip == null)
-        {
-            Debug.LogWarning("[AudioMusicPlayer] Aucun clip assigné.", this);
-            return;
-        }
-
         if (AudioManager.Instance == null)
         {
             Debug.LogWarning("[AudioMusicPlayer] AudioManager.Instance introuvable.", this);
+            return;
+        }
+
+        // Coupe systématiquement la musique précédente avant d'en démarrer une nouvelle,
+        // même si le clip est identique (changement de scène vers la même scène).
+        AudioManager.Instance.StopMusic();
+
+        if (_musicClip == null)
+        {
+            Debug.LogWarning("[AudioMusicPlayer] Aucun clip assigné — musique coupée.", this);
             return;
         }
 

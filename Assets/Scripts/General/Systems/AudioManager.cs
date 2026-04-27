@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Audio;
+using UnityEngine.SceneManagement;
 
 // Singleton persistant gérant la lecture des effets sonores et de la musique de fond.
 [DefaultExecutionOrder(-50)]
@@ -42,6 +43,25 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         BuildSources();
+
+        // Arrête automatiquement la musique à chaque changement de scène.
+        // AudioMusicPlayer de la nouvelle scène la redémarrera avec le bon clip.
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    // Coupe la musique dès qu'une nouvelle scène est chargée.
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Ignore les chargements additifs (overlays, etc.)
+        if (mode == LoadSceneMode.Additive)
+            return;
+
+        StopMusic();
     }
 
     // -------------------------------------------------------------------------

@@ -5,10 +5,10 @@ using UnityEngine.Events;
 public class PauseManager : MonoBehaviour
 {
     // Événement déclenché quand le jeu est mis en pause
-    [SerializeField] private UnityEvent _onPaused;
+    [SerializeField] public UnityEvent _onPaused;
 
     // Événement déclenché quand le jeu reprend après une pause
-    [SerializeField] private UnityEvent _onResumed;
+    [SerializeField] public UnityEvent _onResumed;
 
     // Son joué lors de la mise en pause
     [SerializeField] private AudioClip _pauseClip;

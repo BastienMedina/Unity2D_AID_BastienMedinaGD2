@@ -66,6 +66,14 @@ public class HeroDonkeyKong : MonoBehaviour
         // Récupère le script du baril pour initialiser ses paramètres
         BarrelProjectile barrelProjectile = barrel.GetComponent<BarrelProjectile>();
 
+        // Vérifie que le composant est présent avant d'appeler Initialize
+        if (barrelProjectile == null)
+        {
+            Debug.LogError("[HeroDonkeyKong] Le prefab baril n'a pas de composant BarrelProjectile.", this);
+            Destroy(barrel);
+            return;
+        }
+
         // Initialise le baril avec direction, vitesse et dégâts configurés
         barrelProjectile.Initialize(normalizedDirection, _barrelSpeed, _damage);
 

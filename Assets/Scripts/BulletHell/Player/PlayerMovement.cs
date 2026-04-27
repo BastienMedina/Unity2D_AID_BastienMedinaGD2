@@ -44,10 +44,10 @@ public class PlayerMovement : MonoBehaviour
         // Tente de résoudre automatiquement la référence joystick manquante
         if (_virtualJoystick == null)
         {
-            _virtualJoystick = FindObjectOfType<VirtualJoystick>();
+            _virtualJoystick = FindFirstObjectByType<VirtualJoystick>();
 
             if (_virtualJoystick == null)
-                Debug.LogError("[PlayerMovement] VirtualJoystick introuvable dans la scène.");
+                Debug.LogError("[PlayerMovement] VirtualJoystick introuvable dans la scène — le joueur ne pourra pas se déplacer.");
         }
     }
 
