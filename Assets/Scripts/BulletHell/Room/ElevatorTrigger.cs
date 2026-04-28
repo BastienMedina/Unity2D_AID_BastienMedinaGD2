@@ -33,13 +33,24 @@ public class ElevatorTrigger : MonoBehaviour
         TriggerFloorTransition();
     }
 
-    // Sauvegarde l'état complet et charge l'étage suivant.
+    // Sauvegarde l'état complet et charge l'étage suivant (ou retourne au menu en mode mini-jeu).
     private void TriggerFloorTransition()
     {
         if (GameProgress.Instance == null)
         {
             Debug.LogError("[ElevatorTrigger] GameProgress.Instance est null — transition annulée.", this);
             return;
+        }
+
+        // En mode mini-jeu : retour au menu sans progresser
+        if (GameProgress.Instance.IsMinigameMode)
+        {
+            MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
+            if (minigame != null)
+            {
+                minigame.ReturnToMenu();
+                return;
+            }
         }
 
         // Sauvegarde inventaire, buffs, vies et PV max avant toute transition.

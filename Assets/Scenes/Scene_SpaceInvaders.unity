@@ -578,6 +578,7 @@ GameObject:
   m_Component:
   - component: {fileID: 730673927}
   - component: {fileID: 730673926}
+  - component: {fileID: 730673928}
   m_Layer: 0
   m_Name: GO_SI_Progression
   m_TagString: Untagged
@@ -635,6 +636,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &730673928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 730673924}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2be77ce41c36034895182cde1f49e85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinigameReturnHandler
 --- !u!1 &804328860
 GameObject:
   m_ObjectHideFlags: 0

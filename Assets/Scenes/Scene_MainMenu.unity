@@ -2675,7 +2675,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 656897266}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 663649684}
+        m_TargetAssemblyTypeName: 
+        m_MethodName: OnAllGamesClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &656897266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2786,6 +2798,7 @@ GameObject:
   - component: {fileID: 663649680}
   - component: {fileID: 663649679}
   - component: {fileID: 663649683}
+  - component: {fileID: 663649684}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2897,6 +2910,21 @@ MonoBehaviour:
   _continueButton: {fileID: 1044623220}
   _bulletHellScene: Scene_BulletHell
   _buttonClip: {fileID: 8300000, guid: b8544eb0570dc614f9d3b2ecf8396d80, type: 3}
+--- !u!114 &663649684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 663649678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0dc0f3203a8ca4398372a1662357dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamesMenuController
+  _gamesPanel: {fileID: 751312431}
+  _menuPanel: {fileID: 804023717}
+  _buttonClip: {fileID: 0}
 --- !u!1 &672636557
 GameObject:
   m_ObjectHideFlags: 0
@@ -3806,9 +3834,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 751312433}
+      - m_Target: {fileID: 663649684}
         m_TargetAssemblyTypeName: 
-        m_MethodName: OnApplyAndExit
+        m_MethodName: OnGameAndWatchClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6481,9 +6509,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 751312433}
+      - m_Target: {fileID: 663649684}
         m_TargetAssemblyTypeName: 
-        m_MethodName: OnApplyAndExit
+        m_MethodName: OnBackClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6614,9 +6642,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 751312433}
+      - m_Target: {fileID: 663649684}
         m_TargetAssemblyTypeName: 
-        m_MethodName: OnApplyAndExit
+        m_MethodName: OnBulletHellClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8192,9 +8220,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 751312433}
+      - m_Target: {fileID: 663649684}
         m_TargetAssemblyTypeName: 
-        m_MethodName: OnApplyAndExit
+        m_MethodName: OnSpaceInvadersClicked
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -161,6 +161,7 @@ MonoBehaviour:
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
+  _invincibilityDuration: 0.8
 --- !u!4 &67138596
 Transform:
   m_ObjectHideFlags: 0
@@ -880,6 +881,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioMusicPlayer
   _musicClip: {fileID: 8300000, guid: 3bcb09b91ac36874aa4b518df7db6a4b, type: 3}
+  _sfxVolumeOverride: 1
 --- !u!4 &962502753
 Transform:
   m_ObjectHideFlags: 0
@@ -1144,6 +1146,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1482418675}
   - component: {fileID: 1482418674}
+  - component: {fileID: 1482418676}
   m_Layer: 0
   m_Name: MapManager
   m_TagString: Untagged
@@ -1209,6 +1212,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1482418676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1482418673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2be77ce41c36034895182cde1f49e85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinigameReturnHandler
 --- !u!1 &1628725182
 GameObject:
   m_ObjectHideFlags: 0

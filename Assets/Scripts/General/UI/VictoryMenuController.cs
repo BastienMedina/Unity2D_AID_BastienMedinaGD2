@@ -53,6 +53,14 @@ public class VictoryMenuController : MonoBehaviour
     /// <summary>Appelé par SI_ProgressionGauge.OnVictory — arrête le timer, affiche le panneau et gèle le jeu.</summary>
     public void HandleVictory()
     {
+        // En mode mini-jeu : retourne directement au menu, pas d'écran victoire
+        MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
+        if (minigame != null)
+        {
+            minigame.ReturnToMenu();
+            return;
+        }
+
         // Arrête le timer et enregistre le meilleur temps si battu
         RunTimerManager.Instance?.StopRun();
 

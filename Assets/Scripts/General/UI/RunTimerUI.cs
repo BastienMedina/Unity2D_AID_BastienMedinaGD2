@@ -12,7 +12,7 @@ public class RunTimerUI : MonoBehaviour
     // -------------------------------------------------------------------------
 
     // Taille de police du timer
-    [SerializeField] private float _fontSize = 24f;
+    [SerializeField] private float _fontSize = 40f;
 
     // Couleur du texte par défaut
     [SerializeField] private Color _textColor = Color.white;

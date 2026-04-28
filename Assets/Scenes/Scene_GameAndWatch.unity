@@ -1220,6 +1220,7 @@ GameObject:
   - component: {fileID: 637196184}
   - component: {fileID: 637196183}
   - component: {fileID: 637196185}
+  - component: {fileID: 637196186}
   m_Layer: 0
   m_Name: GO_TurnManager
   m_TagString: Untagged
@@ -1291,6 +1292,18 @@ MonoBehaviour:
   _turnManager: {fileID: 637196183}
   _victoryMenu: {fileID: 0}
   _gameOverMenu: {fileID: 0}
+--- !u!114 &637196186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637196182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2be77ce41c36034895182cde1f49e85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MinigameReturnHandler
 --- !u!1 &637532481
 GameObject:
   m_ObjectHideFlags: 0

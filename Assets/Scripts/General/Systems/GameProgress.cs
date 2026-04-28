@@ -10,6 +10,10 @@ public class GameProgress : MonoBehaviour
     // Étage actuel du joueur entre 1 et 5
     public int CurrentFloor { get; private set; } = 1;
 
+    /// <summary>Vrai quand le joueur lance un mini-jeu depuis le menu "All Games".
+    /// Dans ce mode, la fin de partie retourne toujours au menu principal.</summary>
+    public bool IsMinigameMode { get; private set; } = false;
+
     // Inventaire persistant entre les scènes — null = slot vide
     private List<InventoryItem> _persistedInventory = new List<InventoryItem>();
 
@@ -82,12 +86,20 @@ public class GameProgress : MonoBehaviour
     // Réinitialise le compteur d'étage à un et efface l'inventaire sauvegardé
     public void Reset()
     {
-        CurrentFloor = MinFloor;
+        CurrentFloor    = MinFloor;
+        IsMinigameMode  = false;
         _persistedInventory.Clear();
         _persistedLives = -1;
         _persistedMaxLives = -1;
         _persistedBuffs.Clear();
         _persistedBaseMaxHealth = -1;
+    }
+
+    /// <summary>Active le mode mini-jeu isolé et fixe l'étage cible.</summary>
+    public void SetMinigameMode(int floor)
+    {
+        IsMinigameMode = true;
+        SetFloor(floor);
     }
 
     // -----------------------------------------------------------------------

@@ -41,6 +41,17 @@ public class BossDefeated : MonoBehaviour
     /// <summary>Appelé quand toutes les pièces sont collectées — charge Space Invaders.</summary>
     public void OnBossDefeated()
     {
+        // En mode mini-jeu : retourne directement au menu
+        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode)
+        {
+            MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
+            if (minigame != null)
+            {
+                minigame.ReturnToMenu();
+                return;
+            }
+        }
+
         // Sauvegarde l'intégralité de la progression avant la transition
         FloorTransition.PersistFullState();
 

@@ -64,6 +64,17 @@ public class GameOverMenuController : MonoBehaviour
     /// <summary>Appelé par LivesManager.OnDeath — affiche le panneau et gèle le jeu.</summary>
     public void HandleDeath()
     {
+        // En mode mini-jeu : retourne directement au menu sans afficher l'écran game over
+        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode)
+        {
+            MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
+            if (minigame != null)
+            {
+                minigame.ReturnToMenu();
+                return;
+            }
+        }
+
         if (_floorLabel != null && GameProgress.Instance != null)
             _floorLabel.text = "ÉTAGE " + GameProgress.Instance.CurrentFloor;
 
