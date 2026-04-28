@@ -86,7 +86,8 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
         transform.position = position;
         _currentDesk       = null;
         _attackTimer       = _attackDuration;
-        _damageTimer       = 0f;
+        // Initialise le timer à plein cooldown pour éviter un dégât instantané au spawn
+        _damageTimer       = _damageCooldown;
         _currentState      = State.Attacking;
         ShowHiddenVisual(false);
         gameObject.SetActive(true);
@@ -97,7 +98,8 @@ public class EnemyHidden : EnemyBase, IEnemyInjectable
     {
         _currentDesk  = null;
         _attackTimer  = _attackDuration;
-        _damageTimer  = 0f;
+        // Initialise le timer à plein cooldown pour éviter un dégât instantané à la révélation
+        _damageTimer  = _damageCooldown;
         _currentState = State.Attacking;
         ShowHiddenVisual(false);
         AudioManager.Instance?.PlaySFX(_revealClip);

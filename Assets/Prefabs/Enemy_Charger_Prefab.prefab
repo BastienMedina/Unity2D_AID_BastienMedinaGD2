@@ -222,7 +222,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 1.1
+  m_Radius: 3
 --- !u!114 &4761809280041296409
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -247,6 +247,7 @@ MonoBehaviour:
   _chargeSpeed: 5
   _detectionRadius: 4
   _chargeCooldown: 1.5
+  _chargeMaxDuration: 1.5
   _chargeRange: 1.5
   _patrolPoints:
   - {fileID: 2835601608270176119}

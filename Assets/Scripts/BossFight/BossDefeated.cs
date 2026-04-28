@@ -1,42 +1,51 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-// Gère la transition vers Space Invaders après le boss
+/// <summary>
+/// Écoute CoinSystem.OnVictoryConditionMet dans la scène Game and Watch.
+/// Quand le boss est vaincu : avance l'étage, sauvegarde et charge Space Invaders.
+/// </summary>
 public class BossDefeated : MonoBehaviour
 {
+    // Référence directe au CoinSystem — à assigner dans l'Inspector
+    [SerializeField] private CoinSystem _coinSystem;
+
     // Nom de la scène Space Invaders finale
     [SerializeField] private string _spaceInvadersScene = "Scene_SpaceInvaders";
 
-    // S'abonne à la victoire du CoinSystem au démarrage
+    // -------------------------------------------------------------------------
+    // Cycle de vie Unity
+    // -------------------------------------------------------------------------
+
     private void Start()
     {
-        // Écoute la victoire du Game & Watch via CoinSystem
-        CoinSystem coinSystem = FindObjectOfType<CoinSystem>();
+        if (_coinSystem == null)
+            _coinSystem = FindFirstObjectByType<CoinSystem>();
 
-        if (coinSystem != null)
-            coinSystem.OnVictoryConditionMet.AddListener(OnBossDefeated);
+        if (_coinSystem != null)
+            _coinSystem.OnVictoryConditionMet.AddListener(OnBossDefeated);
         else
-            Debug.LogWarning("[BossDefeated] Aucun CoinSystem trouvé dans la scène.", this);
+            Debug.LogError("[BossDefeated] CoinSystem introuvable dans la scène.", this);
     }
 
-    // Se désabonne proprement à la désactivation du composant
     private void OnDestroy()
     {
-        // Retire le listener pour éviter les appels fantômes
-        CoinSystem coinSystem = FindObjectOfType<CoinSystem>();
-        if (coinSystem != null)
-            coinSystem.OnVictoryConditionMet.RemoveListener(OnBossDefeated);
+        if (_coinSystem != null)
+            _coinSystem.OnVictoryConditionMet.RemoveListener(OnBossDefeated);
     }
 
-    /// <summary>Appelé quand le boss du Game & Watch est vaincu.</summary>
-    // Sauvegarde l'étage et charge la scène finale
+    // -------------------------------------------------------------------------
+    // Transition
+    // -------------------------------------------------------------------------
+
+    /// <summary>Appelé quand toutes les pièces sont collectées — charge Space Invaders.</summary>
     public void OnBossDefeated()
     {
-        // Sauvegarde avant de passer au Space Invaders
-        SaveSystem.SaveGame();
-        GameProgress.Instance.AdvanceFloor();
+        // Sauvegarde l'intégralité de la progression avant la transition
+        FloorTransition.PersistFullState();
 
-        // Charge le mini-jeu Space Invaders final
+        GameProgress.Instance?.AdvanceFloor();
+
         SceneManager.LoadScene(_spaceInvadersScene);
     }
 }

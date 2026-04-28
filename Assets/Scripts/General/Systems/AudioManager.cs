@@ -21,6 +21,9 @@ public class AudioManager : MonoBehaviour
     // Volume global appliqué à tous les SFX (0 = muet, 1 = plein volume)
     [SerializeField] [Range(0f, 1f)] private float _sfxVolume = 0.25f;
 
+    // Multiplicateur de volume SFX propre à la scène active (réinitialisé à 1 à chaque changement de scène).
+    private float _sceneVolumeMultiplier = 1f;
+
     // Source audio dédiée aux effets one-shot
     private AudioSource _sfxSource;
 
@@ -61,6 +64,9 @@ public class AudioManager : MonoBehaviour
         if (mode == LoadSceneMode.Additive)
             return;
 
+        // Réinitialise le multiplicateur de volume scène à chaque transition.
+        _sceneVolumeMultiplier = 1f;
+
         StopMusic();
     }
 
@@ -69,13 +75,21 @@ public class AudioManager : MonoBehaviour
     // -------------------------------------------------------------------------
 
     /// <summary>Joue un son one-shot sur le groupe SFX.
-    /// Le volume est multiplié par <see cref="_sfxVolume"/> pour un contrôle global centralisé.</summary>
+    /// Le volume est multiplié par <see cref="_sfxVolume"/> et par le multiplicateur de scène actif.</summary>
     public void PlaySFX(AudioClip clip, float volume = 1f)
     {
         if (clip == null || _sfxSource == null)
             return;
 
-        _sfxSource.PlayOneShot(clip, volume * _sfxVolume);
+        _sfxSource.PlayOneShot(clip, volume * _sfxVolume * _sceneVolumeMultiplier);
+    }
+
+    /// <summary>Définit un multiplicateur de volume SFX pour la scène active.
+    /// Appelé par <see cref="AudioMusicPlayer"/> au chargement de chaque scène.</summary>
+    public void SetSceneVolumeMultiplier(float multiplier)
+    {
+        // Clamp pour éviter les valeurs négatives ou supérieures à 1.
+        _sceneVolumeMultiplier = Mathf.Clamp01(multiplier);
     }
 
     // -------------------------------------------------------------------------

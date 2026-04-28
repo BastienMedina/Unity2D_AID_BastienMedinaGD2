@@ -2,11 +2,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Affiche le menu de victoire. Appeler HandleVictory() depuis les systèmes de jeu.
+/// <summary>
+/// Affiche l'écran de victoire à la fin de Space Invaders uniquement.
+/// Se branche automatiquement sur SI_ProgressionGauge.OnVictory dans Start().
+/// Gèle le jeu via PauseManager.LockForEndState() pour bloquer toute pause ultérieure.
+/// À placer sur le Canvas victoire dans la scène Scene_SpaceInvaders.
+/// </summary>
 public class VictoryMenuController : MonoBehaviour
 {
     // Panneau racine du menu victoire
-    [SerializeField] private GameObject _victoryPanel;
+    [SerializeField] private GameObject _panel;
 
     // Nom de la scène du menu principal
     [SerializeField] private string _mainMenuScene = "Scene_MainMenu";
@@ -20,20 +25,36 @@ public class VictoryMenuController : MonoBehaviour
 
     private void Awake()
     {
-        _victoryPanel.SetActive(false);
+        if (_panel != null)
+            _panel.SetActive(false);
     }
 
     private void Start()
     {
-        // Câblage du bouton par code
-        Button btnMainMenu = _victoryPanel.transform.Find("Panel/Button_MainMenu")?.GetComponent<Button>();
-        btnMainMenu?.onClick.AddListener(OnMainMenuClicked);
-
-        // Auto-branchement sur SI_ProgressionGauge si présent dans la scène (Space Invaders)
-        // GameOverHandler prend en charge TurnManager (BossFight) directement via ses champs Inspector
+        // Branchement automatique sur SI_ProgressionGauge (Space Invaders)
         SI_ProgressionGauge gauge = FindFirstObjectByType<SI_ProgressionGauge>();
         if (gauge != null)
+        {
             gauge.OnVictory.AddListener(HandleVictory);
+        }
+        else
+        {
+            Debug.LogWarning("[VictoryMenuController] SI_ProgressionGauge introuvable — la victoire ne se déclenchera pas.", this);
+        }
+
+        Button btnMainMenu = FindButtonInChildren(_panel.transform, "Button_MainMenu");
+        btnMainMenu?.onClick.AddListener(OnMainMenuClicked);
+    }
+
+    // -------------------------------------------------------------------------
+    // Déclenchement victoire
+    // -------------------------------------------------------------------------
+
+    /// <summary>Appelé par SI_ProgressionGauge.OnVictory — affiche le panneau et gèle le jeu.</summary>
+    public void HandleVictory()
+    {
+        PauseManager.Instance?.LockForEndState();
+        _panel.SetActive(true);
     }
 
     // -------------------------------------------------------------------------
@@ -51,20 +72,25 @@ public class VictoryMenuController : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
-    // Déclenchement victoire — appeler depuis TurnManager.OnGameOver ou SI_ProgressionGauge.OnVictory
+    // Utilitaire
     // -------------------------------------------------------------------------
 
-    /// <summary>Affiche le panneau de victoire et gèle le jeu.</summary>
-    public void HandleVictory()
+    private Button FindButtonInChildren(Transform root, string buttonName)
     {
-        Time.timeScale = 0f;
-        _victoryPanel.SetActive(true);
-    }
+        if (root == null)
+            return null;
 
-    /// <summary>Surcharge booléenne pour TurnManager.OnGameOver(bool isVictory).</summary>
-    public void HandleVictoryBool(bool isVictory)
-    {
-        if (isVictory)
-            HandleVictory();
+        Transform found = root.Find(buttonName);
+        if (found != null)
+            return found.GetComponent<Button>();
+
+        foreach (Transform child in root)
+        {
+            Button result = FindButtonInChildren(child, buttonName);
+            if (result != null)
+                return result;
+        }
+
+        return null;
     }
 }

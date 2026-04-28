@@ -81,6 +81,9 @@ public class PlayerFeedback : MonoBehaviour
     // Indique si le joueur est en état d'invincibilité post-dégât
     private bool _isInvincible = false;
 
+    // Mémorise le dernier total de vies connu pour détecter une perte de vie
+    private int _previousLives = -1;
+
     // -----------------------------------------------------------------------
     // Cycle de vie Unity
     // -----------------------------------------------------------------------
@@ -98,6 +101,8 @@ public class PlayerFeedback : MonoBehaviour
     {
         if (LivesManager.Instance != null)
         {
+            // Mémorise les vies initiales avant tout événement pour la comparaison
+            _previousLives = LivesManager.Instance.GetCurrentLives();
             LivesManager.Instance.OnLivesChanged.AddListener(OnLivesChanged);
             LivesManager.Instance.OnDeath.AddListener(OnDeath);
         }
@@ -157,12 +162,18 @@ public class PlayerFeedback : MonoBehaviour
     // Callbacks événements
     // -----------------------------------------------------------------------
 
-    // Déclenché par LivesManager.OnLivesChanged — joue le feedback de dégât
+    // Déclenché par LivesManager.OnLivesChanged — joue le feedback uniquement en cas de dégât
     private void OnLivesChanged(int newLives)
     {
-        // Ignore si c'est une augmentation de vie (soin) ou si déjà invincible
-        if (_isInvincible)
-            return;
+        // Détecte une perte de vie en comparant avec la valeur précédente
+        bool tookDamage = _previousLives >= 0 && newLives < _previousLives;
+        _previousLives = newLives;
+
+        // Ignore les soins, les augmentations de max et les initialisations
+        if (!tookDamage) return;
+
+        // Ignore si le flash d'invincibilité est déjà en cours
+        if (_isInvincible) return;
 
         PlayHitFeedback();
     }

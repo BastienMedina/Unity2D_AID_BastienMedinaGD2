@@ -30,22 +30,8 @@ public class BarrelProjectile : MonoBehaviour
         // Récupère le Rigidbody2D sur ce GameObject
         _rigidbody = GetComponent<Rigidbody2D>();
 
-        // Signale si le Rigidbody2D est absent du baril
         if (_rigidbody == null)
-        {
-            Debug.LogError("[BARREL] Rigidbody2D manquant — trigger inopérant sans Rigidbody2D");
-        }
-
-        // Vérifie la présence du Rigidbody2D sur le projectile
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
-        Debug.Log($"[COL] Barrel Awake — Rigidbody2D={rb != null} | bodyType={rb?.bodyType}");
-
-        // Vérifie la présence du CircleCollider2D sur le projectile
-        CircleCollider2D col = GetComponent<CircleCollider2D>();
-        Debug.Log($"[COL] Barrel Awake — CircleCollider2D={col != null} | isTrigger={col?.isTrigger}");
-
-        // Affiche la position de spawn du projectile
-        Debug.Log($"[COL] Barrel Awake — spawnPos={transform.position} | direction={_direction}");
+            Debug.LogError("[BarrelProjectile] Rigidbody2D manquant sur le prefab.", this);
 
         // Enregistre la position monde au moment de l'instanciation
         _spawnPosition = transform.position;
@@ -67,81 +53,53 @@ public class BarrelProjectile : MonoBehaviour
     // Déplace le baril via Rigidbody2D et vérifie la portée en physique
     private void FixedUpdate()
     {
-        // Ignore si le Rigidbody2D est absent du baril
-        if (_rigidbody == null)
-        {
-            return;
-        }
+        if (_rigidbody == null) return;
 
-        // Affiche la position du projectile chaque seconde environ
-        if (Time.frameCount % 50 == 0)
-            Debug.Log($"[COL] Barrel FixedUpdate — pos={_rigidbody.position} | velocity={_rigidbody.linearVelocity}");
-
-        // Calcule la prochaine position du projectile
         Vector2 nextPos = _rigidbody.position + _direction * (_speed * Time.fixedDeltaTime);
-
-        // Déplace le projectile via le Rigidbody2D
         _rigidbody.MovePosition(nextPos);
 
-        // Détruit le baril si la distance parcourue dépasse la portée
         if (Vector3.Distance(_spawnPosition, _rigidbody.position) >= _maxRange)
-        {
-            // Supprime le GameObject quand la portée est dépassée
             Destroy(gameObject);
-        }
     }
 
     // Détecte les ennemis et les murs via le trigger CircleCollider2D
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Confirme que OnTriggerEnter2D est bien déclenché
-        Debug.Log($"[COL] OnTriggerEnter2D FIRED — hit={other.gameObject.name}");
-
-        // Affiche le nom de l'objet touché pour diagnostic
-        Debug.Log($"[BARREL] OnTriggerEnter2D hit: {other.gameObject.name} layer={other.gameObject.layer}");
-
-        // Vérifie si le collider touché implémente IEnemyDamageable
         IEnemyDamageable target = null;
         other.TryGetComponent(out target);
 
-        // Vérifie aussi sur le parent si composant absent sur l'enfant
+        // Vérifie aussi sur le parent si le composant est absent sur l'enfant direct
         if (target == null)
-        {
             target = other.GetComponentInParent<IEnemyDamageable>();
-        }
 
-        // Applique les dégâts si la cible est valide
         if (target != null)
         {
-            // Inflige les dégâts configurés à la cible
             target.TakeDamage(_damage);
-
             AudioManager.Instance?.PlaySFX(_impactClip);
-
-            // Détruit le projectile après impact
             Destroy(gameObject);
             return;
         }
 
-        // Détruit le projectile sur les murs également
         if (other.gameObject.layer == LayerMask.NameToLayer("Wall"))
-        {
-            // Supprime le baril à l'impact avec un mur
             Destroy(gameObject);
-        }
     }
 
-    // Détecte un contact maintenu avec un objet
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        // Affiche le nom de l'objet en contact prolongé
-        Debug.Log($"[COL] OnTriggerStay2D — staying on={other.gameObject.name}");
-    }
-
-    // Détecte une collision physique solide
+    // Détecte une collision physique solide (si le collider n'est pas trigger)
     private void OnCollisionEnter2D(Collision2D other)
     {
-        // Affiche le nom de l'objet heurté en collision solide
-        Debug.Log($"[COL] OnCollisionEnter2D FIRED — hit={other.gameObject.name}");
+        IEnemyDamageable target = other.gameObject.GetComponent<IEnemyDamageable>();
+        if (target == null)
+            target = other.gameObject.GetComponentInParent<IEnemyDamageable>();
+
+        if (target != null)
+        {
+            target.TakeDamage(_damage);
+            AudioManager.Instance?.PlaySFX(_impactClip);
+            Destroy(gameObject);
+            return;
+        }
+
+        if (other.gameObject.layer == LayerMask.NameToLayer("Wall"))
+            Destroy(gameObject);
     }
 }

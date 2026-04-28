@@ -89,19 +89,21 @@ public class HeartsDisplay : MonoBehaviour
             return;
         }
 
-        _livesManager.OnLivesChanged.AddListener(RefreshHearts);
-        BuildHearts(_livesManager.GetCurrentLives());
+        // Abonnements initiaux — OnEnable sera appelé après Start si le GO est actif,
+        // donc on n'abonne PAS ici pour éviter le double abonnement.
+        BuildHearts(_livesManager.GetMaxLives());
         _lastKnownLives = _livesManager.GetCurrentLives();
         RefreshHearts(_livesManager.GetCurrentLives());
     }
 
-    // Abonne la mise à jour à l'événement de changement de vies (réactivation après désactivation).
+    // Abonne les mises à jour aux événements du LivesManager (réactivation après désactivation).
     private void OnEnable()
     {
         if (_livesManager == null)
             return;
 
         _livesManager.OnLivesChanged.AddListener(RefreshHearts);
+        _livesManager.OnMaxHealthChanged.AddListener(OnMaxHealthChanged);
     }
 
     // Désabonne pour éviter les fuites mémoire.
@@ -111,6 +113,15 @@ public class HeartsDisplay : MonoBehaviour
             return;
 
         _livesManager.OnLivesChanged.RemoveListener(RefreshHearts);
+        _livesManager.OnMaxHealthChanged.RemoveListener(OnMaxHealthChanged);
+    }
+
+    // Reconstruit les coeurs et rafraîchit leur état quand le maximum de vies change.
+    private void OnMaxHealthChanged(int newMax)
+    {
+        BuildHearts(newMax);
+        _lastKnownLives = _livesManager.GetCurrentLives();
+        RefreshHearts(_lastKnownLives);
     }
 
     // Tente de localiser le LivesManager via le singleton puis via la scène.

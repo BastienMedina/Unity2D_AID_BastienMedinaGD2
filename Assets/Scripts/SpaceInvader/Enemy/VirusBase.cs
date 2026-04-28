@@ -13,6 +13,9 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
     // Points de score accordés à la destruction de ce virus
     [SerializeField] private int _scoreValue = 10;
 
+    // Prefab de l'effet d'explosion instancié à la mort du virus
+    [SerializeField] private GameObject _explosionPrefab;
+
     // Événement déclenché à chaque réception de dégâts
     [SerializeField] private UnityEvent<int> _onDamageTaken;
 
@@ -93,10 +96,13 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
         // Notifie les abonnés avec la santé courante après impact
         _onDamageTaken?.Invoke(_currentHealth);
 
-        // Déclenche la séquence de mort si la santé est épuisée
+        // Déclenche l'effet d'explosion si le prefab est assigné
         if (IsDead())
         {
             AudioManager.Instance?.PlaySFX(_deathClip);
+
+            // Instancie l'explosion à la position courante du virus avant destruction
+            SpawnExplosion();
 
             // Notifie les abonnés que ce virus vient de mourir
             _onDeath?.Invoke();
@@ -150,4 +156,15 @@ public abstract class VirusBase : MonoBehaviour, IVirusDamageable
     /// <summary>Implémentée par chaque sous-classe pour gérer sa propre mort.</summary>
     // Définit le comportement de mort propre à chaque virus
     protected abstract void HandleDeath();
+
+    // Instancie le prefab d'explosion à la position courante du virus.
+    private void SpawnExplosion()
+    {
+        // Ne spawne rien si le prefab n'est pas assigné dans l'inspecteur
+        if (_explosionPrefab == null)
+            return;
+
+        // Instancie l'effet à la position monde du virus, sans rotation
+        Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+    }
 }

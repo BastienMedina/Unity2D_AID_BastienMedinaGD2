@@ -36,6 +36,9 @@ public class InventoryItem
 
     // Référence à l'ItemData source pour usage futur.
     public ItemData SourceData;
+
+    // Nombre d'exemplaires empilés dans ce slot.
+    public int Quantity = 1;
 }
 
 // Gère le stockage et les opérations sur l'inventaire joueur.
@@ -115,37 +118,35 @@ public class InventoryManager : MonoBehaviour
         RestoreFromGameProgress();
     }
 
-    // S'abonne à l'événement de déchargement de scène pour sauvegarder avant la transition.
+    // S'abonne à l'événement de chargement de scène pour détecter le retour au menu.
     private void OnEnable()
     {
+        SceneManager.sceneLoaded   += OnSceneLoaded;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
     // Se désabonne pour éviter les appels fantômes.
     private void OnDisable()
     {
+        SceneManager.sceneLoaded   -= OnSceneLoaded;
         SceneManager.sceneUnloaded -= OnSceneUnloaded;
     }
 
-    // Sauvegarde l'inventaire dans GameProgress avant la transition de scène,
-    // ou vide la progression si on retourne au menu principal (fin de run).
-    private void OnSceneUnloaded(Scene scene)
+    // Réinitialise la progression quand le menu principal est chargé (fin de run).
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (GameProgress.Instance == null)
-            return;
+        if (GameProgress.Instance == null) return;
 
-        // Retour au menu principal = fin du run : on réinitialise GameProgress
-        // pour éviter que l'inventaire du run précédent réapparaisse.
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Scene_MainMenu")
+        // Retour au menu = fin de run : réinitialise GameProgress
+        if (scene.name == "Scene_MainMenu")
         {
             GameProgress.Instance.Reset();
             Debug.Log("[InventoryManager] Retour au menu — progression réinitialisée.");
-            return;
         }
-
-        GameProgress.Instance.SaveInventory(_slots);
-        Debug.Log("[InventoryManager] Inventaire sauvegardé dans GameProgress avant déchargement de scène.");
     }
+
+    // Callback sceneUnloaded conservé pour d'éventuelles extensions futures.
+    private void OnSceneUnloaded(Scene scene) { }
 
     // Recharge les items persistés depuis GameProgress dans les slots locaux.
     private void RestoreFromGameProgress()
@@ -172,24 +173,55 @@ public class InventoryManager : MonoBehaviour
     // API publique
     // -------------------------------------------------------------------------
 
-    /// <summary>Ajoute un item dans le premier emplacement libre.</summary>
+    /// <summary>Ajoute un item dans l'inventaire.
+    /// Si un slot contient déjà le même item (même SourceData ou même Name),
+    /// incrémente sa quantité plutôt que d'occuper un nouveau slot.</summary>
     public bool AddItem(InventoryItem item)
     {
         // Refuse l'ajout si l'item transmis est nul.
         if (item == null)
             return false;
 
-        // Parcourt tous les slots pour trouver le premier vide.
+        // Cherche d'abord un slot existant contenant le même item.
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            // Ignore les slots vides.
+            if (_slots[i] == null)
+                continue;
+
+            // Identifie un match par SourceData (priorité) ou par nom (fallback).
+            bool sameSource = item.SourceData != null
+                && _slots[i].SourceData == item.SourceData;
+            bool sameName = !sameSource
+                && string.Equals(_slots[i].Name, item.Name, System.StringComparison.Ordinal);
+
+            if (!sameSource && !sameName)
+                continue;
+
+            // Incrémente la quantité du slot existant.
+            _slots[i].Quantity++;
+
+            Debug.Log($"[INV] Stack slot={i} name={item.Name} qty={_slots[i].Quantity}");
+
+            // Notifie l'UI pour rafraîchir le badge de quantité.
+            OnItemAdded.Invoke(i);
+            AudioManager.Instance?.PlaySFX(_itemAddedClip);
+            return true;
+        }
+
+        // Aucun slot existant — cherche le premier slot vide.
         for (int i = 0; i < _slots.Length; i++)
         {
             // Ignore les emplacements déjà occupés par un item.
             if (_slots[i] != null)
                 continue;
 
+            // Garantit que la quantité initiale vaut 1.
+            item.Quantity = 1;
+
             // Insère l'item dans le premier emplacement libre trouvé.
             _slots[i] = item;
 
-            // Confirme l'ajout dans la console avec slot et nom.
             Debug.Log($"[INV] Objet ajouté slot={i} name={item.Name}");
 
             // Notifie les abonnés de l'ajout avec l'index du slot.
@@ -215,14 +247,15 @@ public class InventoryManager : MonoBehaviour
         return _slots[slotIndex];
     }
 
-    /// <summary>Consomme l'item au slot donné et applique son effet.</summary>
+    /// <summary>Consomme une unité de l'item au slot donné et applique son effet.
+    /// Libère le slot uniquement quand la quantité atteint zéro.</summary>
     public bool ConsumeItem(int slotIndex)
     {
         // Refuse si l'index est invalide ou le slot est vide.
         if (!IsValidIndex(slotIndex) || _slots[slotIndex] == null)
             return false;
 
-        // Récupère l'item du slot avant de le supprimer.
+        // Récupère l'item du slot pour appliquer son effet.
         InventoryItem item = _slots[slotIndex];
 
         // Délègue l'effet à PlayerStatsManager si disponible, sinon applique l'effet legacy.
@@ -231,8 +264,19 @@ public class InventoryManager : MonoBehaviour
         else
             ApplyEffect(item);
 
-        // Supprime l'item du slot en le remplaçant par null.
-        _slots[slotIndex] = null;
+        // Décrémente la quantité avant de décider si le slot se libère.
+        item.Quantity--;
+
+        if (item.Quantity <= 0)
+        {
+            // Quantité épuisée : libère le slot.
+            _slots[slotIndex] = null;
+            Debug.Log($"[INV] Slot {slotIndex} libéré — {item.Name} épuisé.");
+        }
+        else
+        {
+            Debug.Log($"[INV] Consommé slot={slotIndex} name={item.Name} qty restante={item.Quantity}");
+        }
 
         // Notifie les abonnés de la consommation avec l'index du slot.
         OnItemConsumed.Invoke(slotIndex);
@@ -252,23 +296,47 @@ public class InventoryManager : MonoBehaviour
     // -------------------------------------------------------------------------
 
     // Applique l'effet de l'item selon son type d'effet défini.
+    // Priorise EffectType (système étendu) sur Effect (système legacy).
     private void ApplyEffect(InventoryItem item)
     {
-        // Sélectionne l'action à exécuter selon l'effet legacy de l'item.
+        // Tente d'abord d'appliquer via le système étendu (EffectType)
+        switch (item.EffectType)
+        {
+            case ItemEffectType.Heal:
+                ApplyHeal(item);
+                return;
+
+            case ItemEffectType.MaxHealthUp:
+                ApplyMaxHealthUp(item);
+                return;
+
+            // Les effets de stat (Speed, Damage, etc.) nécessitent PlayerStatsManager.
+            // Sans lui, on logue un avertissement plutôt que d'ignorer silencieusement.
+            case ItemEffectType.Speed:
+            case ItemEffectType.AttackSpeed:
+            case ItemEffectType.Damage:
+            case ItemEffectType.Shield:
+                Debug.LogWarning($"[InventoryManager] L'effet {item.EffectType} nécessite " +
+                    "PlayerStatsManager — assignez-le dans l'Inspector.", this);
+                return;
+
+            case ItemEffectType.NewHeroCartridge:
+                OnSpecialItemConsumed.Invoke(item);
+                return;
+        }
+
+        // Fallback sur le système legacy si EffectType n'est pas défini
         switch (item.Effect)
         {
-            // Applique un soin via le LivesManager si disponible.
             case LootEffect.Heal:
                 ApplyHeal(item);
                 break;
 
-            // Délègue les effets spéciaux aux systèmes externes.
             case LootEffect.PowerUp:
             case LootEffect.NewHeroCartridge:
                 OnSpecialItemConsumed.Invoke(item);
                 break;
 
-            // N'applique aucun effet pour les items sans effet.
             case LootEffect.None:
             default:
                 break;
@@ -285,8 +353,32 @@ public class InventoryManager : MonoBehaviour
             return;
         }
 
-        // Appelle le soin sur le LivesManager avec le montant configuré.
-        _livesManager.Heal(item.HealAmount);
+        // Utilise EffectValue si défini, sinon HealAmount (legacy)
+        int amount = item.EffectValue > 0f ? (int)item.EffectValue : item.HealAmount;
+
+        // Appelle le soin sur le LivesManager avec le montant calculé.
+        _livesManager.Heal(amount);
+    }
+
+    // Augmente les PV max via le LivesManager si disponible.
+    private void ApplyMaxHealthUp(InventoryItem item)
+    {
+        // Journalise un avertissement si le LivesManager est absent.
+        if (_livesManager == null)
+        {
+            Debug.LogWarning("[InventoryManager] Impossible d'augmenter les PV max : _livesManager null.", this);
+            return;
+        }
+
+        int amount = (int)item.EffectValue;
+
+        // Incrémente le max de vie dans LivesManager (clamp + événements inclus)
+        _livesManager.SetMaxHealth(_livesManager.GetMaxLives() + amount);
+
+        // Soigne le joueur jusqu'au nouveau maximum
+        _livesManager.Heal(amount);
+
+        Debug.Log($"[InventoryManager] PV max augmentés via legacy : +{amount}");
     }
 
     // -------------------------------------------------------------------------

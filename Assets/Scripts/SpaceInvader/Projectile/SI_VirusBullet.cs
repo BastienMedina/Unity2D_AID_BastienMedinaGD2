@@ -50,6 +50,9 @@ public class SI_VirusBullet : MonoBehaviour
         // Stocke la vitesse de déplacement reçue depuis VirusShooter
         _speed = speed;
 
+        // Oriente la roquette dans le sens de la direction de tir
+        transform.up = -_direction;
+
         // Marque la balle comme prête à se déplacer en FixedUpdate
         _isInitialized = true;
     }

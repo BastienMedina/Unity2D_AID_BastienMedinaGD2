@@ -16,8 +16,20 @@ public class GameProgress : MonoBehaviour
     // Vies persistées entre les scènes — -1 = non initialisé
     private int _persistedLives = -1;
 
+    // PV max persistés entre les scènes — -1 = non initialisé
+    private int _persistedMaxLives = -1;
+
+    // Buffs actifs persistés entre les scènes
+    private List<ActiveBuff> _persistedBuffs = new List<ActiveBuff>();
+
+    // PV max de base persistés entre les scènes — -1 = non initialisé
+    private int _persistedBaseMaxHealth = -1;
+
     /// <summary>Vrai si des vies ont été sauvegardées et attendent d'être restaurées.</summary>
     public bool HasPersistedLives => _persistedLives >= 0;
+
+    /// <summary>Vrai si un PV max a été sauvegardé et attend d'être restauré.</summary>
+    public bool HasPersistedMaxLives => _persistedMaxLives >= 0;
 
     // Étage minimum possible dans le jeu
     private const int MinFloor = 1;
@@ -73,7 +85,40 @@ public class GameProgress : MonoBehaviour
         CurrentFloor = MinFloor;
         _persistedInventory.Clear();
         _persistedLives = -1;
+        _persistedMaxLives = -1;
+        _persistedBuffs.Clear();
+        _persistedBaseMaxHealth = -1;
     }
+
+    // -----------------------------------------------------------------------
+    // API buffs persistants
+    // -----------------------------------------------------------------------
+
+    /// <summary>Sauvegarde les buffs actifs et les PV max de base pour la prochaine scène.</summary>
+    public void SaveBuffs(IReadOnlyList<ActiveBuff> buffs, int baseMaxHealth)
+    {
+        _persistedBuffs = new List<ActiveBuff>(buffs);
+        _persistedBaseMaxHealth = baseMaxHealth;
+    }
+
+    /// <summary>Retourne les buffs persistés et les vide pour éviter une double-restauration.</summary>
+    public List<ActiveBuff> PopBuffs()
+    {
+        List<ActiveBuff> copy = new List<ActiveBuff>(_persistedBuffs);
+        _persistedBuffs.Clear();
+        return copy;
+    }
+
+    /// <summary>Retourne les PV max de base persistés et réinitialise le slot.</summary>
+    public int PopBaseMaxHealth()
+    {
+        int value = _persistedBaseMaxHealth;
+        _persistedBaseMaxHealth = -1;
+        return value;
+    }
+
+    /// <summary>Vrai si des buffs ont été sauvegardés et attendent d'être restaurés.</summary>
+    public bool HasPersistedBuffs => _persistedBuffs.Count > 0 || _persistedBaseMaxHealth >= 0;
 
     // -----------------------------------------------------------------------
     // API inventaire persistant
@@ -106,12 +151,26 @@ public class GameProgress : MonoBehaviour
         _persistedLives = currentLives;
     }
 
+    /// <summary>Sauvegarde le PV max courant pour la prochaine scène.</summary>
+    public void SaveMaxLives(int maxLives)
+    {
+        _persistedMaxLives = maxLives;
+    }
+
     /// <summary>Retourne les vies persistées et réinitialise le slot.</summary>
     public int PopLives()
     {
         int lives = _persistedLives;
         _persistedLives = -1;
         return lives;
+    }
+
+    /// <summary>Retourne le PV max persisté et réinitialise le slot.</summary>
+    public int PopMaxLives()
+    {
+        int maxLives = _persistedMaxLives;
+        _persistedMaxLives = -1;
+        return maxLives;
     }
 
     /// <summary>Retourne le nom de scène correspondant à l'étage actuel.</summary>

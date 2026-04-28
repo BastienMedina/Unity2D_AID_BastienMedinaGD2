@@ -93,12 +93,17 @@ public class LootPickup : MonoBehaviour
         InventoryItem item = new InventoryItem
         {
             // Utilise l'ItemData si assigné, sinon le nom du GameObject en fallback.
-            Name        = _itemData != null ? _itemData.ItemName : gameObject.name,
-            Description = _itemData != null ? _itemData.Description : string.Empty,
-            Icon        = _itemData != null ? _itemData.Icon : null,
-            Effect      = _effect,
-            HealAmount  = _healAmount,
-            SourceData  = _itemData,
+            Name           = _itemData != null ? _itemData.ItemName    : gameObject.name,
+            Description    = _itemData != null ? _itemData.Description : string.Empty,
+            Icon           = _itemData != null ? _itemData.Icon        : null,
+            Effect         = _effect,
+            HealAmount     = _healAmount,
+            SourceData     = _itemData,
+            // Copie les champs d'effet étendu depuis l'ItemData source
+            EffectType     = _itemData != null ? _itemData.EffectType     : ItemEffectType.Heal,
+            EffectValue    = _itemData != null ? _itemData.EffectValue    : 0f,
+            HasDuration    = _itemData != null && _itemData.HasDuration,
+            EffectDuration = _itemData != null ? _itemData.EffectDuration : 0f,
         };
 
         // Transmet l'InventoryItem au gestionnaire d'inventaire joueur.

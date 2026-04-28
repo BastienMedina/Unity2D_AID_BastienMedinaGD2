@@ -35,6 +35,9 @@ public class SI_PlayerBullet : MonoBehaviour
 
         // Enregistre la position monde au moment de l'instanciation
         _spawnPosition = transform.position;
+
+        // Oriente la roquette dans le sens du tir (vers le haut)
+        transform.up = -Vector2.up;
     }
 
     // Déplace la balle vers le haut et vérifie la portée maximale

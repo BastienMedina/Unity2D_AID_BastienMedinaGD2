@@ -65,6 +65,9 @@ public class InventoryUI : MonoBehaviour
     // Tableau des images d'icône de chaque slot instancié.
     private Image[] _slotIcons;
 
+    // Tableau des badges de quantité (TextMeshProUGUI) de chaque slot.
+    private TextMeshProUGUI[] _slotQuantityBadges;
+
     // Index du slot actuellement sélectionné, -1 si aucun.
     private int _selectedSlotIndex = -1;
 
@@ -295,9 +298,10 @@ public class InventoryUI : MonoBehaviour
 
             // Masque l'image d'icône pour les slots vides.
             if (_slotIcons[slotIndex] != null)
-            {
                 _slotIcons[slotIndex].enabled = false;
-            }
+
+            // Masque le badge de quantité pour les slots vides.
+            SetQuantityBadge(slotIndex, 0);
             return;
         }
 
@@ -327,6 +331,9 @@ public class InventoryUI : MonoBehaviour
                 _slotIcons[slotIndex].color = _noIconColor;
             }
         }
+
+        // Affiche le badge de quantité uniquement si la pile dépasse 1.
+        SetQuantityBadge(slotIndex, item.Quantity);
     }
 
     // Rafraîchit l'affichage de tous les slots de la grille.
@@ -433,8 +440,9 @@ public class InventoryUI : MonoBehaviour
         int capacity = _inventoryManager.GetCapacity();
 
         // Initialise les tableaux de références aux composants des slots.
-        _slotBackgrounds = new Image[capacity];
-        _slotIcons = new Image[capacity];
+        _slotBackgrounds    = new Image[capacity];
+        _slotIcons          = new Image[capacity];
+        _slotQuantityBadges = new TextMeshProUGUI[capacity];
 
         // Instancie un slot pour chaque emplacement de l'inventaire.
         for (int i = 0; i < capacity; i++)
@@ -465,12 +473,67 @@ public class InventoryUI : MonoBehaviour
             if (_slotIcons[i] != null)
                 _slotIcons[i].enabled = false;
 
+            // Crée le badge de quantité en coin inférieur-droit du slot.
+            _slotQuantityBadges[i] = CreateQuantityBadge(slotGO);
+
             // Abonne le bouton du slot à la méthode de clic.
             Button slotButton = slotGO.GetComponentInChildren<Button>();
 
             // Ajoute le listener si le composant Button est présent.
             if (slotButton != null)
                 slotButton.onClick.AddListener(() => OnSlotClicked(capturedIndex));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Badge de quantité
+    // -------------------------------------------------------------------------
+
+    // Crée dynamiquement un TextMeshProUGUI en coin inférieur-droit du slot.
+    private TextMeshProUGUI CreateQuantityBadge(GameObject slotGO)
+    {
+        GameObject badgeGO = new GameObject("QuantityBadge", typeof(RectTransform));
+        badgeGO.transform.SetParent(slotGO.transform, false);
+
+        // Positionne en bas à droite, en dehors du raycast pour ne pas bloquer les clics.
+        RectTransform rt = badgeGO.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot     = new Vector2(1f, 0f);
+        rt.anchoredPosition = new Vector2(-4f, 4f);
+        rt.sizeDelta = new Vector2(36f, 20f);
+
+        TextMeshProUGUI tmp = badgeGO.AddComponent<TextMeshProUGUI>();
+        tmp.fontSize        = 20f;
+        tmp.fontStyle       = TMPro.FontStyles.Bold;
+        tmp.color           = Color.white;
+        tmp.alignment       = TMPro.TextAlignmentOptions.BottomRight;
+        tmp.raycastTarget   = false;
+        tmp.text            = string.Empty;
+
+        return tmp;
+    }
+
+    // Affiche ou masque le badge de quantité selon la valeur reçue.
+    private void SetQuantityBadge(int slotIndex, int quantity)
+    {
+        // Ignore si le tableau n'est pas initialisé ou l'index hors bornes.
+        if (_slotQuantityBadges == null || slotIndex >= _slotQuantityBadges.Length)
+            return;
+
+        TextMeshProUGUI badge = _slotQuantityBadges[slotIndex];
+        if (badge == null) return;
+
+        // Masque le badge si la quantité vaut 1 ou moins (pas de stack).
+        if (quantity <= 1)
+        {
+            badge.text    = string.Empty;
+            badge.enabled = false;
+        }
+        else
+        {
+            badge.text    = quantity.ToString();
+            badge.enabled = true;
         }
     }
 

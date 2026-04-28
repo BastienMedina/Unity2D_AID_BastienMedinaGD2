@@ -85,15 +85,15 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 6711257252158638106, guid: b4237cec8be5935449122b31787a1de5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
-  m_FlipY: 0
+  m_FlipY: 1
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 2.58, y: 6.42}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!50 &801972813247073151
 Rigidbody2D:
@@ -183,6 +183,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4db7fac14181f5846a44c3b71ea70c93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyProjectileVisual
-  _projectileColor: {r: 1, g: 0, b: 0, a: 1}
   _sortingOrder: 3
-  _spriteScale: 0.2
+  _spriteScale: 0.07

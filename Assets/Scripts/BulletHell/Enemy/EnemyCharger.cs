@@ -1,6 +1,7 @@
 using UnityEngine;
 
 // Patrouille, détecte le joueur, fonce dessus et se repose
+[RequireComponent(typeof(Rigidbody2D))]
 public class EnemyCharger : EnemyBase, IEnemyInjectable
 {
     // Énumère les quatre états possibles de l'ennemi chargeur
@@ -17,6 +18,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
 
     // Durée d'attente après une charge avant de reprendre la patrouille
     [SerializeField] private float _chargeCooldown = 1.5f;
+
+    // Durée maximale d'une charge avant retour forcé en cooldown (anti-blocage)
+    [SerializeField] private float _chargeMaxDuration = 1.5f;
 
     // Distance minimale pour déclencher la charge vers le joueur
     [SerializeField] private float _chargeRange = 1.5f;
@@ -48,6 +52,12 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     // Timer décroissant pendant la phase de cooldown post-charge
     private float _cooldownTimer = 0f;
 
+    // Timer décroissant pendant la charge — force la sortie si aucune collision
+    private float _chargeTimer = 0f;
+
+    // Rigidbody2D utilisé pour le déplacement physique lors de la charge
+    private Rigidbody2D _rigidbody;
+
     // Durée en secondes d'immunité après le spawn — bloque la détection et les charges
     [SerializeField] private float _spawnImmunityDuration = 1.25f;
 
@@ -69,6 +79,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
 
         // Récupère le feedback visuel sur le même GameObject
         _feedback = GetComponent<EnemyFeedback>();
+
+        // Récupère le Rigidbody2D pour le déplacement physique pendant la charge
+        _rigidbody = GetComponent<Rigidbody2D>();
 
         // Initialise le timer d'immunité de spawn
         _spawnImmunityTimer = _spawnImmunityDuration;
@@ -164,7 +177,7 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         }
     }
 
-    // Suit le joueur à vitesse normale et prépare la charge
+    // Déclenche la charge vers le joueur si assez proche
     private void HandleChase()
     {
         // Repasse en patrouille si le joueur sort du rayon de détection
@@ -188,6 +201,9 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
             // Verrouille la direction vers le joueur pour la charge
             _chargeDirection = (_playerTransform.position - transform.position).normalized;
 
+            // Arme le timer de durée maximale de charge (anti-blocage)
+            _chargeTimer = _chargeMaxDuration;
+
             AudioManager.Instance?.PlaySFX(_chargeClip);
 
             // Passe immédiatement dans l'état de charge rapide
@@ -195,11 +211,34 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
         }
     }
 
-    // Propulse l'ennemi dans la direction verrouillée à grande vitesse
+    // Gère le timer de charge et la transition vers le cooldown si la durée est dépassée.
+    // Le déplacement physique est appliqué dans FixedUpdate.
     private void HandleCharge()
     {
-        // Déplace l'ennemi à vitesse de charge dans la direction fixée
-        transform.Translate(_chargeDirection * (_chargeSpeed * Time.deltaTime), Space.World);
+        _chargeTimer -= Time.deltaTime;
+
+        // Force la sortie de charge si la durée maximale est dépassée (anti-blocage mur)
+        if (_chargeTimer <= 0f)
+        {
+            StopCharge();
+        }
+    }
+
+    // Applique le déplacement via Rigidbody2D.MovePosition pour déclencher les collisions physiques.
+    private void FixedUpdate()
+    {
+        if (IsDead() || _currentState != State.Charge) return;
+
+        Vector2 nextPos = _rigidbody.position + _chargeDirection * (_chargeSpeed * Time.fixedDeltaTime);
+        _rigidbody.MovePosition(nextPos);
+    }
+
+    // Arrête la charge et passe en cooldown.
+    private void StopCharge()
+    {
+        _rigidbody.linearVelocity = Vector2.zero;
+        _cooldownTimer  = _chargeCooldown;
+        _currentState   = State.Cooldown;
     }
 
     // Décrémente le timer et reprend la patrouille à son expiration
@@ -234,27 +273,19 @@ public class EnemyCharger : EnemyBase, IEnemyInjectable
     {
         // Ignore les collisions si l'ennemi n'est pas en état de charge
         if (_currentState != State.Charge)
-        {
             return;
-        }
 
         // Inflige des dégâts au joueur si le collider est bien le sien
         if (collision.gameObject.CompareTag("Player"))
         {
-            // Ignore si le gestionnaire de vies n'est pas injecté
             if (_livesManager != null)
-            {
                 _livesManager.TakeDamage();
-            }
 
             AudioManager.Instance?.PlaySFX(_impactClip);
-
-            // Réarme le timer de cooldown après une charge réussie
-            _cooldownTimer = _chargeCooldown;
-
-            // Passe en cooldown pour se reposer avant de reprendre
-            _currentState = State.Cooldown;
         }
+
+        // Stoppe la charge dans tous les cas (mur ou joueur) et passe en cooldown
+        StopCharge();
     }
 
     // Désactive le GameObject à la mort de l'ennemi chargeur

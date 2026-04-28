@@ -173,6 +173,7 @@ MonoBehaviour:
   _maxHealth: 1
   _moveSpeed: 0.5
   _scoreValue: 10
+  _explosionPrefab: {fileID: 3148297542755074967, guid: 4a53902ce08072142a98e341f45d30dd, type: 3}
   _onDamageTaken:
     m_PersistentCalls:
       m_Calls: []

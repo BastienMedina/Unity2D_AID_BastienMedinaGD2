@@ -30,6 +30,9 @@ public class LivesManager : MonoBehaviour
     // Déclenché à chaque changement avec la nouvelle valeur.
     public UnityEvent<int> OnLivesChanged = new UnityEvent<int>();
 
+    // Déclenché quand le maximum de vies change, avec la nouvelle valeur max.
+    public UnityEvent<int> OnMaxHealthChanged = new UnityEvent<int>();
+
     // Déclenché quand toutes les vies atteignent zéro.
     public UnityEvent OnDeath = new UnityEvent();
 
@@ -37,12 +40,21 @@ public class LivesManager : MonoBehaviour
     // État interne
     // -------------------------------------------------------------------------
 
+    // Durée en secondes d'invincibilité après un dégât — bloque tout TakeDamage entrant
+    [SerializeField] private float _invincibilityDuration = 0.8f;
+
+    // Timer décroissant de l'invincibilité post-dégât
+    private float _invincibilityTimer = 0f;
+
     // Nombre de vies restantes au moment courant.
     private int _currentLives;
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
+    // Décrémente le timer d'invincibilité chaque frame.
+    private void Update()
+    {
+        if (_invincibilityTimer > 0f)
+            _invincibilityTimer -= Time.deltaTime;
+    }
 
     // Initialise les vies et notifie les abonnés au démarrage.
     private void Awake()
@@ -57,10 +69,16 @@ public class LivesManager : MonoBehaviour
         // Assigne cette instance comme référence singleton globale
         Instance = this;
 
-        // Restaure les vies depuis GameProgress si elles ont été sauvegardées
+        // Restaure le PV max persisté en priorité (potion de vitalité inter-étages)
+        if (GameProgress.Instance != null && GameProgress.Instance.HasPersistedMaxLives)
+            _maxLives = GameProgress.Instance.PopMaxLives();
+
+        // Restaure les vies courantes depuis GameProgress si disponibles
         if (GameProgress.Instance != null && GameProgress.Instance.HasPersistedLives)
         {
             _currentLives = GameProgress.Instance.PopLives();
+            // Clamp au cas où les vies seraient supérieures au max restauré
+            _currentLives = Mathf.Min(_currentLives, _maxLives);
         }
         else
         {
@@ -134,8 +152,15 @@ public class LivesManager : MonoBehaviour
         if (_currentLives <= 0)
             return;
 
+        // Ignore si le joueur est encore invincible suite au dernier dégât.
+        if (_invincibilityTimer > 0f)
+            return;
+
         // Décrémente le compteur de vies actuel.
         _currentLives--;
+
+        // Démarre la fenêtre d'invincibilité post-dégât.
+        _invincibilityTimer = _invincibilityDuration;
 
         // Notifie les abonnés du nouveau total de vies.
         OnLivesChanged.Invoke(_currentLives);
@@ -152,13 +177,22 @@ public class LivesManager : MonoBehaviour
         }
     }
 
-    // Met à jour le maximum de vies du joueur
+    /// <summary>Met à jour le maximum de vies du joueur et clamp les vies courantes.</summary>
     public void SetMaxHealth(int newMax)
     {
         // Met à jour le maximum configurable
         _maxLives = newMax;
 
-        // Notifie les abonnés du changement
+        // Empêche les vies courantes de dépasser le nouveau maximum
+        _currentLives = Mathf.Min(_currentLives, _maxLives);
+
+        // Notifie les abonnés du changement de maximum (reconstruit les coeurs UI)
+        OnMaxHealthChanged.Invoke(_maxLives);
+
+        // Notifie les abonnés du changement de vies courantes
         OnLivesChanged.Invoke(_currentLives);
     }
+
+    /// <summary>Retourne le maximum de vies actuel.</summary>
+    public int GetMaxLives() => _maxLives;
 }

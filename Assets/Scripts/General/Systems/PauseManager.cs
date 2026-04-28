@@ -1,14 +1,14 @@
 using UnityEngine;
-using UnityEngine.Events;
 
-// Gère la mise en pause et la reprise du jeu via Time.timeScale
+/// <summary>
+/// Gère l'état de pause global via Time.timeScale.
+/// Expose IsPaused et les méthodes Pause / Resume / TogglePause.
+/// À placer sur un GameObject dans chaque scène de jeu.
+/// </summary>
 public class PauseManager : MonoBehaviour
 {
-    // Événement déclenché quand le jeu est mis en pause
-    [SerializeField] public UnityEvent _onPaused;
-
-    // Événement déclenché quand le jeu reprend après une pause
-    [SerializeField] public UnityEvent _onResumed;
+    // Instance statique locale à la scène — résolue par PauseButtonController et PauseMenuController
+    public static PauseManager Instance { get; private set; }
 
     // Son joué lors de la mise en pause
     [SerializeField] private AudioClip _pauseClip;
@@ -17,65 +17,85 @@ public class PauseManager : MonoBehaviour
     [SerializeField] private AudioClip _resumeClip;
 
     // Indique si le jeu est actuellement en pause
-    private bool _isPaused = false;
+    private bool _isPaused;
 
-    /// <summary>Retourne vrai si le jeu est actuellement en pause.</summary>
+    // Indique si le jeu est en état terminal (game over ou victoire) — bloque la pause
+    private bool _isGameOver;
+
+    /// <summary>Vrai si le jeu est actuellement en pause.</summary>
     public bool IsPaused => _isPaused;
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        // Garantit que le jeu ne reste pas bloqué si l'objet est supprimé pendant la pause
+        if (Instance == this)
+        {
+            Instance = null;
+            Time.timeScale = 1f;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // API publique
+    // -------------------------------------------------------------------------
 
     /// <summary>Bascule entre pause et reprise du jeu.</summary>
     public void TogglePause()
     {
-        Debug.Log($"[PauseManager] TogglePause — état actuel _isPaused : {_isPaused}", this);
+        if (_isGameOver)
+            return;
+
         if (_isPaused)
             Resume();
         else
             Pause();
     }
 
-    /// <summary>Met le jeu en pause en gelant Time.timeScale à zéro.</summary>
+    /// <summary>Met le jeu en pause.</summary>
     public void Pause()
     {
-        if (_isPaused)
-        {
-            Debug.Log("[PauseManager] Pause() ignoré — déjà en pause.", this);
+        if (_isPaused || _isGameOver)
             return;
-        }
 
-        Time.timeScale = 0f;
         _isPaused = true;
-
-        if (_pauseClip != null)
-            AudioManager.Instance?.PlaySFX(_pauseClip);
-
-        Debug.Log($"[PauseManager] Pause() — _onPaused listeners : {_onPaused.GetPersistentEventCount()} persistants. Invocation...", this);
-        _onPaused?.Invoke();
-        Debug.Log("[PauseManager] Pause() — _onPaused.Invoke() terminé.", this);
+        Time.timeScale = 0f;
+        AudioManager.Instance?.PlaySFX(_pauseClip);
     }
 
-    /// <summary>Reprend le jeu en restaurant Time.timeScale à un.</summary>
+    /// <summary>Reprend le jeu après une pause.</summary>
     public void Resume()
     {
         if (!_isPaused)
-        {
-            Debug.Log("[PauseManager] Resume() ignoré — pas en pause.", this);
             return;
-        }
 
-        Time.timeScale = 1f;
         _isPaused = false;
-
-        if (_resumeClip != null)
-            AudioManager.Instance?.PlaySFX(_resumeClip);
-
-        Debug.Log($"[PauseManager] Resume() — _onResumed listeners : {_onResumed.GetPersistentEventCount()} persistants. Invocation...", this);
-        _onResumed?.Invoke();
-        Debug.Log("[PauseManager] Resume() — _onResumed.Invoke() terminé.", this);
+        Time.timeScale = 1f;
+        AudioManager.Instance?.PlaySFX(_resumeClip);
     }
 
-    // Restaure le timeScale si le gestionnaire est détruit en cours de pause
-    private void OnDestroy()
+    /// <summary>
+    /// Verrouille le PauseManager en état terminal (game over / victoire).
+    /// Empêche toute pause ultérieure et restaure le timeScale si nécessaire.
+    /// Appelé par GameOverMenuController et VictoryMenuController.
+    /// </summary>
+    public void LockForEndState()
     {
-        // Garantit que le jeu ne reste pas bloqué si l'objet est supprimé
-        Time.timeScale = 1f;
+        _isGameOver = true;
+
+        // Si le jeu était en pause au moment du game over, on remet timeScale à 0
+        // car c'est l'écran de fin qui gèle maintenant, pas le menu pause
+        _isPaused = false;
+        Time.timeScale = 0f;
     }
 }

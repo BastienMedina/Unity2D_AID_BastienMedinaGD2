@@ -159,7 +159,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.9
+  m_Radius: 2.5
 --- !u!114 &2642392113385366663
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,6 +188,7 @@ MonoBehaviour:
   _projectilePrefab: {fileID: 2952081833280473030, guid: eba3ea5b0489ac9419d35914216cd659, type: 3}
   _projectileDamage: 1
   _projectileSpeed: 6
+  _projectileSpawnOffset: 0.5
   _projectileMaxRange: 10
   _playerTransform: {fileID: 0}
   _livesManager: {fileID: 0}

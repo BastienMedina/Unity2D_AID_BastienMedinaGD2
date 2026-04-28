@@ -30,6 +30,9 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
     // Vitesse de déplacement du projectile après instanciation
     [SerializeField] private float _projectileSpeed = 6f;
 
+    // Distance d'offset du spawn du projectile par rapport au centre de l'ennemi
+    [SerializeField] private float _projectileSpawnOffset = 0.5f;
+
     // Portée maximale du projectile avant auto-destruction
     [SerializeField] private float _projectileMaxRange = 10f;
 
@@ -217,8 +220,10 @@ public class EnemyShooter : EnemyBase, IEnemyInjectable
         // Calcule la direction normalisée vers le joueur pour le tir
         Vector2 direction = (_playerTransform.position - transform.position).normalized;
 
-        // Instancie le projectile à la position actuelle du tireur
-        GameObject projectileObject = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
+        // Instancie le projectile légèrement devant l'ennemi dans la direction du tir
+        // pour éviter une collision immédiate avec son propre collider
+        Vector3 spawnPos = transform.position + (Vector3)(direction * _projectileSpawnOffset);
+        GameObject projectileObject = Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
 
         // Récupère le script EnemyProjectile sur l'objet instancié
         EnemyProjectile projectile = projectileObject.GetComponent<EnemyProjectile>();

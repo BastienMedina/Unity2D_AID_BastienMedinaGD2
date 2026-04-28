@@ -5,10 +5,10 @@ using UnityEngine.Events;
 public class SI_ServerHealth : MonoBehaviour
 {
     // Valeur maximale de l'intégrité du serveur au démarrage
-    [SerializeField] private int _maxIntegrity = 5;
+    [SerializeField] private int _maxIntegrity = 3;
 
-    // Événement déclenché après chaque dégât avec l'intégrité restante
-    [SerializeField] private UnityEvent<int> _onServerDamaged;
+    // Événement déclenché après chaque dégât avec l'intégrité restante — accessible par SI_ServerHeartsDisplay
+    [SerializeField] public UnityEvent<int> _onServerDamaged;
 
     // Événement déclenché une fois quand l'intégrité atteint zéro
     [SerializeField] private UnityEvent _onServerDestroyed;
@@ -77,5 +77,13 @@ public class SI_ServerHealth : MonoBehaviour
     {
         // Renvoie la valeur courante sans la modifier
         return _currentIntegrity;
+    }
+
+    /// <summary>Retourne le maximum d'intégrité configuré pour ce serveur.</summary>
+    // Expose le maximum pour que l'UI puisse construire le bon nombre de coeurs
+    public int GetMaxIntegrity()
+    {
+        // Renvoie la valeur maximale configurée dans l'inspecteur
+        return _maxIntegrity;
     }
 }

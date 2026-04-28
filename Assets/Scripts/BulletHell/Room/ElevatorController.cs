@@ -147,29 +147,15 @@ public class ElevatorController : MonoBehaviour
         _onElevatorUnlocked?.Invoke();
     }
 
-    // Enregistre la présence du joueur dans la zone de l'ascenseur
-    private void OnTriggerEnter2D(Collider2D other)
+    /// <summary>Appelé par ElevatorTrigger quand le joueur entre dans la zone.</summary>
+    public void OnPlayerEnterRange()
     {
-        // Ignore les collisions qui ne proviennent pas du joueur
-        if (!other.CompareTag("Player"))
-        {
-            return;
-        }
-
-        // Marque le joueur comme présent dans la zone de l'ascenseur
         _playerInRange = true;
     }
 
-    // Retire la présence du joueur quand il quitte la zone
-    private void OnTriggerExit2D(Collider2D other)
+    /// <summary>Appelé par ElevatorTrigger quand le joueur quitte la zone.</summary>
+    public void OnPlayerExitRange()
     {
-        // Ignore les sorties qui ne concernent pas le joueur
-        if (!other.CompareTag("Player"))
-        {
-            return;
-        }
-
-        // Marque le joueur comme absent de la zone de l'ascenseur
         _playerInRange = false;
     }
 

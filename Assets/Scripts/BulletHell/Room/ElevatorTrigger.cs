@@ -1,41 +1,77 @@
 using UnityEngine;
 
 // Ajouté dynamiquement par ProceduralMapGenerator sur la salle ascenseur.
-// Déclenche la transition animée dès que le joueur entre dans la zone.
+// Déclenche la sauvegarde complète et la transition vers l'étage suivant
+// dès que toutes les salles requises sont libérées et que le joueur entre.
 public class ElevatorTrigger : MonoBehaviour
 {
-    // Étage maximum géré par la scène Bullet Hell
-    private const int BulletHellMaxFloor = 3;
+    // Indique si la transition a déjà été déclenchée (anti double-trigger).
+    private bool _hasTriggered = false;
 
-    // Nom de la scène Bullet Hell rechargée pour un nouvel étage
-    private const string BulletHellScene = "Scene_BulletHell";
+    // Vérifie si toutes les salles de la scène sont libérées avant d'autoriser la transition.
+    private bool AreAllRoomsCleared()
+    {
+        RoomController[] rooms = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
 
-    // Nom de la scène Game & Watch pour l'étage 4
-    private const string GameAndWatchScene = "Scene_GameAndWatch";
+        // Aucune salle trouvée = pas de condition de blocage, on laisse passer.
+        if (rooms == null || rooms.Length == 0)
+            return true;
 
-    // Empêche un double déclenchement si le joueur reste dans le trigger
-    private bool _triggered = false;
+        foreach (RoomController room in rooms)
+        {
+            if (room != null && !room.IsCleared())
+                return false;
+        }
 
-    // Déclenche la transition quand le joueur entre dans la zone de l'ascenseur
+        return true;
+    }
+
+    // Déclenche la transition quand le joueur entre dans la zone de l'ascenseur.
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (_hasTriggered) return;
         if (!other.CompareTag("Player")) return;
-        if (_triggered) return;
 
-        _triggered = true;
+        if (!AreAllRoomsCleared())
+        {
+            Debug.Log("[ElevatorTrigger] Des salles ne sont pas encore libérées — transition bloquée.");
+            return;
+        }
 
-        // Sauvegarde les vies courantes avant le changement de scène
-        if (LivesManager.Instance != null && GameProgress.Instance != null)
-            GameProgress.Instance.SaveLives(LivesManager.Instance.GetCurrentLives());
+        _hasTriggered = true;
+        TriggerFloorTransition();
+    }
 
-        // Calcule le prochain étage pour l'affichage de la transition
-        int nextFloor = GameProgress.Instance.CurrentFloor + 1;
-        string targetScene = nextFloor <= BulletHellMaxFloor ? BulletHellScene : GameAndWatchScene;
+    // Sauvegarde l'état complet et charge l'étage suivant.
+    private void TriggerFloorTransition()
+    {
+        if (GameProgress.Instance == null)
+        {
+            Debug.LogError("[ElevatorTrigger] GameProgress.Instance est null — transition annulée.", this);
+            return;
+        }
 
-        // Sauvegarde et avance la progression avant le chargement
+        // Sauvegarde inventaire, buffs, vies et PV max avant toute transition.
+        FloorTransition.PersistFullState();
+
+        // Incrémente l'étage.
         GameProgress.Instance.AdvanceFloor();
-        SaveSystem.SaveGame();
 
-        FloorTransitionAnimator.Instance.TransitionToScene(targetScene, nextFloor);
+        int nextFloor = GameProgress.Instance.CurrentFloor;
+        string targetScene = GameProgress.Instance.GetCurrentSceneName();
+
+        Debug.Log($"[ElevatorTrigger] Transition vers étage {nextFloor} → scène '{targetScene}'");
+
+        // Utilise FloorTransitionAnimator s'il est disponible (fondu + label d'étage).
+        if (FloorTransitionAnimator.Instance != null)
+        {
+            FloorTransitionAnimator.Instance.TransitionToScene(targetScene, nextFloor);
+        }
+        else
+        {
+            // Fallback direct si le singleton d'animation n'est pas chargé.
+            Debug.LogWarning("[ElevatorTrigger] FloorTransitionAnimator introuvable — chargement direct.");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(targetScene);
+        }
     }
 }

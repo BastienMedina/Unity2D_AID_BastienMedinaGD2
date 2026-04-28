@@ -56,5 +56,5 @@ MonoBehaviour:
   _slotPrefab: {fileID: 5362336191636876096, guid: 715888805e2c11347a41d905192abf00, type: 3}
   _itemNameText: {fileID: 0}
   _itemDescText: {fileID: 0}
-  _itemIconImage: {fileID: 0}
   _useButton: {fileID: 0}
+  _toggleButton: {fileID: 0}

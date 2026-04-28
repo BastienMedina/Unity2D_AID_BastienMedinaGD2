@@ -3,16 +3,20 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Affiche le menu de défaite lorsque LivesManager.OnDeath est déclenché.
+/// <summary>
+/// Affiche l'écran de défaite quand LivesManager.OnDeath est déclenché.
+/// Gèle le jeu via PauseManager.LockForEndState() pour bloquer toute pause ultérieure.
+/// À placer sur le Canvas game over dans chaque scène de jeu.
+/// </summary>
 public class GameOverMenuController : MonoBehaviour
 {
-    // Panneau racine du menu game over (l'Overlay plein-écran)
-    [SerializeField] private GameObject _gameOverPanel;
+    // Panneau racine du menu game over
+    [SerializeField] private GameObject _panel;
 
-    // Texte affichant l'étage atteint par le joueur
+    // Texte affichant l'étage atteint par le joueur (optionnel)
     [SerializeField] private TextMeshProUGUI _floorLabel;
 
-    // Nom de la scène de départ (BulletHell étage 1)
+    // Nom de la scène de départ (premier étage)
     [SerializeField] private string _restartScene = "Scene_BulletHell";
 
     // Nom de la scène du menu principal
@@ -21,51 +25,57 @@ public class GameOverMenuController : MonoBehaviour
     // Son joué lors des interactions avec les boutons
     [SerializeField] private AudioClip _buttonClip;
 
-    // Image de l'overlay plein-écran — son raycastTarget est contrôlé pour ne pas bloquer l'UI sous-jacente
-    private Image _overlayImage;
-
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
     private void Awake()
     {
-        // Récupère l'Image de l'overlay pour contrôler son raycastTarget
-        _overlayImage = _gameOverPanel.GetComponent<Image>();
-
-        // Cache le panneau et désactive le raycast au démarrage
-        _gameOverPanel.SetActive(false);
-        SetOverlayRaycast(false);
+        if (_panel != null)
+            _panel.SetActive(false);
     }
 
     private void Start()
     {
-        // Câblage des boutons par code
-        Button btnRestart  = _gameOverPanel.transform.Find("Panel/Button_Restart")?.GetComponent<Button>();
-        Button btnMainMenu = _gameOverPanel.transform.Find("Panel/Button_MainMenu")?.GetComponent<Button>();
+        if (LivesManager.Instance == null)
+        {
+            Debug.LogError("[GameOverMenuController] LivesManager.Instance introuvable.", this);
+            return;
+        }
+
+        LivesManager.Instance.OnDeath.AddListener(HandleDeath);
+
+        Button btnRestart  = FindButtonInChildren(_panel.transform, "Button_Restart");
+        Button btnMainMenu = FindButtonInChildren(_panel.transform, "Button_MainMenu");
 
         btnRestart?.onClick.AddListener(OnRestartClicked);
         btnMainMenu?.onClick.AddListener(OnMainMenuClicked);
-
-        // Abonnement à OnDeath ici : Start() garantit que tous les Awake() ont déjà été exécutés,
-        // donc LivesManager.Instance est forcément initialisé à ce stade.
-        if (LivesManager.Instance != null)
-            LivesManager.Instance.OnDeath.AddListener(HandleDeath);
-        else
-            Debug.LogError("[GameOverMenuController] LivesManager.Instance est null dans Start() — le menu game over ne s'affichera pas.", this);
     }
 
     private void OnDestroy()
     {
-        // Nettoyage de l'abonnement pour éviter les références fantômes
         LivesManager.Instance?.OnDeath.RemoveListener(HandleDeath);
+    }
+
+    // -------------------------------------------------------------------------
+    // Déclenchement défaite
+    // -------------------------------------------------------------------------
+
+    /// <summary>Appelé par LivesManager.OnDeath — affiche le panneau et gèle le jeu.</summary>
+    public void HandleDeath()
+    {
+        if (_floorLabel != null && GameProgress.Instance != null)
+            _floorLabel.text = "ÉTAGE " + GameProgress.Instance.CurrentFloor;
+
+        PauseManager.Instance?.LockForEndState();
+        _panel.SetActive(true);
     }
 
     // -------------------------------------------------------------------------
     // Boutons
     // -------------------------------------------------------------------------
 
-    /// <summary>Repart depuis l'étage 1 sans sauvegarde.</summary>
+    /// <summary>Repart depuis le début sans sauvegarde.</summary>
     public void OnRestartClicked()
     {
         AudioManager.Instance?.PlaySFX(_buttonClip);
@@ -86,24 +96,25 @@ public class GameOverMenuController : MonoBehaviour
     }
 
     // -------------------------------------------------------------------------
-    // Déclenchement mort — appelable aussi depuis GameOverHandler
+    // Utilitaire
     // -------------------------------------------------------------------------
 
-    /// <summary>Affiche le panneau game over et gèle le jeu.</summary>
-    public void HandleDeath()
+    private Button FindButtonInChildren(Transform root, string buttonName)
     {
-        if (_floorLabel != null && GameProgress.Instance != null)
-            _floorLabel.text = "ÉTAGE " + GameProgress.Instance.CurrentFloor;
+        if (root == null)
+            return null;
 
-        Time.timeScale = 0f;
-        _gameOverPanel.SetActive(true);
-        SetOverlayRaycast(true);
-    }
+        Transform found = root.Find(buttonName);
+        if (found != null)
+            return found.GetComponent<Button>();
 
-    // Active ou désactive le raycast de l'overlay plein-écran
-    private void SetOverlayRaycast(bool enabled)
-    {
-        if (_overlayImage != null)
-            _overlayImage.raycastTarget = enabled;
+        foreach (Transform child in root)
+        {
+            Button result = FindButtonInChildren(child, buttonName);
+            if (result != null)
+                return result;
+        }
+
+        return null;
     }
 }

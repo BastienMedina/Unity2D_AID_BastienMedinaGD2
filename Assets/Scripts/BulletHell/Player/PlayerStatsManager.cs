@@ -72,11 +72,52 @@ public class PlayerStatsManager : MonoBehaviour
         RecalculateStats();
     }
 
+    // Restaure les buffs persistés depuis GameProgress après tous les Awake()
+    private void Start()
+    {
+        RestoreFromGameProgress();
+    }
+
     // Met à jour les buffs temporaires chaque frame
     private void Update()
     {
         // Décrémente les timers de tous les buffs actifs
         TickBuffs();
+    }
+
+    // ── RESTAURATION ─────────────────────────────────
+
+    // Restaure les buffs et les PV max de base depuis GameProgress
+    private void RestoreFromGameProgress()
+    {
+        if (GameProgress.Instance == null || !GameProgress.Instance.HasPersistedBuffs)
+            return;
+
+        // Restaure les PV max de base si persistés
+        int savedBaseMaxHealth = GameProgress.Instance.PopBaseMaxHealth();
+        if (savedBaseMaxHealth >= 0)
+        {
+            _baseMaxHealth = savedBaseMaxHealth;
+            _livesManager?.SetMaxHealth(_baseMaxHealth);
+            Debug.Log($"[STATS] PV max restaurés : {_baseMaxHealth}");
+        }
+
+        // Restaure les buffs actifs — les buffs temporaires reprennent avec leur temps restant
+        List<ActiveBuff> persistedBuffs = GameProgress.Instance.PopBuffs();
+        foreach (ActiveBuff buff in persistedBuffs)
+        {
+            // Ignore les buffs temporaires expirés pendant la transition
+            if (buff.HasDuration && buff.RemainingTime <= 0f)
+                continue;
+
+            _activeBuffs.Add(buff);
+            OnBuffAdded.Invoke(buff);
+            Debug.Log($"[STATS] Buff restauré : {buff.Type} +{buff.Value}");
+        }
+
+        // Recalcule les stats avec les buffs restaurés
+        if (_activeBuffs.Count > 0)
+            RecalculateStats();
     }
 
     // ── APPLICATION DES EFFETS ───────────────────────
@@ -352,6 +393,9 @@ public class PlayerStatsManager : MonoBehaviour
 
     // Retourne la liste des buffs actifs en lecture seule
     public IReadOnlyList<ActiveBuff> GetActiveBuffs() => _activeBuffs;
+
+    // Retourne la valeur de base des PV max (avant buffs)
+    public int GetBaseMaxHealth() => _baseMaxHealth;
 }
 
 // Représente un buff temporaire ou permanent actif

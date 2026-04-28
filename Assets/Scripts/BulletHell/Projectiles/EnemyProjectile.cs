@@ -54,6 +54,9 @@ public class EnemyProjectile : MonoBehaviour
         _livesManager = livesManager;
         _damage       = damage;
         _spawnPosition = transform.position;
+
+        // Oriente la roquette dans le sens de la direction de tir
+        transform.up = -_direction;
     }
 
     // -------------------------------------------------------------------------
