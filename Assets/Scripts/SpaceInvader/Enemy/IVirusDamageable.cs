@@ -1,12 +1,6 @@
-// Contrat obligatoire pour tout virus pouvant subir des dégâts
 public interface IVirusDamageable
 {
-    // Applique un montant de dégâts au virus concerné
-    void TakeDamage(int amount);
-
-    // Retourne vrai si la santé du virus est épuisée
-    bool IsDead();
-
-    // Retourne la valeur de santé actuelle du virus
-    int GetCurrentHealth();
+    void TakeDamage(int amount); // Applique les dégâts au virus
+    bool IsDead();               // Retourne vrai si la santé est épuisée
+    int GetCurrentHealth();      // Retourne la santé actuelle du virus
 }

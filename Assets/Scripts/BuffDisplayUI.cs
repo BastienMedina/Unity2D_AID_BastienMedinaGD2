@@ -3,129 +3,75 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Affiche les buffs actifs avec leurs icônes et timers
 public class BuffDisplayUI : MonoBehaviour
 {
-    // Référence au gestionnaire de stats du joueur
     [SerializeField] private PlayerStatsManager _statsManager;
-
-    // Prefab d'un slot de buff (icône + timer text)
     [SerializeField] private GameObject _buffSlotPrefab;
-
-    // Conteneur horizontal des buffs actifs
     [SerializeField] private Transform _buffContainer;
 
-    // Dictionnaire liant chaque buff à son slot UI
-    private Dictionary<ActiveBuff, GameObject> _buffSlots
-        = new Dictionary<ActiveBuff, GameObject>();
+    private Dictionary<ActiveBuff, GameObject> _buffSlots = new Dictionary<ActiveBuff, GameObject>();
 
-    // Abonne l'UI aux événements de buff
-    private void OnEnable()
+    private void OnEnable() // Abonne l'UI aux événements de buff
     {
-        // Masque le conteneur dès l'activation — pas de buff au départ
         RefreshContainerVisibility();
-
-        // Ignore silencieusement si le statsManager n'est pas encore câblé
         if (_statsManager == null) return;
-
-        // Écoute les ajouts de buffs
         _statsManager.OnBuffAdded.AddListener(AddBuffSlot);
-
-        // Écoute les expirations de buffs
         _statsManager.OnBuffRemoved.AddListener(RemoveBuffSlot);
     }
 
-    // Désabonne l'UI des événements de buff
-    private void OnDisable()
+    private void OnDisable() // Désabonne l'UI des événements de buff
     {
-        // Ignore silencieusement si le statsManager n'est pas câblé
         if (_statsManager == null) return;
-
-        // Retire les listeners pour éviter les fuites mémoire
         _statsManager.OnBuffAdded.RemoveListener(AddBuffSlot);
         _statsManager.OnBuffRemoved.RemoveListener(RemoveBuffSlot);
     }
 
-    // Met à jour les timers chaque frame
-    private void Update()
+    private void Update() // Met à jour les timers chaque frame
     {
-        // Parcourt chaque buff actif pour mettre à jour son slot
-        foreach (var pair in _buffSlots)
+        foreach (var pair in _buffSlots) // Parcourt chaque buff actif
         {
             ActiveBuff buff = pair.Key;
             GameObject slot = pair.Value;
 
-            // Cherche le texte du timer dans les enfants du slot
-            TextMeshProUGUI timerText =
-                slot.transform.Find("TimerText")?.GetComponent<TextMeshProUGUI>();
-
-            // Met à jour le texte du timer avec les secondes restantes
+            TextMeshProUGUI timerText = slot.transform.Find("TimerText")?.GetComponent<TextMeshProUGUI>();
             if (timerText != null)
                 timerText.text = Mathf.Ceil(buff.RemainingTime).ToString() + "s";
 
-            // Met à jour la barre de progression du buff
-            Image fillBar =
-                slot.transform.Find("FillBar")?.GetComponent<Image>();
-
-            // Calcule le ratio de remplissage de la barre
+            Image fillBar = slot.transform.Find("FillBar")?.GetComponent<Image>();
             if (fillBar != null)
                 fillBar.fillAmount = buff.RemainingTime / buff.TotalDuration;
         }
     }
 
-    // Crée un slot UI pour un nouveau buff temporaire
-    private void AddBuffSlot(ActiveBuff buff)
+    private void AddBuffSlot(ActiveBuff buff) // Crée un slot UI pour un buff temporaire
     {
-        // Ignore les buffs permanents sans durée
         if (!buff.HasDuration) return;
 
-        // Instancie le prefab de slot dans le conteneur
         GameObject slot = Instantiate(_buffSlotPrefab, _buffContainer);
 
-        // Affiche l'icône du buff si disponible
         Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
-
-        // Assigne le sprite uniquement si l'icône existe
         if (icon != null && buff.Icon != null)
             icon.sprite = buff.Icon;
 
-        // Affiche le nom du buff dans le label
-        TextMeshProUGUI label =
-            slot.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
-
-        // Remplit le texte du label avec le type de buff
+        TextMeshProUGUI label = slot.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
         if (label != null)
             label.text = buff.Type.ToString();
 
-        // Enregistre le slot dans le dictionnaire
         _buffSlots[buff] = slot;
-
-        // Rend le conteneur visible dès qu'un buff est ajouté
         RefreshContainerVisibility();
     }
 
-    // Supprime le slot UI d'un buff expiré
-    private void RemoveBuffSlot(ActiveBuff buff)
+    private void RemoveBuffSlot(ActiveBuff buff) // Supprime le slot UI d'un buff expiré
     {
-        // Vérifie que le buff est bien dans le dictionnaire
         if (!_buffSlots.ContainsKey(buff)) return;
-
-        // Détruit le slot UI associé
         Destroy(_buffSlots[buff]);
-
-        // Retire l'entrée du dictionnaire
         _buffSlots.Remove(buff);
-
-        // Masque le conteneur s'il ne reste plus aucun buff
         RefreshContainerVisibility();
     }
 
-    // Affiche ou masque le conteneur selon le nombre de buffs actifs
-    private void RefreshContainerVisibility()
+    private void RefreshContainerVisibility() // Affiche ou masque le conteneur selon les buffs
     {
         if (_buffContainer == null) return;
-
-        // Le conteneur (ou son GameObject parent) est visible uniquement s'il y a des slots
         _buffContainer.gameObject.SetActive(_buffSlots.Count > 0);
     }
 }

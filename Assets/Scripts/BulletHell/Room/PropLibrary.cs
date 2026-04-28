@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Centralise tous les prefabs de props d'environnement utilisés par
-/// MapVisualBuilder et ProceduralMapGenerator.
-/// Assignez un prefab par type de prop — laissez null pour utiliser le fallback couleur.
-/// </summary>
 [CreateAssetMenu(fileName = "PropLibrary", menuName = "BulletHell/PropLibrary")]
 public class PropLibrary : ScriptableObject
 {

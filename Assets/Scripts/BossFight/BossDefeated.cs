@@ -1,23 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Écoute CoinSystem.OnVictoryConditionMet dans la scène Game and Watch.
-/// Quand le boss est vaincu : avance l'étage, sauvegarde et charge Space Invaders.
-/// </summary>
 public class BossDefeated : MonoBehaviour
 {
-    // Référence directe au CoinSystem — à assigner dans l'Inspector
     [SerializeField] private CoinSystem _coinSystem;
-
-    // Nom de la scène Space Invaders finale
     [SerializeField] private string _spaceInvadersScene = "Scene_SpaceInvaders";
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
-
-    private void Start()
+    private void Start() // Cherche CoinSystem et s'abonne à la victoire
     {
         if (_coinSystem == null)
             _coinSystem = FindFirstObjectByType<CoinSystem>();
@@ -28,21 +17,15 @@ public class BossDefeated : MonoBehaviour
             Debug.LogError("[BossDefeated] CoinSystem introuvable dans la scène.", this);
     }
 
-    private void OnDestroy()
+    private void OnDestroy() // Désabonne l'écouteur de victoire
     {
         if (_coinSystem != null)
             _coinSystem.OnVictoryConditionMet.RemoveListener(OnBossDefeated);
     }
 
-    // -------------------------------------------------------------------------
-    // Transition
-    // -------------------------------------------------------------------------
-
-    /// <summary>Appelé quand toutes les pièces sont collectées — charge Space Invaders.</summary>
-    public void OnBossDefeated()
+    public void OnBossDefeated() // Sauvegarde et charge Space Invaders
     {
-        // En mode mini-jeu : retourne directement au menu
-        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode)
+        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode) // Mode mini-jeu : retour menu
         {
             MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
             if (minigame != null)
@@ -52,11 +35,8 @@ public class BossDefeated : MonoBehaviour
             }
         }
 
-        // Sauvegarde l'intégralité de la progression avant la transition
-        FloorTransition.PersistFullState();
-
+        FloorTransition.PersistFullState(); // Sauvegarde avant transition
         GameProgress.Instance?.AdvanceFloor();
-
         SceneManager.LoadScene(_spaceInvadersScene);
     }
 }

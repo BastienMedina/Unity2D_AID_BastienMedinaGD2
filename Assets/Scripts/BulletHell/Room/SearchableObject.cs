@@ -2,370 +2,147 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
-// Gère la proximité joueur, la fouille et le butin.
 public class SearchableObject : MonoBehaviour
 {
-    // -------------------------------------------------------------------------
-    // Énumération des états internes possibles
-    // -------------------------------------------------------------------------
+    public enum SearchState { Idle, PlayerNearby, Searching, Searched }
 
-    // Représente les quatre états possibles de cet objet.
-    public enum SearchState
-    {
-        Idle,
-        PlayerNearby,
-        Searching,
-        Searched
-    }
-
-    // -------------------------------------------------------------------------
-    // Paramètres configurables
-    // -------------------------------------------------------------------------
-
-    // Marge uniforme en unités monde ajoutée de chaque côté du BoxCollider2D pour la détection.
-    // Remplace l'ancienne détection circulaire par une zone rectangulaire cohérente avec la forme du prop.
     [SerializeField] private float _searchMargin = 0.8f;
-
-    // Durée en secondes nécessaire pour fouiller cet objet.
     [SerializeField] private float _searchDuration = 1.5f;
-
-    // Référence au composant qui génère le butin à la fouille.
     [SerializeField] private LootDropper _lootDropper;
-
-    // Ennemi réseau lié à ce bureau fouillable
     [SerializeField] private DeskNetworkEnemy _networkEnemy;
-
-    // Étiquette textuelle identifiant cet objet dans l'interface.
     [SerializeField] private string _objectLabel = "Bureau";
-
-    // Intervalle en secondes entre chaque vérification de distance.
     [SerializeField] private float _proximityCheckInterval = 0.2f;
-
-    // -------------------------------------------------------------------------
-    // Système infesté
-    // -------------------------------------------------------------------------
-
-    // Probabilité (0-1) que ce bureau contienne un ennemi caché
-    [SerializeField] [Range(0f, 1f)] private float _infestedChance = 0f;
-
-    // Prefab EnemyHidden à instancier si ce bureau est infesté
+    [SerializeField][Range(0f, 1f)] private float _infestedChance = 0f;
     [SerializeField] private GameObject _enemyHiddenPrefab;
 
-    // Ennemi caché enregistré dans ce bureau (arrive après une attaque)
     private EnemyHidden _hiddenEnemy;
 
-    // -------------------------------------------------------------------------
-    // Événements publics
-    // -------------------------------------------------------------------------
+    public UnityEvent OnSearchStarted                              = new UnityEvent();
+    public UnityEvent<SearchableObject> OnPlayerEnterRange         = new UnityEvent<SearchableObject>();
+    public UnityEvent<SearchableObject> OnPlayerExitRange          = new UnityEvent<SearchableObject>();
+    public UnityEvent OnSearchComplete                             = new UnityEvent();
+    public UnityEvent<float> OnSearchProgressUpdate               = new UnityEvent<float>();
 
-    // Déclenché au début de la fouille par le joueur.
-    public UnityEvent OnSearchStarted = new UnityEvent();
-
-    // Déclenché quand le joueur entre dans le rayon de fouille.
-    public UnityEvent<SearchableObject> OnPlayerEnterRange = new UnityEvent<SearchableObject>();
-
-    // Déclenché quand le joueur quitte le rayon de fouille.
-    public UnityEvent<SearchableObject> OnPlayerExitRange = new UnityEvent<SearchableObject>();
-
-    // Déclenché quand la fouille se termine avec succès.
-    public UnityEvent OnSearchComplete = new UnityEvent();
-
-    // Déclenché périodiquement avec la progression de 0 à 1.
-    public UnityEvent<float> OnSearchProgressUpdate = new UnityEvent<float>();
-
-    // -------------------------------------------------------------------------
-    // État interne
-    // -------------------------------------------------------------------------
-
-    // État courant de cet objet dans la machine à états.
     private SearchState _state = SearchState.Idle;
-
-    // Référence au Transform du joueur pour le calcul de distance.
     private Transform _playerTransform;
-
-    // Référence à la coroutine de fouille pour l'annulation.
     private Coroutine _searchCoroutine;
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
-
-    // Localise le joueur et démarre la vérification périodique.
-    private void Awake()
+    private void Awake() // Localise le joueur par tag
     {
-        // Cherche le joueur par tag pour éviter une dépendance directe.
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-
-        if (playerObject == null)
-            return;
-
-        // Stocke le Transform du joueur pour les calculs de distance.
-        _playerTransform = playerObject.transform;
+        if (playerObject != null)
+            _playerTransform = playerObject.transform;
     }
 
-    // Démarre la vérification de proximité répétée par interval.
-    private void Start()
+    private void Start() // Démarre la vérification périodique de proximité
     {
-        // Ignore le démarrage si le joueur n'a pas été localisé.
-        if (_playerTransform == null)
-            return;
-
-        // Démarre la vérification périodique de la distance joueur.
+        if (_playerTransform == null) return;
         InvokeRepeating(nameof(CheckPlayerProximity), 0f, _proximityCheckInterval);
     }
 
-    // Arrête proprement la vérification quand l'objet est détruit.
-    private void OnDestroy()
+    private void OnDestroy() // Annule la vérification périodique
     {
-        // Annule tous les InvokeRepeating actifs sur ce composant.
         CancelInvoke(nameof(CheckPlayerProximity));
     }
 
-    // -------------------------------------------------------------------------
-    // API publique
-    // -------------------------------------------------------------------------
-
-    /// <summary>Démarre la fouille si le joueur est proche et l'objet non fouillé.</summary>
-    public void StartSearch()
+    public void StartSearch() // Démarre la fouille si joueur proche et non fouillé
     {
-        // Ignore si l'objet a déjà été fouillé entièrement.
-        if (_state == SearchState.Searched)
-            return;
-
-        // Ignore si le joueur n'est pas dans le rayon requis.
-        if (_state != SearchState.PlayerNearby)
-            return;
-
-        // Passe à l'état Searching et démarre la coroutine.
+        if (_state == SearchState.Searched || _state != SearchState.PlayerNearby) return;
         _state = SearchState.Searching;
-
-        // Déclenché au début de la fouille.
         OnSearchStarted.Invoke();
-
-        // Lance la coroutine et conserve la référence pour annulation.
         _searchCoroutine = StartCoroutine(SearchCoroutine());
     }
 
-    /// <summary>Annule la fouille en cours et revient à PlayerNearby.</summary>
-    public void CancelSearch()
+    public void CancelSearch() // Annule la fouille et revient à PlayerNearby
     {
-        // Ignore si aucune fouille n'est actuellement en cours.
-        if (_state != SearchState.Searching)
-            return;
-
-        // Arrête la coroutine de fouille si elle est active.
-        if (_searchCoroutine != null)
-        {
-            // Interrompt la coroutine et libère la référence.
-            StopCoroutine(_searchCoroutine);
-            _searchCoroutine = null;
-        }
-
-        // Retourne à l'état PlayerNearby après annulation.
+        if (_state != SearchState.Searching) return;
+        if (_searchCoroutine != null) { StopCoroutine(_searchCoroutine); _searchCoroutine = null; }
         _state = SearchState.PlayerNearby;
     }
 
-    /// <summary>Retourne vrai si l'objet a déjà été fouillé.</summary>
-    public bool IsSearched()
+    public bool IsSearched()       => _state == SearchState.Searched; // Retourne si déjà fouillé
+    public SearchState GetState()  => _state;                          // Expose l'état courant
+    public string GetLabel()       => _objectLabel;                    // Retourne l'étiquette de l'objet
+    public void SetLabel(string label)             => _objectLabel  = label;           // Met à jour l'étiquette
+    public void SetLootDropper(LootDropper ld)     => _lootDropper  = ld;              // Assigne le LootDropper
+    public void SetInfested(float chance, GameObject prefab) { _infestedChance = chance; _enemyHiddenPrefab = prefab; } // Configure l'infestation
+    public void RegisterHiddenEnemy(EnemyHidden e) => _hiddenEnemy  = e;              // Enregistre l'ennemi caché
+    public void UnregisterHiddenEnemy()            => _hiddenEnemy  = null;           // Libère le slot ennemi
+    public bool CanHideEnemy()                     => _hiddenEnemy == null && _state != SearchState.Searched; // Vérifie si le bureau est libre
+
+    private void CheckPlayerProximity() // Met à jour l'état selon la zone de fouille
     {
-        // Compare l'état courant à l'état terminal Searched.
-        return _state == SearchState.Searched;
-    }
+        if (_state == SearchState.Searched || _state == SearchState.Searching) return;
 
-    /// <summary>Retourne l'état courant de cet objet fouillable.</summary>
-    public SearchState GetState()
-    {
-        // Expose l'état interne en lecture seule pour les systèmes.
-        return _state;
-    }
-
-    /// <summary>Retourne l'étiquette textuelle de cet objet fouillable.</summary>
-    public string GetLabel()
-    {
-        // Expose l'étiquette configurée pour l'affichage externe.
-        return _objectLabel;
-    }
-
-    /// <summary>Définit l'étiquette textuelle de cet objet fouillable depuis l'extérieur.</summary>
-    public void SetLabel(string label)
-    {
-        _objectLabel = label;
-    }
-
-    /// <summary>Assigne le LootDropper depuis l'extérieur (câblage runtime).</summary>
-    public void SetLootDropper(LootDropper lootDropper)
-    {
-        _lootDropper = lootDropper;
-    }
-
-    /// <summary>Configure la probabilité d'infestation et le prefab ennemi depuis ProceduralMapGenerator.</summary>
-    public void SetInfested(float chance, GameObject enemyHiddenPrefab)
-    {
-        _infestedChance    = chance;
-        _enemyHiddenPrefab = enemyHiddenPrefab;
-    }
-
-    /// <summary>Enregistre un EnemyHidden qui se cache dans ce bureau.</summary>
-    public void RegisterHiddenEnemy(EnemyHidden enemy)
-    {
-        _hiddenEnemy = enemy;
-    }
-
-    /// <summary>Libère le slot de bureau (appelé à la mort de l'ennemi).</summary>
-    public void UnregisterHiddenEnemy()
-    {
-        _hiddenEnemy = null;
-    }
-
-    /// <summary>Retourne vrai si ce bureau peut accueillir un ennemi caché.</summary>
-    public bool CanHideEnemy()
-    {
-        return _hiddenEnemy == null && _state != SearchState.Searched;
-    }
-
-    // -------------------------------------------------------------------------
-    // Vérification de proximité
-    // -------------------------------------------------------------------------
-
-    // Évalue la proximité joueur via une zone rectangulaire et met à jour l'état si nécessaire.
-    private void CheckPlayerProximity()
-    {
-        // Ignore la vérification si la fouille est terminée.
-        if (_state == SearchState.Searched)
-            return;
-
-        // Ignore si une fouille est actuellement en cours.
-        if (_state == SearchState.Searching)
-            return;
-
-        // Détermine si le joueur est dans la zone rectangulaire étendue autour du prop.
         bool isInRange = IsPlayerInSearchZone();
 
-        // Traite l'entrée dans la zone depuis l'état Idle.
-        if (isInRange && _state == SearchState.Idle)
+        if (isInRange && _state == SearchState.Idle) // Joueur entre dans la zone
         {
-            // Passe à l'état PlayerNearby et notifie les abonnés.
             _state = SearchState.PlayerNearby;
-
-            // Notifie les abonnés avec une référence à cet objet.
             OnPlayerEnterRange.Invoke(this);
         }
-
-        // Traite la sortie de la zone depuis l'état PlayerNearby.
-        else if (!isInRange && _state == SearchState.PlayerNearby)
+        else if (!isInRange && _state == SearchState.PlayerNearby) // Joueur quitte la zone
         {
-            // Retourne à l'état Idle et notifie les abonnés.
             _state = SearchState.Idle;
-
-            // Notifie les abonnés avec une référence à cet objet.
             OnPlayerExitRange.Invoke(this);
         }
     }
 
-    // Teste si le joueur se trouve dans la zone rectangulaire du prop étendue par _searchMargin.
-    // Utilise les bounds monde du BoxCollider2D pour rester cohérent avec n'importe quel scale.
-    private bool IsPlayerInSearchZone()
+    private bool IsPlayerInSearchZone() // Vérifie si le joueur est dans la zone rectangulaire étendue
     {
         BoxCollider2D col = GetComponent<BoxCollider2D>();
-
-        Vector2 halfExtents;
-
-        if (col != null)
-        {
-            // Extents en espace monde (tient compte du localScale) + marge uniforme.
-            halfExtents = col.bounds.extents + new Vector3(_searchMargin, _searchMargin, 0f);
-        }
-        else
-        {
-            // Fallback si aucun BoxCollider2D : zone carrée de _searchMargin de chaque côté.
-            halfExtents = new Vector2(_searchMargin, _searchMargin);
-        }
+        Vector2 halfExtents = col != null
+            ? (Vector2)(col.bounds.extents + new Vector3(_searchMargin, _searchMargin, 0f))
+            : new Vector2(_searchMargin, _searchMargin);
 
         Vector2 delta = (Vector2)_playerTransform.position - (Vector2)transform.position;
-
-        return Mathf.Abs(delta.x) <= halfExtents.x
-            && Mathf.Abs(delta.y) <= halfExtents.y;
+        return Mathf.Abs(delta.x) <= halfExtents.x && Mathf.Abs(delta.y) <= halfExtents.y;
     }
 
-    // -------------------------------------------------------------------------
-    // Coroutine de fouille
-    // -------------------------------------------------------------------------
-
-    // Attend la durée configurée, génère le butin et notifie.
-    private IEnumerator SearchCoroutine()
+    private IEnumerator SearchCoroutine() // Attend la durée, génère le loot et notifie
     {
-        // Initialise le temps écoulé depuis le début de la fouille.
-        float elapsed = 0f;
+        float elapsed              = 0f;
+        const float updateInterval = 0.1f;
+        float timeSinceLastUpdate  = 0f;
 
-        // Intervalle fixe entre chaque mise à jour de progression.
-        const float progressUpdateInterval = 0.1f;
-
-        // Accumule le temps depuis la dernière mise à jour.
-        float timeSinceLastUpdate = 0f;
-
-        // Boucle jusqu'à ce que la durée de fouille soit atteinte.
-        while (elapsed < _searchDuration)
+        while (elapsed < _searchDuration) // Attend la durée complète de fouille
         {
-            // Incrémente le temps écoulé depuis le dernier frame.
-            elapsed += Time.deltaTime;
-
-            // Incrémente le temps depuis la dernière mise à jour.
+            elapsed             += Time.deltaTime;
             timeSinceLastUpdate += Time.deltaTime;
 
-            // Envoie une mise à jour de progression toutes les 0.1s.
-            if (timeSinceLastUpdate >= progressUpdateInterval)
+            if (timeSinceLastUpdate >= updateInterval) // Envoie la progression toutes les 0.1s
             {
-                // Remet l'accumulateur à zéro après chaque mise à jour.
                 timeSinceLastUpdate = 0f;
-
-                // Calcule et clamp la progression entre 0 et 1.
-                float progress = Mathf.Clamp01(elapsed / _searchDuration);
-
-                // Notifie les abonnés avec la progression courante.
-                OnSearchProgressUpdate.Invoke(progress);
+                OnSearchProgressUpdate.Invoke(Mathf.Clamp01(elapsed / _searchDuration));
             }
-
-            // Attend le prochain frame avant de continuer.
             yield return null;
         }
 
-        // Envoie la progression finale à 1 avant la complétion.
         OnSearchProgressUpdate.Invoke(1f);
 
-        // Génère le butin à la position de cet objet si possible.
         if (_lootDropper != null)
             _lootDropper.DropLoot(transform.position);
 
-        // Passe à l'état terminal après la fouille complète.
-        _state = SearchState.Searched;
-
-        // Libère la référence coroutine après complétion normale.
+        _state           = SearchState.Searched;
         _searchCoroutine = null;
-
-        // Notifie les abonnés de la complétion de la fouille.
         OnSearchComplete.Invoke();
 
-        // Déclenche l'ennemi réseau si assigné à ce bureau
-        if (_networkEnemy != null && !_networkEnemy.gameObject.activeSelf)
+        if (_networkEnemy != null && !_networkEnemy.gameObject.activeSelf) // Déclenche l'ennemi réseau si associé
             _networkEnemy.TriggerFromDesk(this);
 
-        // Si un ennemi caché s'est réfugié dans ce bureau, le révèle
-        if (_hiddenEnemy != null)
+        if (_hiddenEnemy != null) // Révèle l'ennemi caché si présent
         {
             EnemyHidden toReveal = _hiddenEnemy;
             _hiddenEnemy = null;
             toReveal.RevealFromDesk();
         }
-        // Sinon, tente un spawn infesté aléatoire
-        else if (_enemyHiddenPrefab != null && Random.value < _infestedChance)
+        else if (_enemyHiddenPrefab != null && Random.value < _infestedChance) // Spawn infesté aléatoire
         {
-            GameObject go = Instantiate(_enemyHiddenPrefab, transform.position, Quaternion.identity);
+            GameObject go      = Instantiate(_enemyHiddenPrefab, transform.position, Quaternion.identity);
             EnemyHidden spawned = go.GetComponent<EnemyHidden>();
-            if (spawned != null)
-                spawned.SpawnAndAttack(transform.position);
+            if (spawned != null) spawned.SpawnAndAttack(transform.position);
         }
 
-        // Masque le bouton en notifiant la sortie de proximité.
         OnPlayerExitRange.Invoke(this);
     }
 }

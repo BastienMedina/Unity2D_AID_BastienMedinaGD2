@@ -1,138 +1,63 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-// Gère uniquement le déplacement horizontal du joueur
 public class SI_PlayerMovement : MonoBehaviour
 {
-    // Vitesse de déplacement horizontal configurable
     [SerializeField] private float _moveSpeed = 4f;
-
-    // Limite gauche de la zone de déplacement
     [SerializeField] private float _minX = -4f;
-
-    // Limite droite de la zone de déplacement
     [SerializeField] private float _maxX = 4f;
-
-    // Référence au joystick virtuel mobile
     [SerializeField] private VirtualJoystick _virtualJoystick;
-
-    // Événement déclenché à chaque déplacement horizontal
     [SerializeField] private UnityEvent<float> _onPositionChanged;
 
-    // Rigidbody2D utilisé pour déplacer le joueur physiquement
     private Rigidbody2D _rigidbody;
-
-    // SpriteRenderer pour retourner le sprite horizontalement
     private SpriteRenderer _spriteRenderer;
-
-    // Direction horizontale lue depuis le joystick chaque frame
     private float _horizontalDirection;
-
-    // Position Y fixe du joueur, jamais modifiée
     private float _fixedY;
 
-    // Initialise les composants et la position de départ
-    private void Awake()
+    private void Awake() // Initialise les composants et la position de départ
     {
-        // Récupère le Rigidbody2D requis pour MovePosition
         _rigidbody = GetComponent<Rigidbody2D>();
-
-        // Signale si le Rigidbody2D est manquant sur le joueur
         if (_rigidbody == null)
-        {
             Debug.LogError("[PM] SI_PlayerMovement — Rigidbody2D manquant sur le joueur");
-        }
 
-        // Récupère le SpriteRenderer pour le retournement horizontal
         _spriteRenderer = GetComponent<SpriteRenderer>();
-
-        // Signale si le SpriteRenderer est manquant sur le joueur
         if (_spriteRenderer == null)
-        {
             Debug.LogError("[PM] SI_PlayerMovement — SpriteRenderer manquant sur le joueur");
-        }
 
-        // Tente de trouver le VirtualJoystick automatiquement si non assigné dans l'inspecteur
         if (_virtualJoystick == null)
         {
             _virtualJoystick = FindObjectOfType<VirtualJoystick>();
-
             if (_virtualJoystick == null)
-            {
                 Debug.LogError("[PM] SI_PlayerMovement — Aucun VirtualJoystick trouvé dans la scène");
-            }
         }
 
-        // Place le joueur juste au-dessus du serveur en bas de l'écran
         transform.position = new Vector2(0f, -3.0f);
-
-        // Mémorise la position Y fixe pour ne jamais la modifier
         _fixedY = transform.position.y;
     }
 
-    // Lit la direction horizontale du joystick chaque frame
-    private void Update()
+    private void Update() // Lit la direction horizontale et retourne le sprite
     {
-        // Abandonne silencieusement si le joystick est introuvable
-        if (_virtualJoystick == null)
-        {
-            return;
-        }
-
-        // Extrait uniquement la composante horizontale du joystick
+        if (_virtualJoystick == null) return;
         _horizontalDirection = _virtualJoystick.GetDirection().x;
-
-        // Retourne le sprite selon la direction horizontale courante
         FlipSprite(_horizontalDirection);
     }
 
-    // Applique le déplacement horizontal en cadence physique
-    private void FixedUpdate()
+    private void FixedUpdate() // Applique le déplacement horizontal clamped
     {
-        // Abandonne si le Rigidbody2D est absent du joueur
-        if (_rigidbody == null)
-        {
-            return;
-        }
+        if (_rigidbody == null) return;
 
-        // Calcule la nouvelle position X selon la vitesse et le temps
         float newX = _rigidbody.position.x + _horizontalDirection * _moveSpeed * Time.fixedDeltaTime;
+        float clampedX = Mathf.Clamp(newX, _minX, _maxX); // Bloque dans la zone de jeu
+        _rigidbody.MovePosition(new Vector2(clampedX, _fixedY));
 
-        // Bloque la position X entre les limites gauche et droite
-        float clampedX = Mathf.Clamp(newX, _minX, _maxX);
-
-        // Construit la position cible en conservant le Y fixe
-        Vector2 targetPosition = new Vector2(clampedX, _fixedY);
-
-        // Déplace le joueur vers la position cible via la physique
-        _rigidbody.MovePosition(targetPosition);
-
-        // Déclenche l'événement si le joueur a bougé horizontalement
         if (_horizontalDirection != 0f)
-        {
-            // Notifie les abonnés avec la position X actuelle
             _onPositionChanged?.Invoke(clampedX);
-        }
     }
 
-    // Retourne le sprite selon la direction horizontale reçue
-    private void FlipSprite(float horizontalDirection)
+    private void FlipSprite(float horizontalDirection) // Retourne le sprite selon la direction
     {
-        // Abandonne si le SpriteRenderer est absent du joueur
-        if (_spriteRenderer == null)
-        {
-            return;
-        }
-
-        // Retourne le sprite vers la gauche si direction négative
-        if (horizontalDirection < 0f)
-        {
-            _spriteRenderer.flipX = true;
-        }
-        // Retourne le sprite vers la droite si direction positive
-        else if (horizontalDirection > 0f)
-        {
-            _spriteRenderer.flipX = false;
-        }
+        if (_spriteRenderer == null) return;
+        if      (horizontalDirection < 0f) _spriteRenderer.flipX = true;
+        else if (horizontalDirection > 0f) _spriteRenderer.flipX = false;
     }
 }

@@ -1,111 +1,58 @@
 using UnityEngine;
 
-// Déplace la balle vers le haut et détecte les impacts sur virus et murs
 public class SI_PlayerBullet : MonoBehaviour
 {
-    // Vitesse de déplacement vertical de la balle en unités par seconde
     [SerializeField] private float _speed = 12f;
-
-    // Dégâts infligés au virus touché par cette balle
     [SerializeField] private int _damage = 1;
-
-    // Distance maximale avant auto-destruction de la balle
     [SerializeField] private float _maxRange = 12f;
-
-    // Son joué à l'impact de la balle sur un virus
     [SerializeField] private AudioClip _impactClip;
 
-    // Référence au Rigidbody2D pour le déplacement physique
     private Rigidbody2D _rigidbody;
-
-    // Position enregistrée à l'instanciation pour le calcul de portée
     private Vector2 _spawnPosition;
 
-    // Initialise le Rigidbody2D et mémorise la position de spawn
-    private void Awake()
+    private void Awake() // Initialise le Rigidbody et mémorise la position spawn
     {
-        // Récupère le Rigidbody2D requis pour MovePosition
         _rigidbody = GetComponent<Rigidbody2D>();
-
-        // Signale si le Rigidbody2D est manquant sur la balle
         if (_rigidbody == null)
-        {
             Debug.LogError("[BULLET] SI_PlayerBullet — Rigidbody2D manquant sur la balle");
-        }
 
-        // Enregistre la position monde au moment de l'instanciation
         _spawnPosition = transform.position;
-
-        // Oriente la roquette dans le sens du tir (vers le haut)
-        transform.up = -Vector2.up;
+        transform.up   = -Vector2.up;
     }
 
-    // Déplace la balle vers le haut et vérifie la portée maximale
-    private void FixedUpdate()
+    private void FixedUpdate() // Déplace la balle et détruit si portée dépassée
     {
-        // Abandonne si le Rigidbody2D est absent de la balle
-        if (_rigidbody == null)
-        {
-            return;
-        }
+        if (_rigidbody == null) return;
 
-        // Calcule la prochaine position en montant tout droit vers le haut
         Vector2 nextPosition = _rigidbody.position + (Vector2.up * (_speed * Time.fixedDeltaTime));
-
-        // Déplace la balle vers la position calculée via la physique
         _rigidbody.MovePosition(nextPosition);
 
-        // Détruit la balle si la distance parcourue dépasse la portée
-        if (Vector2.Distance(_spawnPosition, _rigidbody.position) >= _maxRange)
-        {
-            // Supprime le GameObject quand la portée maximale est atteinte
+        if (Vector2.Distance(_spawnPosition, _rigidbody.position) >= _maxRange) // Détruit si hors portée
             Destroy(gameObject);
-        }
     }
 
-    // Détecte les virus et les murs via le trigger CircleCollider2D
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other) // Détecte les virus et murs via trigger
     {
-        // Tente de récupérer l'interface IVirusDamageable sur le collider direct
         IVirusDamageable target = null;
         other.TryGetComponent(out target);
 
-        // Cherche l'interface sur le parent si absente sur le collider direct
         if (target == null)
-        {
             target = other.GetComponentInParent<IVirusDamageable>();
-        }
 
-        // Applique les dégâts et détruit la balle si l'interface est trouvée
-        if (target != null)
+        if (target != null) // Inflige dégâts et détruit sur impact virus
         {
-            // Inflige les dégâts configurés au virus touché
             target.TakeDamage(_damage);
-
             AudioManager.Instance?.PlaySFX(_impactClip);
-
-            // Supprime la balle immédiatement après l'impact sur le virus
             Destroy(gameObject);
             return;
         }
 
-        // Fallback : virus sans interface mais avec tag sur l'objet ou son parent
-        bool hitVirusByTag = other.CompareTag("Virus")
+        bool hitVirusByTag = other.CompareTag("Virus") // Fallback par tag Virus
             || (other.transform.parent != null && other.transform.parent.CompareTag("Virus"));
 
-        // Détruit la balle si le tag Virus est trouvé sans interface
-        if (hitVirusByTag)
-        {
-            // Supprime la balle au contact d'un objet tagué Virus
-            Destroy(gameObject);
-            return;
-        }
+        if (hitVirusByTag) { Destroy(gameObject); return; }
 
-        // Vérifie si l'objet touché appartient au layer Wall
-        if (other.gameObject.layer == LayerMask.NameToLayer("Wall"))
-        {
-            // Supprime la balle à l'impact avec un mur
+        if (other.gameObject.layer == LayerMask.NameToLayer("Wall")) // Détruit sur mur
             Destroy(gameObject);
-        }
     }
 }

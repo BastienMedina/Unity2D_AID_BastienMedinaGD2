@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 5892719501121393827}
   - component: {fileID: 1981975847905038164}
   - component: {fileID: 4021186642516474660}
-  - component: {fileID: 3064978683616916981}
   - component: {fileID: 8563556950080678921}
   - component: {fileID: 5398016327306559818}
   - component: {fileID: 9158958854513939183}
@@ -205,21 +204,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _attackClip: {fileID: 8300000, guid: 6daaaf7350f4a3141a925f563afccf5c, type: 3}
---- !u!114 &3064978683616916981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2820338830230650032}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07d264a58e7dbf8449a0e0410a82af11, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EditorInputAdapter
-  _hero: {fileID: 4021186642516474660}
-  _playerMovement: {fileID: 1981975847905038164}
-  _attackButton: {fileID: 0}
 --- !u!114 &8563556950080678921
 MonoBehaviour:
   m_ObjectHideFlags: 0

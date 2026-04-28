@@ -1,187 +1,80 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-// Suit la libération des salles, déverrouille et déclenche la transition
 public class ElevatorController : MonoBehaviour
 {
-    // Salles devant être libérées pour déverrouiller l'ascenseur
     [SerializeField] private RoomController[] _requiredRooms;
-
-    // Si vrai, toutes les salles doivent être libérées pour déverrouiller
     [SerializeField] private bool _requireAllRooms = true;
-
-    // Événement déclenché quand l'ascenseur devient utilisable
     [SerializeField] private UnityEvent _onElevatorUnlocked;
-
-    // Événement déclenché quand le joueur confirme l'utilisation
     [SerializeField] private UnityEvent _onFloorTransitionRequested;
 
-    // Indique si l'ascenseur est actuellement déverrouillé
     private bool _isUnlocked = false;
-
-    // Indique si le joueur est actuellement dans la zone de trigger
     private bool _playerInRange = false;
 
-    // Abonne l'ascenseur aux événements de libération de chaque salle
-    private void OnEnable()
+    private void OnEnable() // S'abonne à OnRoomCleared de chaque salle
     {
-        // Ignore si aucune salle n'est assignée dans l'inspecteur
-        if (_requiredRooms == null)
+        if (_requiredRooms == null) return;
+        foreach (RoomController room in _requiredRooms) // Parcourt les salles requises
         {
-            return;
-        }
-
-        // S'abonne à l'événement OnRoomCleared de chaque salle requise
-        foreach (RoomController room in _requiredRooms)
-        {
-            // Ignore les entrées nulles dans le tableau de salles
-            if (room == null)
-            {
-                continue;
-            }
-
-            // Ajoute le callback de vérification à l'événement de la salle
+            if (room == null) continue;
             room.OnRoomCleared.AddListener(OnRoomCleared);
         }
     }
 
-    // Désabonne l'ascenseur des événements à la désactivation
-    private void OnDisable()
+    private void OnDisable() // Désabonne les listeners des salles
     {
-        // Ignore si aucune salle n'est assignée dans l'inspecteur
-        if (_requiredRooms == null)
+        if (_requiredRooms == null) return;
+        foreach (RoomController room in _requiredRooms) // Retire chaque listener
         {
-            return;
-        }
-
-        // Retire le callback de chaque salle pour éviter les fuites
-        foreach (RoomController room in _requiredRooms)
-        {
-            // Ignore les entrées nulles dans le tableau de salles
-            if (room == null)
-            {
-                continue;
-            }
-
-            // Supprime le listener pour éviter les appels fantômes
+            if (room == null) continue;
             room.OnRoomCleared.RemoveListener(OnRoomCleared);
         }
     }
 
-    // Vérifie la condition de déverrouillage quand une salle est libérée
-    private void OnRoomCleared()
+    private void OnRoomCleared() // Vérifie la condition de déverrouillage
     {
-        // Ignore si l'ascenseur est déjà déverrouillé
-        if (_isUnlocked)
-        {
-            return;
-        }
-
-        // Vérifie si la condition de déverrouillage est satisfaite
+        if (_isUnlocked) return;
         if (CheckUnlockCondition())
-        {
-            // Déverrouille l'ascenseur et notifie les abonnés
             UnlockElevator();
-        }
     }
 
-    // Retourne vrai si la condition de déverrouillage est remplie
-    private bool CheckUnlockCondition()
+    private bool CheckUnlockCondition() // Évalue si toutes les salles requises sont libérées
     {
-        // Retourne faux si aucune salle n'est configurée
-        if (_requiredRooms == null || _requiredRooms.Length == 0)
-        {
-            return false;
-        }
+        if (_requiredRooms == null || _requiredRooms.Length == 0) return false;
 
-        // Vérifie que toutes les salles sont libérées si requis
-        if (_requireAllRooms)
+        if (_requireAllRooms) // Toutes les salles doivent être libérées
         {
-            // Parcourt chaque salle pour vérifier son état libéré
             foreach (RoomController room in _requiredRooms)
             {
-                // Ignore les références nulles dans le tableau
-                if (room == null)
-                {
-                    continue;
-                }
-
-                // Retourne faux dès qu'une salle n'est pas libérée
-                if (!room.IsCleared())
-                {
-                    return false;
-                }
+                if (room == null) continue;
+                if (!room.IsCleared()) return false; // Une salle non libérée bloque
             }
-
-            // Toutes les salles valides sont libérées, condition remplie
             return true;
         }
 
-        // Vérifie qu'au moins une salle est libérée si mode partiel
-        foreach (RoomController room in _requiredRooms)
+        foreach (RoomController room in _requiredRooms) // Au moins une salle suffit
         {
-            // Ignore les références nulles dans le tableau
-            if (room == null)
-            {
-                continue;
-            }
-
-            // Retourne vrai dès qu'une salle libérée est trouvée
-            if (room.IsCleared())
-            {
-                return true;
-            }
+            if (room == null) continue;
+            if (room.IsCleared()) return true;
         }
-
-        // Aucune salle libérée trouvée en mode partiel
         return false;
     }
 
-    // Marque l'ascenseur comme déverrouillé et notifie les abonnés
-    private void UnlockElevator()
+    private void UnlockElevator() // Marque déverrouillé et notifie les abonnés
     {
-        // Enregistre l'état déverrouillé pour bloquer les re-triggers
         _isUnlocked = true;
-
-        // Notifie les abonnés que l'ascenseur est maintenant accessible
         _onElevatorUnlocked?.Invoke();
     }
 
-    /// <summary>Appelé par ElevatorTrigger quand le joueur entre dans la zone.</summary>
-    public void OnPlayerEnterRange()
+    public void OnPlayerEnterRange() => _playerInRange = true; // Signale entrée dans la zone
+
+    public void OnPlayerExitRange() => _playerInRange = false; // Signale sortie de la zone
+
+    public void ConfirmInteraction() // Déclenche la transition si conditions remplies
     {
-        _playerInRange = true;
-    }
-
-    /// <summary>Appelé par ElevatorTrigger quand le joueur quitte la zone.</summary>
-    public void OnPlayerExitRange()
-    {
-        _playerInRange = false;
-    }
-
-    // Appelé par le bouton UI pour confirmer l'utilisation de l'ascenseur
-    public void ConfirmInteraction()
-    {
-        // Ignore si l'ascenseur n'est pas encore déverrouillé
-        if (!_isUnlocked)
-        {
-            return;
-        }
-
-        // Ignore si le joueur n'est pas dans la zone de l'ascenseur
-        if (!_playerInRange)
-        {
-            return;
-        }
-
-        // Demande au FloorProgressionManager de gérer la transition
+        if (!_isUnlocked || !_playerInRange) return;
         _onFloorTransitionRequested?.Invoke();
     }
 
-    // Retourne vrai si l'ascenseur est déverrouillé et utilisable
-    public bool IsUnlocked()
-    {
-        // Expose l'état interne de déverrouillage en lecture seule
-        return _isUnlocked;
-    }
+    public bool IsUnlocked() => _isUnlocked; // Expose l'état de déverrouillage
 }

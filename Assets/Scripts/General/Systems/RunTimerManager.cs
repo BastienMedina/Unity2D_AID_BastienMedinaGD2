@@ -2,143 +2,70 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
-// Singleton persistant qui mesure le temps d'une run complète (BulletHell → victoire).
-// Démarre au chargement du premier étage, s'arrête à la victoire.
-// Persiste le meilleur temps via PlayerPrefs.
 public class RunTimerManager : MonoBehaviour
 {
-    // -------------------------------------------------------------------------
-    // Clé PlayerPrefs
-    // -------------------------------------------------------------------------
-
     private const string BestTimeKey = "BestRunTime";
-
-    // -------------------------------------------------------------------------
-    // Singleton
-    // -------------------------------------------------------------------------
 
     public static RunTimerManager Instance { get; private set; }
 
-    // -------------------------------------------------------------------------
-    // Événements publics
-    // -------------------------------------------------------------------------
+    public UnityEvent<float> OnTick              = new UnityEvent<float>();
+    public UnityEvent<float, bool> OnRunFinished  = new UnityEvent<float, bool>();
 
-    // Déclenché chaque seconde avec le temps écoulé en secondes
-    public UnityEvent<float> OnTick = new UnityEvent<float>();
-
-    // Déclenché quand la run se termine avec le temps final et si c'est un record
-    public UnityEvent<float, bool> OnRunFinished = new UnityEvent<float, bool>();
-
-    // -------------------------------------------------------------------------
-    // Propriétés publiques
-    // -------------------------------------------------------------------------
-
-    /// <summary>Temps écoulé depuis le début de la run (secondes).</summary>
     public float ElapsedTime { get; private set; }
-
-    /// <summary>Meilleur temps enregistré (0 si aucun record).</summary>
-    public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0f);
-
-    /// <summary>Vrai si un timer est en cours.</summary>
-    public bool IsRunning { get; private set; }
-
-    // -------------------------------------------------------------------------
-    // État interne
-    // -------------------------------------------------------------------------
+    public float BestTime    => PlayerPrefs.GetFloat(BestTimeKey, 0f);
+    public bool  IsRunning   { get; private set; }
 
     private Coroutine _tickCoroutine;
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
-
-    private void Awake()
+    private void Awake() // Initialise le singleton persistant
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
-    // -------------------------------------------------------------------------
-    // API publique
-    // -------------------------------------------------------------------------
-
-    /// <summary>Démarre le timer depuis zéro. Appelé par MainMenuController au lancement d'une run.</summary>
-    public void StartRun()
+    public void StartRun() // Remet à zéro et démarre le timer
     {
         ElapsedTime = 0f;
         IsRunning   = true;
 
-        if (_tickCoroutine != null)
-            StopCoroutine(_tickCoroutine);
-
+        if (_tickCoroutine != null) StopCoroutine(_tickCoroutine);
         _tickCoroutine = StartCoroutine(TickCoroutine());
-
-        Debug.Log("[RunTimerManager] Timer démarré.");
     }
 
-    /// <summary>Arrête le timer et enregistre le meilleur temps si battu.
-    /// Appelé par VictoryMenuController à la victoire.</summary>
-    public void StopRun()
+    public void StopRun() // Stoppe le timer et notifie la fin de run
     {
         if (!IsRunning) return;
 
         IsRunning = false;
-
-        if (_tickCoroutine != null)
-        {
-            StopCoroutine(_tickCoroutine);
-            _tickCoroutine = null;
-        }
+        if (_tickCoroutine != null) { StopCoroutine(_tickCoroutine); _tickCoroutine = null; }
 
         bool isNewBest = RegisterBestTime(ElapsedTime);
-
-        Debug.Log($"[RunTimerManager] Run terminée — {FormatTime(ElapsedTime)}{(isNewBest ? " ★ Nouveau record !" : "")}");
-
         OnRunFinished?.Invoke(ElapsedTime, isNewBest);
     }
 
-    /// <summary>Remet le timer à zéro sans le démarrer (utilisé lors du Reset de GameProgress).</summary>
-    public void ResetTimer()
+    public void ResetTimer() // Stoppe et vide le timer sans déclencher OnRunFinished
     {
         IsRunning   = false;
         ElapsedTime = 0f;
-
-        if (_tickCoroutine != null)
-        {
-            StopCoroutine(_tickCoroutine);
-            _tickCoroutine = null;
-        }
+        if (_tickCoroutine != null) { StopCoroutine(_tickCoroutine); _tickCoroutine = null; }
     }
 
-    /// <summary>Efface le meilleur temps enregistré.</summary>
-    public void ClearBestTime()
+    public void ClearBestTime() // Supprime le record de PlayerPrefs
     {
         PlayerPrefs.DeleteKey(BestTimeKey);
         PlayerPrefs.Save();
     }
 
-    /// <summary>Formate un temps en secondes vers MM:SS.cc</summary>
-    public static string FormatTime(float seconds)
+    public static string FormatTime(float seconds) // Convertit les secondes en MM:SS.cc
     {
         int min  = (int)(seconds / 60f);
         int sec  = (int)(seconds % 60f);
         int cent = (int)((seconds - Mathf.Floor(seconds)) * 100f);
-
         return $"{min:D2}:{sec:D2}.{cent:D2}";
     }
 
-    // -------------------------------------------------------------------------
-    // Interne
-    // -------------------------------------------------------------------------
-
-    // Incrémente ElapsedTime chaque seconde et fire OnTick
-    private IEnumerator TickCoroutine()
+    private IEnumerator TickCoroutine() // Incrémente et notifie chaque seconde
     {
         while (IsRunning)
         {
@@ -148,18 +75,10 @@ public class RunTimerManager : MonoBehaviour
         }
     }
 
-    // Enregistre le meilleur temps si le nouveau est inférieur (ou si aucun record)
-    private bool RegisterBestTime(float time)
+    private bool RegisterBestTime(float time) // Enregistre le record si meilleur ou absent
     {
         float current = BestTime;
-
-        if (current <= 0f || time < current)
-        {
-            PlayerPrefs.SetFloat(BestTimeKey, time);
-            PlayerPrefs.Save();
-            return true;
-        }
-
+        if (current <= 0f || time < current) { PlayerPrefs.SetFloat(BestTimeKey, time); PlayerPrefs.Save(); return true; }
         return false;
     }
 }

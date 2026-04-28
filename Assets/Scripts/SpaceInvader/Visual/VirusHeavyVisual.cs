@@ -1,20 +1,14 @@
 using UnityEngine;
 
-// Configure le rendu du virus lourd — le collider est défini directement dans le prefab
 public class VirusHeavyVisual : MonoBehaviour
 {
-    // Ordre de tri dans le layer de rendu
     [SerializeField] private int _sortingOrder = 2;
 
-    // Nom du shader URP 2D Sprite-Unlit-Default
     private const string ShaderName = "Universal Render Pipeline/2D/Sprite-Unlit-Default";
 
-    // Applique uniquement le shader et le sortingOrder — collider géré dans le prefab
-    private void Awake()
+    private void Awake() // Applique shader et sortingOrder sans écraser le sprite du prefab
     {
-        SpriteRenderer sr = GetComponent<SpriteRenderer>()
-            ?? gameObject.AddComponent<SpriteRenderer>();
-
+        SpriteRenderer sr = GetComponent<SpriteRenderer>() ?? gameObject.AddComponent<SpriteRenderer>();
         sr.sharedMaterial = new Material(Shader.Find(ShaderName));
         sr.sortingOrder   = _sortingOrder;
     }

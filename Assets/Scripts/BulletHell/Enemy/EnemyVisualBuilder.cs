@@ -1,76 +1,55 @@
 using UnityEngine;
 
-// Assigne les sprites visuels à chaque ennemi en Awake ou à la demande
 [DefaultExecutionOrder(-5)]
 public class EnemyVisualBuilder : MonoBehaviour
 {
-    // -----------------------------------------------------------------------
-    // Constante shader URP partagée par tous les ennemis
-    // -----------------------------------------------------------------------
-
-    // Nom du shader URP 2D non-éclairé requis en URP
     private const string URPShaderName = "Universal Render Pipeline/2D/Sprite-Unlit-Default";
 
-    // -----------------------------------------------------------------------
-    // API publique statique — appelée par ProceduralMapGenerator après Instantiate
-    // -----------------------------------------------------------------------
-
-    /// <summary>Applique les visuels de chargeur sur le GameObject fourni.</summary>
-    public static void ApplyChargerVisual(GameObject go)
+    public static void ApplyChargerVisual(GameObject go) // Applique le visuel du chargeur
     {
         if (go == null) return;
-
-        // Le sprite est assigné directement sur le prefab — on préserve le visuel existant
         SpriteRenderer sr = GetOrAddSpriteRenderer(go);
         SetURPMaterial(sr);
         sr.sortingOrder = 5;
     }
 
-    /// <summary>Applique les visuels de tireur sur le GameObject fourni.</summary>
-    public static void ApplyShooterVisual(GameObject go)
+    public static void ApplyShooterVisual(GameObject go) // Applique le visuel du tireur
     {
         if (go == null) return;
-
-        // Le sprite est assigné directement sur le prefab — on préserve le visuel existant
         SpriteRenderer sr = GetOrAddSpriteRenderer(go);
         SetURPMaterial(sr);
         sr.sortingOrder = 5;
     }
 
-    /// <summary>Applique les visuels de l'ennemi caché sur le GameObject fourni.</summary>
-    public static void ApplyHiddenVisual(GameObject go)
+    public static void ApplyHiddenVisual(GameObject go) // Applique les visuels de l'ennemi caché
     {
         if (go == null) return;
 
-        // --- Visuel caché : aspect bureau gris foncé ---
-        Transform hiddenVisualTransform = go.transform.Find("HiddenVisual");
-        if (hiddenVisualTransform != null)
+        Transform hiddenT = go.transform.Find("HiddenVisual");
+        if (hiddenT != null) // Visuel bureau gris foncé
         {
-            SpriteRenderer srHidden = GetOrAddSpriteRenderer(hiddenVisualTransform.gameObject);
-            srHidden.sprite = CreateColorSprite(new Color(0.27f, 0.27f, 0.27f, 1f));
-            SetURPMaterial(srHidden);
-            srHidden.sortingOrder = 1;
-            hiddenVisualTransform.localScale = new Vector3(1.5f, 0.8f, 1f);
+            SpriteRenderer srH = GetOrAddSpriteRenderer(hiddenT.gameObject);
+            srH.sprite = CreateColorSprite(new Color(0.27f, 0.27f, 0.27f, 1f));
+            SetURPMaterial(srH);
+            srH.sortingOrder = 1;
+            hiddenT.localScale = new Vector3(1.5f, 0.8f, 1f);
         }
 
-        // --- Visuel ennemi révélé : sprite orange (désactivé au départ) ---
-        Transform enemyVisualTransform = go.transform.Find("EnemyVisual");
-        if (enemyVisualTransform != null)
+        Transform enemyT = go.transform.Find("EnemyVisual");
+        if (enemyT != null) // Visuel ennemi orange (désactivé au départ)
         {
-            SpriteRenderer srEnemy = GetOrAddSpriteRenderer(enemyVisualTransform.gameObject);
-            srEnemy.sprite = CreateColorSprite(new Color(1f, 0.4f, 0f, 1f));
-            SetURPMaterial(srEnemy);
-            srEnemy.sortingOrder = 2;
-            enemyVisualTransform.localScale = new Vector3(0.5f, 0.5f, 1f);
-            enemyVisualTransform.gameObject.SetActive(false);
+            SpriteRenderer srE = GetOrAddSpriteRenderer(enemyT.gameObject);
+            srE.sprite = CreateColorSprite(new Color(1f, 0.4f, 0f, 1f));
+            SetURPMaterial(srE);
+            srE.sortingOrder = 2;
+            enemyT.localScale = new Vector3(0.5f, 0.5f, 1f);
+            enemyT.gameObject.SetActive(false);
         }
     }
 
-    /// <summary>Applique les visuels de spawner réseau sur le GameObject fourni.</summary>
-    public static void ApplyNetworkSpawnerVisual(GameObject go)
+    public static void ApplyNetworkSpawnerVisual(GameObject go) // Applique le visuel du spawner réseau
     {
         if (go == null) return;
-
         SpriteRenderer sr = GetOrAddSpriteRenderer(go);
         sr.sprite = CreateColorSprite(new Color(0f, 1f, 1f, 1f));
         SetURPMaterial(sr);
@@ -78,12 +57,7 @@ public class EnemyVisualBuilder : MonoBehaviour
         go.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
     }
 
-    // -----------------------------------------------------------------------
-    // Cycle de vie Unity — câble les ennemis pré-placés dans la scène par nom
-    // -----------------------------------------------------------------------
-
-    // Point d'entrée : applique les visuels aux ennemis pré-placés
-    private void Awake()
+    private void Awake() // Applique les visuels aux ennemis pré-placés dans la scène
     {
         ApplyChargerVisual(GameObject.Find("Enemy_Charger_01"));
         ApplyShooterVisual(GameObject.Find("Enemy_Shooter_01"));
@@ -91,31 +65,21 @@ public class EnemyVisualBuilder : MonoBehaviour
         ApplyNetworkSpawnerVisual(GameObject.Find("Enemy_NetworkSpawner_01"));
     }
 
-    // -----------------------------------------------------------------------
-    // Helpers privés statiques
-    // -----------------------------------------------------------------------
-
-    // Récupère ou ajoute un SpriteRenderer sur le GameObject cible
-    private static SpriteRenderer GetOrAddSpriteRenderer(GameObject go)
+    private static SpriteRenderer GetOrAddSpriteRenderer(GameObject go) // Récupère ou ajoute un SpriteRenderer
     {
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
-        if (sr == null)
-            sr = go.AddComponent<SpriteRenderer>();
-        return sr;
+        return sr != null ? sr : go.AddComponent<SpriteRenderer>();
     }
 
-    // Crée un sprite de couleur unie depuis une texture d'un pixel
-    private static Sprite CreateColorSprite(Color color)
+    private static Sprite CreateColorSprite(Color color) // Crée un sprite de couleur unie 1px
     {
-        Texture2D tex = new Texture2D(1, 1);
-        tex.filterMode = FilterMode.Point;
+        Texture2D tex = new Texture2D(1, 1) { filterMode = FilterMode.Point };
         tex.SetPixel(0, 0, color);
         tex.Apply();
         return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
     }
 
-    // Assigne le shader URP au SpriteRenderer donné
-    private static void SetURPMaterial(SpriteRenderer sr)
+    private static void SetURPMaterial(SpriteRenderer sr) // Assigne le shader URP non-éclairé
     {
         sr.sharedMaterial = new Material(Shader.Find(URPShaderName));
     }

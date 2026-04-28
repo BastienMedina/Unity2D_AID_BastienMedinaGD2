@@ -1,88 +1,40 @@
 using UnityEngine;
 using TMPro;
 
-// Affiche uniquement le compteur de vies du joueur.
 public class LivesDisplay : MonoBehaviour
 {
-    // -------------------------------------------------------------------------
-    // Références configurables
-    // -------------------------------------------------------------------------
-
-    // Référence au gestionnaire de vies pour lire les données.
     [SerializeField] private LivesManager _livesManager;
-
-    // Composant texte cible pour l'affichage des vies.
     [SerializeField] private TextMeshProUGUI _text;
 
-    // -------------------------------------------------------------------------
-    // Constantes
-    // -------------------------------------------------------------------------
-
-    // Préfixe affiché devant le nombre de vies courant.
     private const string LivesPrefix = "VIE ";
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
-
-    // Résout la référence LivesManager dans Awake — sans lire les vies
-    // pour éviter la race condition avec LivesManager.Awake().
-    private void Awake()
+    private void Awake() // Résout LivesManager si non assigné en Inspector
     {
-        // Cherche le LivesManager dans la scène si non assigné en Inspector.
         if (_livesManager == null)
             _livesManager = FindFirstObjectByType<LivesManager>();
-
-        // Journalise un avertissement si la référence reste absente.
-        if (_livesManager == null)
-            Debug.LogWarning("[LivesDisplay] LivesManager introuvable dans la scène.", this);
     }
 
-    // Lit les vies initiales dans Start() — garanti après tous les Awake(),
-    // donc LivesManager est déjà initialisé avec la bonne valeur.
-    private void Start()
+    private void Start() // Lit les vies initiales après tous les Awake
     {
-        if (_livesManager == null)
-            return;
-
-        // Affiche les vies actuelles une fois que LivesManager est prêt.
+        if (_livesManager == null) return;
         UpdateText(_livesManager.GetCurrentLives());
     }
 
-    // Abonne le rappel à l'événement de changement de vies.
-    private void OnEnable()
+    private void OnEnable() // Abonne la mise à jour à OnLivesChanged
     {
-        // Vérifie que la référence est valide avant l'abonnement.
-        if (_livesManager == null)
-            return;
-
-        // Abonne la méthode de mise à jour à l'événement des vies.
+        if (_livesManager == null) return;
         _livesManager.OnLivesChanged.AddListener(UpdateText);
     }
 
-    // Désabonne le rappel pour éviter les fuites mémoire.
-    private void OnDisable()
+    private void OnDisable() // Désabonne pour éviter les fuites mémoire
     {
-        // Vérifie que la référence est valide avant le désabonnement.
-        if (_livesManager == null)
-            return;
-
-        // Retire la méthode de l'événement lors de la désactivation.
+        if (_livesManager == null) return;
         _livesManager.OnLivesChanged.RemoveListener(UpdateText);
     }
 
-    // -------------------------------------------------------------------------
-    // Méthodes privées
-    // -------------------------------------------------------------------------
-
-    // Met à jour le texte avec la nouvelle valeur de vies.
-    private void UpdateText(int newValue)
+    private void UpdateText(int newValue) // Compose et applique la chaîne affichée
     {
-        // Ignore la mise à jour si le composant texte est absent.
-        if (_text == null)
-            return;
-
-        // Compose et applique la chaîne affichée à l'écran.
+        if (_text == null) return;
         _text.text = LivesPrefix + newValue;
     }
 }

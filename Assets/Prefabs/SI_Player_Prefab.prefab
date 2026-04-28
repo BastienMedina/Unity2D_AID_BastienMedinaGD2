@@ -46,7 +46,6 @@ GameObject:
   - component: {fileID: 6518250656851993807}
   - component: {fileID: 3885368734350116012}
   - component: {fileID: 3534948345932798712}
-  - component: {fileID: 4899164639122248959}
   m_Layer: 0
   m_Name: SI_Player_Prefab
   m_TagString: Player
@@ -254,18 +253,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SI_PlayerVisual
   _sortingOrder: 3
---- !u!114 &4899164639122248959
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2656042729045043572}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b7718c11e44b5a4b8af65f225a18435, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SI_EditorInputAdapter
-  _movement: {fileID: 6518250656851993807}
-  _shooter: {fileID: 3885368734350116012}
-  _moveSpeed: 4

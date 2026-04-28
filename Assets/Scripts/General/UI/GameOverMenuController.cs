@@ -3,76 +3,41 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// Affiche l'écran de défaite quand LivesManager.OnDeath est déclenché.
-/// Gèle le jeu via PauseManager.LockForEndState() pour bloquer toute pause ultérieure.
-/// À placer sur le Canvas game over dans chaque scène de jeu.
-/// </summary>
 public class GameOverMenuController : MonoBehaviour
 {
-    // Panneau racine du menu game over
     [SerializeField] private GameObject _panel;
-
-    // Texte affichant l'étage atteint par le joueur (optionnel)
     [SerializeField] private TextMeshProUGUI _floorLabel;
-
-    // Nom de la scène de départ (premier étage)
-    [SerializeField] private string _restartScene = "Scene_BulletHell";
-
-    // Nom de la scène du menu principal
+    [SerializeField] private string _restartScene  = "Scene_BulletHell";
     [SerializeField] private string _mainMenuScene = "Scene_MainMenu";
-
-    // Son joué lors des interactions avec les boutons
     [SerializeField] private AudioClip _buttonClip;
 
-    // -------------------------------------------------------------------------
-    // Cycle de vie Unity
-    // -------------------------------------------------------------------------
-
-    private void Awake()
+    private void Awake() // Cache le panneau au démarrage
     {
-        if (_panel != null)
-            _panel.SetActive(false);
+        if (_panel != null) _panel.SetActive(false);
     }
 
-    private void Start()
+    private void Start() // Abonne HandleDeath et câble les boutons
     {
-        if (LivesManager.Instance == null)
-        {
-            Debug.LogError("[GameOverMenuController] LivesManager.Instance introuvable.", this);
-            return;
-        }
-
+        if (LivesManager.Instance == null) return;
         LivesManager.Instance.OnDeath.AddListener(HandleDeath);
 
         Button btnRestart  = FindButtonInChildren(_panel.transform, "Button_Restart");
         Button btnMainMenu = FindButtonInChildren(_panel.transform, "Button_MainMenu");
-
         btnRestart?.onClick.AddListener(OnRestartClicked);
         btnMainMenu?.onClick.AddListener(OnMainMenuClicked);
     }
 
-    private void OnDestroy()
+    private void OnDestroy() // Désabonne le listener de mort
     {
         LivesManager.Instance?.OnDeath.RemoveListener(HandleDeath);
     }
 
-    // -------------------------------------------------------------------------
-    // Déclenchement défaite
-    // -------------------------------------------------------------------------
-
-    /// <summary>Appelé par LivesManager.OnDeath — affiche le panneau et gèle le jeu.</summary>
-    public void HandleDeath()
+    public void HandleDeath() // Gère le mode mini-jeu puis affiche le panneau
     {
-        // En mode mini-jeu : retourne directement au menu sans afficher l'écran game over
-        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode)
+        if (GameProgress.Instance != null && GameProgress.Instance.IsMinigameMode) // Mini-jeu : retour menu
         {
             MinigameReturnHandler minigame = FindFirstObjectByType<MinigameReturnHandler>();
-            if (minigame != null)
-            {
-                minigame.ReturnToMenu();
-                return;
-            }
+            if (minigame != null) { minigame.ReturnToMenu(); return; }
         }
 
         if (_floorLabel != null && GameProgress.Instance != null)
@@ -82,12 +47,7 @@ public class GameOverMenuController : MonoBehaviour
         _panel.SetActive(true);
     }
 
-    // -------------------------------------------------------------------------
-    // Boutons
-    // -------------------------------------------------------------------------
-
-    /// <summary>Repart depuis le début sans sauvegarde.</summary>
-    public void OnRestartClicked()
+    public void OnRestartClicked() // Réinitialise et charge la scène de départ
     {
         AudioManager.Instance?.PlaySFX(_buttonClip);
         GameProgress.Instance?.Reset();
@@ -96,8 +56,7 @@ public class GameOverMenuController : MonoBehaviour
         SceneManager.LoadScene(_restartScene);
     }
 
-    /// <summary>Retourne au menu principal sans sauvegarder.</summary>
-    public void OnMainMenuClicked()
+    public void OnMainMenuClicked() // Réinitialise et charge le menu principal
     {
         AudioManager.Instance?.PlaySFX(_buttonClip);
         GameProgress.Instance?.Reset();
@@ -106,26 +65,12 @@ public class GameOverMenuController : MonoBehaviour
         SceneManager.LoadScene(_mainMenuScene);
     }
 
-    // -------------------------------------------------------------------------
-    // Utilitaire
-    // -------------------------------------------------------------------------
-
-    private Button FindButtonInChildren(Transform root, string buttonName)
+    private Button FindButtonInChildren(Transform root, string buttonName) // Cherche récursivement un bouton par nom
     {
-        if (root == null)
-            return null;
-
+        if (root == null) return null;
         Transform found = root.Find(buttonName);
-        if (found != null)
-            return found.GetComponent<Button>();
-
-        foreach (Transform child in root)
-        {
-            Button result = FindButtonInChildren(child, buttonName);
-            if (result != null)
-                return result;
-        }
-
+        if (found != null) return found.GetComponent<Button>();
+        foreach (Transform child in root) { Button result = FindButtonInChildren(child, buttonName); if (result != null) return result; }
         return null;
     }
 }

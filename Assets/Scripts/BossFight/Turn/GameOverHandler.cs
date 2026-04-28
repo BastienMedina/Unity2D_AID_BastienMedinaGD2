@@ -1,19 +1,12 @@
 using UnityEngine;
 
-// Écoute TurnManager.OnGameOver et déclenche le menu victoire ou défaite approprié.
 public class GameOverHandler : MonoBehaviour
 {
-    // Référence au gestionnaire de tour pour s'abonner à OnGameOver.
     [SerializeField] private TurnManager _turnManager;
-
-    // Contrôleur du menu victoire dans la scène
     [SerializeField] private VictoryMenuController _victoryMenu;
-
-    // Contrôleur du menu game over dans la scène
     [SerializeField] private GameOverMenuController _gameOverMenu;
 
-    // S'abonne à OnGameOver au démarrage
-    private void Awake()
+    private void Awake() // S'abonne à OnGameOver du TurnManager
     {
         if (_turnManager == null)
         {
@@ -24,19 +17,13 @@ public class GameOverHandler : MonoBehaviour
         _turnManager.OnGameOver.AddListener(HandleGameOver);
     }
 
-    // Se désabonne proprement à la destruction
-    private void OnDestroy()
+    private void OnDestroy() // Désabonne l'écouteur de fin de partie
     {
         if (_turnManager != null)
             _turnManager.OnGameOver.RemoveListener(HandleGameOver);
     }
 
-    // -------------------------------------------------------------------------
-    // Gestionnaire
-    // -------------------------------------------------------------------------
-
-    /// <summary>Affiche le menu victoire ou défaite selon le résultat.</summary>
-    private void HandleGameOver(bool isVictory)
+    private void HandleGameOver(bool isVictory) // Affiche le menu victoire ou défaite
     {
         if (isVictory)
             _victoryMenu?.HandleVictory();
