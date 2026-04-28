@@ -1,40 +1,31 @@
 using UnityEngine;
 
 // Ajouté dynamiquement par ProceduralMapGenerator sur la salle ascenseur.
-// Déclenche la sauvegarde complète et la transition vers l'étage suivant
-// dès que toutes les salles requises sont libérées et que le joueur entre.
+// Le timer démarre automatiquement au chargement de la scène (via ElevatorDoorController).
+// La transition n'a lieu que quand le joueur entre dans l'ascenseur ET que le timer est écoulé.
 public class ElevatorTrigger : MonoBehaviour
 {
-    // Indique si la transition a déjà été déclenchée (anti double-trigger).
+    // Référence au contrôleur de portes, résolu au démarrage.
+    private ElevatorDoorController _doorController;
+
+    // Anti double-trigger
     private bool _hasTriggered = false;
 
-    // Vérifie si toutes les salles de la scène sont libérées avant d'autoriser la transition.
-    private bool AreAllRoomsCleared()
+    private void Awake()
     {
-        RoomController[] rooms = FindObjectsByType<RoomController>(FindObjectsSortMode.None);
-
-        // Aucune salle trouvée = pas de condition de blocage, on laisse passer.
-        if (rooms == null || rooms.Length == 0)
-            return true;
-
-        foreach (RoomController room in rooms)
-        {
-            if (room != null && !room.IsCleared())
-                return false;
-        }
-
-        return true;
+        _doorController = GetComponent<ElevatorDoorController>();
     }
 
-    // Déclenche la transition quand le joueur entre dans la zone de l'ascenseur.
+    // Déclenche la transition quand le joueur entre dans l'ascenseur et que le timer est écoulé.
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (_hasTriggered) return;
         if (!other.CompareTag("Player")) return;
 
-        if (!AreAllRoomsCleared())
+        // Bloque la transition si le timer n'est pas encore terminé
+        if (_doorController != null && !_doorController.IsTimerDone)
         {
-            Debug.Log("[ElevatorTrigger] Des salles ne sont pas encore libérées — transition bloquée.");
+            Debug.Log("[ElevatorTrigger] Timer pas encore écoulé — transition bloquée.");
             return;
         }
 
@@ -57,7 +48,7 @@ public class ElevatorTrigger : MonoBehaviour
         // Incrémente l'étage.
         GameProgress.Instance.AdvanceFloor();
 
-        int nextFloor = GameProgress.Instance.CurrentFloor;
+        int nextFloor      = GameProgress.Instance.CurrentFloor;
         string targetScene = GameProgress.Instance.GetCurrentSceneName();
 
         Debug.Log($"[ElevatorTrigger] Transition vers étage {nextFloor} → scène '{targetScene}'");

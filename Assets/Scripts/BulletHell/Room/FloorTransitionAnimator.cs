@@ -7,6 +7,8 @@ using UnityEngine.UI;
 // Singleton persistant gérant l'animation de transition entre les étages
 public class FloorTransitionAnimator : MonoBehaviour
 {
+    // Chemin de la font TMP SDF utilisée pour le label d'étage
+    private const string FontAssetPath = "Assets/TextMesh Pro/Fonts/Tiny5-Regular SDF.asset";
     // Instance globale accessible depuis n'importe quelle scène
     public static FloorTransitionAnimator Instance { get; private set; }
 
@@ -184,11 +186,28 @@ public class FloorTransitionAnimator : MonoBehaviour
         _label.color = Color.white;
         _label.fontStyle = FontStyles.Bold;
 
+        // Charge et applique la font Tiny5
+        TMP_FontAsset tiny5 = LoadFont();
+        if (tiny5 != null)
+            _label.font = tiny5;
+        else
+            Debug.LogWarning($"[FloorTransitionAnimator] Font Tiny5 introuvable à : {FontAssetPath}");
+
         RectTransform labelRect = _label.rectTransform;
         labelRect.anchorMin = new Vector2(0f, 0.5f);
         labelRect.anchorMax = new Vector2(1f, 0.5f);
         labelRect.pivot = new Vector2(0.5f, 0.5f);
         labelRect.sizeDelta = new Vector2(0f, 120f);
         labelRect.anchoredPosition = Vector2.zero;
+    }
+
+    // Charge la font Tiny5 depuis l'éditeur ou via Resources en build
+    private TMP_FontAsset LoadFont()
+    {
+#if UNITY_EDITOR
+        return UnityEditor.AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
+#else
+        return Resources.Load<TMP_FontAsset>("Tiny5-Regular SDF");
+#endif
     }
 }

@@ -50,6 +50,9 @@ public class MainMenuController : MonoBehaviour
         GameProgress.Instance.Reset();
         SaveSystem.DeleteSave();
 
+        // Démarre le timer de run depuis zéro
+        RunTimerManager.Instance?.StartRun();
+
         SceneManager.LoadScene(_bulletHellScene);
     }
 
@@ -70,6 +73,9 @@ public class MainMenuController : MonoBehaviour
         }
 
         SaveSystem.LoadGame();
+
+        // Démarre le timer de run (reprise depuis le temps sauvegardé si disponible)
+        RunTimerManager.Instance?.StartRun();
 
         // Charge la scène correspondant à l'étage sauvegardé
         SceneManager.LoadScene(GameProgress.Instance.GetCurrentSceneName());

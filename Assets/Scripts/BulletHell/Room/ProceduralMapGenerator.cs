@@ -385,7 +385,14 @@ public class ProceduralMapGenerator : MonoBehaviour
             (_elevatorHeight - 0.4f) / _elevatorHeight);
 
         // Ajoute le composant ElevatorTrigger pour la transition
+        ElevatorDoorController doorCtrl = elev.AddComponent<ElevatorDoorController>();
+        elev.AddComponent<ElevatorCountdownUI>();
         elev.AddComponent<ElevatorTrigger>();
+
+        // Configure les portes : le passage est sur le côté opposé au mur d'attachement
+        WallSide doorwaySide = GetOppositeWall(attachedWall);
+        Vector2 entranceDir  = WallSideToDirection(doorwaySide);
+        doorCtrl.Configure(entranceDir, _doorwayWidth);
 
         // Génère les quatre murs de l'ascenseur avec passage vers l'Open Space
         BuildRoomWalls(pos, new Vector2(_elevatorWidth, _elevatorHeight),
@@ -1067,6 +1074,19 @@ public class ProceduralMapGenerator : MonoBehaviour
             WallSide.Right  => WallSide.Left,
             WallSide.Left   => WallSide.Right,
             _               => WallSide.Top
+        };
+    }
+
+    // Convertit un WallSide en direction normalisée pointant vers l'extérieur de la salle
+    private Vector2 WallSideToDirection(WallSide side)
+    {
+        return side switch
+        {
+            WallSide.Top    => Vector2.up,
+            WallSide.Bottom => Vector2.down,
+            WallSide.Right  => Vector2.right,
+            WallSide.Left   => Vector2.left,
+            _               => Vector2.down
         };
     }
 

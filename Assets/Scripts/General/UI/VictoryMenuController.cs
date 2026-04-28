@@ -50,9 +50,12 @@ public class VictoryMenuController : MonoBehaviour
     // Déclenchement victoire
     // -------------------------------------------------------------------------
 
-    /// <summary>Appelé par SI_ProgressionGauge.OnVictory — affiche le panneau et gèle le jeu.</summary>
+    /// <summary>Appelé par SI_ProgressionGauge.OnVictory — arrête le timer, affiche le panneau et gèle le jeu.</summary>
     public void HandleVictory()
     {
+        // Arrête le timer et enregistre le meilleur temps si battu
+        RunTimerManager.Instance?.StopRun();
+
         PauseManager.Instance?.LockForEndState();
         _panel.SetActive(true);
     }
