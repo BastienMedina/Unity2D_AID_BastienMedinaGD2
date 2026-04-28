@@ -1,21 +1,20 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Bouton flottant toujours visible qui ouvre une popup de confirmation avant de quitter.
+// Bouton flottant toujours visible qui bascule le menu pause.
 public class QuickMenuController : MonoBehaviour
 {
-    // Panneau de confirmation (popup)
-    [SerializeField] private GameObject _confirmPanel;
-
-    // Bouton flottant racine (le petit ≡ MENU en coin)
+    // Bouton flottant (le petit bouton pause en coin d'écran)
     [SerializeField] private Button _quickButton;
 
-    // Nom de la scène du menu principal
-    [SerializeField] private string _mainMenuScene = "Scene_MainMenu";
-
-    // Son joué lors des interactions avec les boutons
+    // Son joué lors du clic
     [SerializeField] private AudioClip _buttonClip;
+
+    // -------------------------------------------------------------------------
+    // État interne
+    // -------------------------------------------------------------------------
+
+    private PauseManager _pauseManager;
 
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
@@ -23,47 +22,42 @@ public class QuickMenuController : MonoBehaviour
 
     private void Awake()
     {
-        _confirmPanel.SetActive(false);
+        _pauseManager = FindFirstObjectByType<PauseManager>();
+
+        Debug.Log($"[QuickMenuController] Awake — _pauseManager : {(_pauseManager != null ? _pauseManager.name : "NULL")}", this);
+        Debug.Log($"[QuickMenuController] Awake — _quickButton : {(_quickButton != null ? _quickButton.name : "NULL")}", this);
+
+        if (_pauseManager == null)
+            Debug.LogError("[QuickMenuController] Aucun PauseManager trouvé dans la scène.", this);
+
+        if (_quickButton == null)
+            Debug.LogError("[QuickMenuController] _quickButton non assigné.", this);
     }
 
     private void Start()
     {
-        // Câblage du bouton flottant par code
         if (_quickButton != null)
-            _quickButton.onClick.AddListener(OnQuickMenuClicked);
+        {
+            _quickButton.onClick.AddListener(OnQuickButtonClicked);
+            Debug.Log($"[QuickMenuController] Start — listener AddListener OK. Bouton interactable : {_quickButton.interactable}", this);
+        }
+    }
 
-        // Câblage des boutons de la popup
-        Button btnConfirm = _confirmPanel.transform.Find("Panel/Button_Confirm")?.GetComponent<Button>();
-        Button btnCancel  = _confirmPanel.transform.Find("Panel/Button_Cancel")?.GetComponent<Button>();
-
-        btnConfirm?.onClick.AddListener(OnConfirmClicked);
-        btnCancel?.onClick.AddListener(OnCancelClicked);
+    private void OnDestroy()
+    {
+        if (_quickButton != null)
+            _quickButton.onClick.RemoveListener(OnQuickButtonClicked);
     }
 
     // -------------------------------------------------------------------------
-    // Boutons
+    // Bouton
     // -------------------------------------------------------------------------
 
-    /// <summary>Ouvre la popup de confirmation.</summary>
-    public void OnQuickMenuClicked()
+    /// <summary>Bascule le menu pause via le PauseManager.</summary>
+    public void OnQuickButtonClicked()
     {
+        Debug.Log($"[QuickMenuController] OnQuickButtonClicked — _pauseManager : {(_pauseManager != null ? _pauseManager.name : "NULL")}", this);
         AudioManager.Instance?.PlaySFX(_buttonClip);
-        _confirmPanel.SetActive(true);
-    }
-
-    /// <summary>Sauvegarde et quitte vers le menu principal.</summary>
-    public void OnConfirmClicked()
-    {
-        AudioManager.Instance?.PlaySFX(_buttonClip);
-        SaveSystem.SaveGame();
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(_mainMenuScene);
-    }
-
-    /// <summary>Annule et ferme la popup.</summary>
-    public void OnCancelClicked()
-    {
-        AudioManager.Instance?.PlaySFX(_buttonClip);
-        _confirmPanel.SetActive(false);
+        _pauseManager?.TogglePause();
     }
 }

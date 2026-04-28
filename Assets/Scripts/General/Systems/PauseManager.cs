@@ -25,61 +25,51 @@ public class PauseManager : MonoBehaviour
     /// <summary>Bascule entre pause et reprise du jeu.</summary>
     public void TogglePause()
     {
-        // Choisit la bonne action selon l'état courant de la pause
+        Debug.Log($"[PauseManager] TogglePause — état actuel _isPaused : {_isPaused}", this);
         if (_isPaused)
-        {
             Resume();
-        }
         else
-        {
             Pause();
-        }
     }
 
     /// <summary>Met le jeu en pause en gelant Time.timeScale à zéro.</summary>
     public void Pause()
     {
-        // Ignore si le jeu est déjà en pause pour éviter les doublons
         if (_isPaused)
         {
+            Debug.Log("[PauseManager] Pause() ignoré — déjà en pause.", this);
             return;
         }
 
-        // Gèle le temps Unity pour bloquer tous les Update et physique
         Time.timeScale = 0f;
-
-        // Marque l'état interne comme en pause
         _isPaused = true;
 
-        // Joue le son de pause en temps non scalé
         if (_pauseClip != null)
             AudioManager.Instance?.PlaySFX(_pauseClip);
 
-        // Notifie les abonnés de la mise en pause
+        Debug.Log($"[PauseManager] Pause() — _onPaused listeners : {_onPaused.GetPersistentEventCount()} persistants. Invocation...", this);
         _onPaused?.Invoke();
+        Debug.Log("[PauseManager] Pause() — _onPaused.Invoke() terminé.", this);
     }
 
     /// <summary>Reprend le jeu en restaurant Time.timeScale à un.</summary>
     public void Resume()
     {
-        // Ignore si le jeu n'est pas en pause pour éviter les doublons
         if (!_isPaused)
         {
+            Debug.Log("[PauseManager] Resume() ignoré — pas en pause.", this);
             return;
         }
 
-        // Restaure le temps Unity pour reprendre la simulation
         Time.timeScale = 1f;
-
-        // Marque l'état interne comme actif
         _isPaused = false;
 
-        // Joue le son de reprise
         if (_resumeClip != null)
             AudioManager.Instance?.PlaySFX(_resumeClip);
 
-        // Notifie les abonnés de la reprise du jeu
+        Debug.Log($"[PauseManager] Resume() — _onResumed listeners : {_onResumed.GetPersistentEventCount()} persistants. Invocation...", this);
         _onResumed?.Invoke();
+        Debug.Log("[PauseManager] Resume() — _onResumed.Invoke() terminé.", this);
     }
 
     // Restaure le timeScale si le gestionnaire est détruit en cours de pause

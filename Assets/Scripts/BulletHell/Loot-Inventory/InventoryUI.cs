@@ -49,9 +49,6 @@ public class InventoryUI : MonoBehaviour
     // Texte affichant la description de l'item sélectionné.
     [SerializeField] private TextMeshProUGUI _itemDescText;
 
-    // Image affichant l'icône de l'item sélectionné.
-    [SerializeField] private Image _itemIconImage;
-
     // Bouton déclenchant la consommation de l'item sélectionné.
     [SerializeField] private Button _useButton;
 
@@ -351,7 +348,7 @@ public class InventoryUI : MonoBehaviour
     // Panneau de description
     // -------------------------------------------------------------------------
 
-    // Met à jour les textes et l'icône du panneau de description.
+    // Met à jour les textes du panneau de description.
     private void UpdateDescriptionPanel(InventoryItem item)
     {
         // Met à jour le texte du nom si le composant est assigné.
@@ -361,23 +358,6 @@ public class InventoryUI : MonoBehaviour
         // Met à jour le texte de description si le composant est assigné.
         if (_itemDescText != null)
             _itemDescText.text = item.Description;
-
-        // Met à jour l'icône du panneau si le composant est assigné.
-        if (_itemIconImage != null)
-        {
-            // Affiche l'icône réelle si disponible, sinon couleur unie.
-            if (item.Icon != null)
-            {
-                _itemIconImage.sprite = item.Icon;
-                _itemIconImage.color = Color.white;
-            }
-            else
-            {
-                // Utilise une couleur de substitution si pas d'icône.
-                _itemIconImage.sprite = null;
-                _itemIconImage.color = _noIconColor;
-            }
-        }
     }
 
     // Vide tous les éléments du panneau de description.
@@ -390,13 +370,6 @@ public class InventoryUI : MonoBehaviour
         // Efface le texte de description dans le panneau.
         if (_itemDescText != null)
             _itemDescText.text = string.Empty;
-
-        // Masque l'icône dans le panneau de description.
-        if (_itemIconImage != null)
-        {
-            _itemIconImage.sprite = null;
-            _itemIconImage.color = Color.clear;
-        }
     }
 
     // -------------------------------------------------------------------------

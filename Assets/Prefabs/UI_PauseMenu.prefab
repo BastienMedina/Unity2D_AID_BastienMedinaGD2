@@ -67,7 +67,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -4396457546342399234, guid: 4daec6860c0dfcd4eb8c350734bb7c7d, type: 3}
+  m_Sprite: {fileID: -440002501, guid: 102f1e7e90e2b1e4baad9469a34bcca6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -188,7 +188,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -4396457546342399234, guid: 4daec6860c0dfcd4eb8c350734bb7c7d, type: 3}
+  m_Sprite: {fileID: -440002501, guid: 102f1e7e90e2b1e4baad9469a34bcca6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -387,7 +387,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -8132923703055857805, guid: 4daec6860c0dfcd4eb8c350734bb7c7d, type: 3}
+  m_Sprite: {fileID: -1557013538026691241, guid: 102f1e7e90e2b1e4baad9469a34bcca6, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -814,7 +814,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 924b7f206c560f848a54a75db95c21af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseMenuController
-  _pausePanel: {fileID: 1003930901190524386}
+  _raycaster: {fileID: 3227762576466845167}
+  _panel: {fileID: 2836201172735078223}
   _mainMenuScene: Scene_MainMenu
   _buttonClip: {fileID: 8300000, guid: 372e0a96152ec124cbd220b30edba607, type: 3}
 --- !u!1 &7162664009886069568

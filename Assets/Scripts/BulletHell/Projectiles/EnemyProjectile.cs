@@ -1,6 +1,8 @@
 using UnityEngine;
 
-// Déplace le projectile ennemi et inflige des dégâts au joueur
+// Déplace le projectile ennemi via Rigidbody2D et inflige des dégâts au joueur au contact.
+// Requiert un Rigidbody2D (Kinematic, Continuous) et un Collider2D (isTrigger) sur le prefab.
+[RequireComponent(typeof(Rigidbody2D))]
 public class EnemyProjectile : MonoBehaviour
 {
     // Direction normalisée transmise par EnemyShooter à l'init
@@ -24,55 +26,69 @@ public class EnemyProjectile : MonoBehaviour
     // Son joué à l'impact du projectile sur le joueur
     [SerializeField] private AudioClip _impactClip;
 
-    // Initialise le projectile avec tous ses paramètres de tir
+    // Rigidbody2D utilisé pour le déplacement physique sans tunneling
+    private Rigidbody2D _rigidbody;
+
+    // Flag interne pour ne déclencher l'impact qu'une seule fois
+    private bool _hasHit = false;
+
+    // -------------------------------------------------------------------------
+    // Cycle de vie Unity
+    // -------------------------------------------------------------------------
+
+    private void Awake()
+    {
+        _rigidbody = GetComponent<Rigidbody2D>();
+    }
+
+    // -------------------------------------------------------------------------
+    // Initialisation
+    // -------------------------------------------------------------------------
+
+    /// <summary>Initialise le projectile avec tous ses paramètres de tir.</summary>
     public void Initialize(Vector2 direction, float speed, float maxRange, LivesManager livesManager, int damage)
     {
-        // Stocke la direction normalisée reçue depuis EnemyShooter
-        _direction = direction;
-
-        // Stocke la vitesse reçue depuis EnemyShooter
-        _speed = speed;
-
-        // Stocke la portée maximale reçue depuis EnemyShooter
-        _maxRange = maxRange;
-
-        // Stocke la référence au gestionnaire de vies du joueur
+        _direction    = direction;
+        _speed        = speed;
+        _maxRange     = maxRange;
         _livesManager = livesManager;
-
-        // Stocke les dégâts reçus depuis EnemyShooter
-        _damage = damage;
-
-        // Mémorise la position de spawn pour le calcul de distance
+        _damage       = damage;
         _spawnPosition = transform.position;
     }
 
-    // Déplace le projectile et vérifie la portée maximale chaque frame
-    private void Update()
+    // -------------------------------------------------------------------------
+    // Déplacement physique
+    // -------------------------------------------------------------------------
+
+    // Déplace le projectile via Rigidbody2D.MovePosition pour éviter le tunneling
+    private void FixedUpdate()
     {
-        // Applique le déplacement dans l'espace monde cette frame
-        transform.Translate(_direction * (_speed * Time.deltaTime), Space.World);
+        if (_hasHit) return;
+
+        Vector2 nextPos = _rigidbody.position + _direction * (_speed * Time.fixedDeltaTime);
+        _rigidbody.MovePosition(nextPos);
 
         // Détruit le projectile si la portée maximale est dépassée
-        if (Vector3.Distance(_spawnPosition, transform.position) >= _maxRange)
-        {
-            // Supprime le projectile hors de portée de la scène
+        if (Vector3.Distance(_spawnPosition, (Vector3)_rigidbody.position) >= _maxRange)
             Destroy(gameObject);
-        }
     }
+
+    // -------------------------------------------------------------------------
+    // Détection d'impact
+    // -------------------------------------------------------------------------
 
     // Détecte la collision avec le joueur via le trigger du collider
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Vérifie si l'objet touché est bien le joueur via son tag
-        if (other.CompareTag("Player"))
-        {
-            // Inflige les dégâts au joueur via le gestionnaire de vies
-            _livesManager.TakeDamage();
+        // Garantit qu'un seul impact est traité même si plusieurs triggers se déclenchent
+        if (_hasHit) return;
 
-            AudioManager.Instance?.PlaySFX(_impactClip);
+        if (!other.CompareTag("Player")) return;
 
-            // Détruit le projectile immédiatement après le contact
-            Destroy(gameObject);
-        }
+        _hasHit = true;
+
+        _livesManager?.TakeDamage();
+        AudioManager.Instance?.PlaySFX(_impactClip);
+        Destroy(gameObject);
     }
 }

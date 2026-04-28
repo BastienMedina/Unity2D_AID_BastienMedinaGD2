@@ -6,7 +6,7 @@ using UnityEngine.UI;
 // Affiche le menu de défaite lorsque LivesManager.OnDeath est déclenché.
 public class GameOverMenuController : MonoBehaviour
 {
-    // Panneau racine du menu game over
+    // Panneau racine du menu game over (l'Overlay plein-écran)
     [SerializeField] private GameObject _gameOverPanel;
 
     // Texte affichant l'étage atteint par le joueur
@@ -21,13 +21,21 @@ public class GameOverMenuController : MonoBehaviour
     // Son joué lors des interactions avec les boutons
     [SerializeField] private AudioClip _buttonClip;
 
+    // Image de l'overlay plein-écran — son raycastTarget est contrôlé pour ne pas bloquer l'UI sous-jacente
+    private Image _overlayImage;
+
     // -------------------------------------------------------------------------
     // Cycle de vie Unity
     // -------------------------------------------------------------------------
 
     private void Awake()
     {
+        // Récupère l'Image de l'overlay pour contrôler son raycastTarget
+        _overlayImage = _gameOverPanel.GetComponent<Image>();
+
+        // Cache le panneau et désactive le raycast au démarrage
         _gameOverPanel.SetActive(false);
+        SetOverlayRaycast(false);
     }
 
     private void Start()
@@ -89,5 +97,13 @@ public class GameOverMenuController : MonoBehaviour
 
         Time.timeScale = 0f;
         _gameOverPanel.SetActive(true);
+        SetOverlayRaycast(true);
+    }
+
+    // Active ou désactive le raycast de l'overlay plein-écran
+    private void SetOverlayRaycast(bool enabled)
+    {
+        if (_overlayImage != null)
+            _overlayImage.raycastTarget = enabled;
     }
 }
